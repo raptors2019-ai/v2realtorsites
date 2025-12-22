@@ -17,11 +17,15 @@ const headerConfig: HeaderConfig = {
   logoSecondPart: 'Collective',
   logoSecondPartClass: 'text-gradient-primary',
   navigation: [
+    { label: 'Home', href: '/' },
+    { label: 'Builder Projects', href: '/builder-projects' },
     { label: 'Properties', href: '/properties' },
-    { label: 'Sell Your House', href: '/sell' },
-    { label: 'About', href: '/about' },
     { label: 'Contact', href: '/contact' },
   ],
+  ctaButton: {
+    text: 'Get Started',
+    href: '/contact',
+  },
 }
 
 const footerConfig: FooterConfig = {

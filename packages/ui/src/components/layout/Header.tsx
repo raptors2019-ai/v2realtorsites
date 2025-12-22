@@ -30,7 +30,6 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
 
-  // Add scroll listener for header shadow
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10)
@@ -62,7 +61,7 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" className="flex items-center gap-2 group shrink-0">
             <span className="text-2xl font-semibold tracking-tight transition-all duration-300 group-hover:scale-[1.02]">
               {config.logoFirstPart && (
                 <span className="text-secondary dark:text-white transition-colors duration-300">
@@ -76,7 +75,6 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
                     'text-gradient-primary transition-colors duration-300'
                   }
                 >
-                  {config.logoFirstPart ? ' ' : ''}
                   {config.logoSecondPart}
                 </span>
               )}
@@ -86,8 +84,8 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
+          {/* Desktop Navigation - Right Side */}
+          <div className="header-desktop-nav">
             {enableDarkMode && <ThemeToggle />}
             {config.navigation.map((link) => (
               <Link
@@ -104,11 +102,12 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
                 >
                   {link.label}
                 </span>
-                {/* Underline animation */}
+                {/* Underline animation - uses theme primary color */}
                 <span
-                  className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-gradient-to-r from-primary to-primary-light transition-all duration-300 ease-out ${
-                    isActive(link.href) ? 'w-6' : 'w-0 group-hover:w-6'
+                  className={`absolute bottom-1 left-1/2 -translate-x-1/2 h-[2px] rounded-full transition-all duration-300 ease-out ${
+                    isActive(link.href) ? 'w-5' : 'w-0 group-hover:w-5'
                   }`}
+                  style={{ background: 'var(--primary)' }}
                 />
                 {/* Background hover effect */}
                 <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#faf9f7] to-[#f5f3f0] dark:from-secondary-light dark:to-secondary scale-0 group-hover:scale-100 transition-transform duration-300 ease-out -z-10" />
@@ -117,18 +116,16 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
             {config.ctaButton && (
               <Link
                 href={config.ctaButton.href}
-                className="relative ml-4 px-6 py-2.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-secondary to-secondary-light overflow-hidden group transition-all duration-300 hover:shadow-lg hover:shadow-secondary/25 hover:-translate-y-0.5"
+                className="relative ml-3 px-6 py-2.5 rounded-lg text-sm font-medium text-white bg-secondary hover:bg-secondary-light overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-secondary/25 hover:-translate-y-0.5"
               >
                 <span className="relative z-10">{config.ctaButton.text}</span>
-                {/* Shimmer on hover */}
-                <span className="absolute inset-0 bg-gradient-to-r from-secondary-light via-primary/20 to-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </Link>
             )}
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden relative w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[#faf9f7] dark:hover:bg-secondary-light transition-colors duration-300"
+            className="header-mobile-btn relative w-10 h-10 items-center justify-center rounded-lg hover:bg-[#faf9f7] dark:hover:bg-secondary-light transition-colors duration-300"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -154,7 +151,7 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
 
         {/* Mobile Navigation */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${
+          className={`header-mobile-menu overflow-hidden transition-all duration-300 ease-out ${
             mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
@@ -180,7 +177,7 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
               {config.ctaButton && (
                 <Link
                   href={config.ctaButton.href}
-                  className="mx-4 mt-2 px-5 py-3 rounded-lg text-sm font-medium text-center text-white bg-gradient-to-r from-secondary to-secondary-light hover:shadow-lg transition-all duration-300"
+                  className="mx-4 mt-2 px-5 py-3 rounded-lg text-sm font-medium text-center text-white bg-secondary hover:bg-secondary-light hover:shadow-lg transition-all duration-300"
                   onClick={() => setMobileMenuOpen(false)}
                   style={{
                     transitionDelay: mobileMenuOpen

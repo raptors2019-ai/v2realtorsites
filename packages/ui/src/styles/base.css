@@ -71,14 +71,14 @@ html {
   outline-offset: 2px;
 }
 
-/* Link styles */
-a {
+/* Link styles - only apply to links without explicit classes */
+a:not([class]) {
   color: var(--primary);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-a:hover {
+a:not([class]):hover {
   color: var(--primary-light, var(--primary));
 }
 
@@ -121,4 +121,34 @@ a:hover {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== HEADER RESPONSIVE STYLES ===== */
+/* Explicit media queries to ensure responsive behavior works */
+.header-desktop-nav {
+  display: none;
+}
+
+.header-mobile-btn {
+  display: flex;
+}
+
+.header-mobile-menu {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .header-desktop-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .header-mobile-btn {
+    display: none;
+  }
+
+  .header-mobile-menu {
+    display: none;
+  }
 }

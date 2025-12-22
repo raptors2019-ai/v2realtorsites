@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Header, Footer, ChatbotWidget } from '@repo/ui'
+import { Header, Footer, ChatbotWidget, ThemeProvider } from '@repo/ui'
 import type { HeaderConfig, FooterConfig } from '@repo/ui'
 import { GoogleTagManager } from '@next/third-parties/google'
 import { CookieConsent } from '@repo/analytics'
@@ -17,11 +17,14 @@ const headerConfig: HeaderConfig = {
   logoSecondPart: 'HomeShow',
   logoSecondPartClass: 'text-gradient-primary',
   navigation: [
-    { label: 'Properties', href: '/properties' },
-    { label: 'Builder Projects', href: '/builder-projects' },
-    { label: 'About', href: '/about' },
+    { label: 'Home', href: '/' },
+    { label: 'Projects', href: '/builder-projects' },
     { label: 'Contact', href: '/contact' },
   ],
+  ctaButton: {
+    text: 'Get Started',
+    href: '/contact',
+  },
 }
 
 const footerConfig: FooterConfig = {
@@ -60,12 +63,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
       </head>
       <body className="antialiased">
-        <Header config={headerConfig} />
-        <main className="pt-16">
-          {children}
-        </main>
-        <Footer config={footerConfig} />
-        <ChatbotWidget />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <Header config={headerConfig} enableDarkMode={true} />
+          <main className="pt-16">
+            {children}
+          </main>
+          <Footer config={footerConfig} />
+          <ChatbotWidget />
+        </ThemeProvider>
         {process.env.NEXT_PUBLIC_GTM_ID && (
           <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
         )}

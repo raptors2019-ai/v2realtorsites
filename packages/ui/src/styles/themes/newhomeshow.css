@@ -9,10 +9,10 @@
   --primary-dark: #B8941F;
   --primary-rgb: 212, 175, 55;
 
-  /* Secondary = Black (contrast color) */
-  --secondary: #000000;
-  --secondary-light: #1a1a1a;
-  --secondary-dark: #0a0a0a;
+  /* Secondary = Navy Blue (contrast color) */
+  --secondary: #0a1628;
+  --secondary-light: #1a2d4d;
+  --secondary-dark: #061020;
 
   /* Accent = Supporting gold tones */
   --accent: #C9A962;
@@ -21,7 +21,7 @@
 
   /* Base Colors */
   --background: #ffffff;
-  --foreground: #000000;
+  --foreground: #0a1628;
   --white: #ffffff;
   --off-white: #fafafa;
   --cream: #f8f8f8;
@@ -32,7 +32,7 @@
   --gray-dark: #4a4a4a;
 
   /* Text */
-  --text-primary: #000000;
+  --text-primary: #0a1628;
   --text-secondary: #4a4a4a;
   --text-muted: #808080;
   --text-light: #ffffff;

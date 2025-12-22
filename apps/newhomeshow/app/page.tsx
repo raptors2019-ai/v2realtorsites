@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BentoGrid, BentoFeatureCard } from "@repo/ui";
 
 export default function Home() {
   return (
@@ -100,10 +101,9 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Feature 1 */}
-            <div className="luxury-card-premium rounded-xl p-8 text-center group">
-              <div className="feature-icon mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+          <BentoGrid className="max-w-5xl mx-auto">
+            <BentoFeatureCard
+              icon={
                 <svg
                   className="w-7 h-7 text-primary"
                   fill="none"
@@ -117,20 +117,13 @@ export default function Home() {
                     d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"
                   />
                 </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">
-                VIP Builder Access
-              </h3>
-              <p className="text-text-secondary dark:text-gray-300 text-sm leading-relaxed">
-                Get first access to pre-construction developments before they
-                hit the public market. Our direct builder relationships mean
-                better pricing and unit selection.
-              </p>
-            </div>
+              }
+              title="VIP Builder Access"
+              description="Get first access to pre-construction developments before they hit the public market. Our direct builder relationships mean better pricing and unit selection."
+            />
 
-            {/* Feature 2 */}
-            <div className="luxury-card-premium rounded-xl p-8 text-center group">
-              <div className="feature-icon mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+            <BentoFeatureCard
+              icon={
                 <svg
                   className="w-7 h-7 text-primary"
                   fill="none"
@@ -144,20 +137,13 @@ export default function Home() {
                     d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                   />
                 </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">
-                Platinum Pricing
-              </h3>
-              <p className="text-text-secondary dark:text-gray-300 text-sm leading-relaxed">
-                Access exclusive incentives, capped development fees, and
-                special pricing only available through our preferred agent
-                network with top builders.
-              </p>
-            </div>
+              }
+              title="Platinum Pricing"
+              description="Access exclusive incentives, capped development fees, and special pricing only available through our preferred agent network with top builders."
+            />
 
-            {/* Feature 3 */}
-            <div className="luxury-card-premium rounded-xl p-8 text-center group">
-              <div className="feature-icon mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+            <BentoFeatureCard
+              icon={
                 <svg
                   className="w-7 h-7 text-primary"
                   fill="none"
@@ -171,17 +157,11 @@ export default function Home() {
                     d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
                   />
                 </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">
-                Expert Guidance
-              </h3>
-              <p className="text-text-secondary dark:text-gray-300 text-sm leading-relaxed">
-                Navigate the pre-construction market with confidence. Our team
-                provides expert analysis on builder reputation, location value,
-                and investment potential.
-              </p>
-            </div>
-          </div>
+              }
+              title="Expert Guidance"
+              description="Navigate the pre-construction market with confidence. Our team provides expert analysis on builder reputation, location value, and investment potential."
+            />
+          </BentoGrid>
         </div>
       </section>
 

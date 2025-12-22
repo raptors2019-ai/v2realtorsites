@@ -6,6 +6,45 @@ import { convertToProperty } from "@repo/lib";
 // Re-export utilities from shared lib
 export { formatPrice, cn } from "@repo/lib";
 
+// Type for JSON data (listingDate is string in JSON)
+interface PropertyJSON {
+  id: string;
+  title: string;
+  address: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  sqft: number;
+  propertyType: 'detached' | 'semi-detached' | 'townhouse' | 'condo';
+  status: 'active' | 'pending' | 'sold';
+  featured: boolean;
+  images: string[];
+  description: string;
+  listingDate: string; // JSON stores as string
+  mlsNumber?: string;
+}
+
+/**
+ * Convert JSON property data to Property type
+ * Handles listingDate string -> Date conversion
+ */
+function convertJSONToProperty(json: PropertyJSON): Property {
+  return {
+    ...json,
+    listingDate: new Date(json.listingDate),
+  };
+}
+
+/**
+ * Get mock properties with proper type conversion
+ */
+function getMockPropertiesConverted(): Property[] {
+  return (propertiesData as PropertyJSON[]).map(convertJSONToProperty);
+}
+
 /**
  * Get all properties from BoldTrail API
  * Falls back to mock data if API is not configured
@@ -18,7 +57,7 @@ export async function getAllProperties(filters?: ListingFilters): Promise<Proper
     if (process.env.NODE_ENV === 'development') {
       console.log('[DEV] Using mock property data (BOLDTRAIL_API_KEY not set)');
     }
-    return propertiesData as Property[];
+    return getMockPropertiesConverted();
   }
 
   try {
@@ -30,7 +69,7 @@ export async function getAllProperties(filters?: ListingFilters): Promise<Proper
         console.log('[DEV] BoldTrail API unavailable, using mock data:', response.error);
       }
       // Fallback to mock data
-      return propertiesData as Property[];
+      return getMockPropertiesConverted();
     }
 
     // Convert BoldTrail listings to Property format
@@ -41,7 +80,7 @@ export async function getAllProperties(filters?: ListingFilters): Promise<Proper
       console.log('[DEV] BoldTrail API error, using mock data');
     }
     // Fallback to mock data on error
-    return propertiesData as Property[];
+    return getMockPropertiesConverted();
   }
 }
 
@@ -49,7 +88,7 @@ export async function getAllProperties(filters?: ListingFilters): Promise<Proper
  * Get all properties from mock data (synchronous fallback)
  */
 export function getMockProperties(): Property[] {
-  return propertiesData as Property[];
+  return getMockPropertiesConverted();
 }
 
 /**

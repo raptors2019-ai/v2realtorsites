@@ -1,4 +1,4 @@
-import { PropertyCard } from "@repo/ui";
+import { PropertyCard, BentoGrid, BentoFeatureCard } from "@repo/ui";
 import { getFeaturedProperties } from "@/lib/data";
 import Link from "next/link";
 
@@ -95,10 +95,9 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Feature 1 */}
-            <div className="luxury-card-premium rounded-xl p-8 text-center group">
-              <div className="feature-icon mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+          <BentoGrid className="max-w-5xl mx-auto">
+            <BentoFeatureCard
+              icon={
                 <svg
                   className="w-7 h-7 text-primary"
                   fill="none"
@@ -112,19 +111,13 @@ export default async function Home() {
                     d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
                   />
                 </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-secondary mb-3 group-hover:text-primary transition-colors">
-                Extensive Listings
-              </h3>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                Access thousands of MLS listings across the GTA. Our powerful
-                search tools help you find properties that match your exact criteria.
-              </p>
-            </div>
+              }
+              title="Extensive Listings"
+              description="Access thousands of MLS listings across the GTA. Our powerful search tools help you find properties that match your exact criteria."
+            />
 
-            {/* Feature 2 */}
-            <div className="luxury-card-premium rounded-xl p-8 text-center group">
-              <div className="feature-icon mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+            <BentoFeatureCard
+              icon={
                 <svg
                   className="w-7 h-7 text-primary"
                   fill="none"
@@ -138,19 +131,13 @@ export default async function Home() {
                     d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                   />
                 </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-secondary mb-3 group-hover:text-primary transition-colors">
-                Market Expertise
-              </h3>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                Deep knowledge of GTA neighborhoods and market trends. We help
-                you make informed decisions whether buying or selling.
-              </p>
-            </div>
+              }
+              title="Market Expertise"
+              description="Deep knowledge of GTA neighborhoods and market trends. We help you make informed decisions whether buying or selling."
+            />
 
-            {/* Feature 3 */}
-            <div className="luxury-card-premium rounded-xl p-8 text-center group">
-              <div className="feature-icon mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+            <BentoFeatureCard
+              icon={
                 <svg
                   className="w-7 h-7 text-primary"
                   fill="none"
@@ -164,16 +151,11 @@ export default async function Home() {
                     d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
                   />
                 </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-secondary mb-3 group-hover:text-primary transition-colors">
-                24/7 AI Support
-              </h3>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                Our AI-powered chatbot is always available to answer questions,
-                schedule viewings, and help you find your perfect home.
-              </p>
-            </div>
-          </div>
+              }
+              title="24/7 AI Support"
+              description="Our AI-powered chatbot is always available to answer questions, schedule viewings, and help you find your perfect home."
+            />
+          </BentoGrid>
         </div>
       </section>
 

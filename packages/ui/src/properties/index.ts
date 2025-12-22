@@ -1,4 +1,5 @@
 export { PropertyCard } from './PropertyCard'
+export { PropertyCardCarousel } from './PropertyCardCarousel'
 export { PropertyGrid } from './PropertyGrid'
 export { PropertyFilters } from './PropertyFilters'
 export { PropertiesPageClient } from './PropertiesPageClient'

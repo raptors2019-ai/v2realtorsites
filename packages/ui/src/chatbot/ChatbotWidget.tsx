@@ -266,6 +266,7 @@ export function ChatbotWidget() {
       }, 4000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isOpen, isPromptVisible, prompts.length]);
 
   const sendMessage = async (content: string) => {
