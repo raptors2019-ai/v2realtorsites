@@ -4,9 +4,19 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-// BoldTrail API Configuration (kvCORE)
-const BOLDTRAIL_API_BASE = "https://api.kvcore.com";
+// BoldTrail API Configuration (kvCORE Public API V2)
+// Documentation: https://developer.insiderealestate.com/publicv2/reference
+const BOLDTRAIL_API_BASE = "https://api.kvcore.com/v2/public";
 const API_KEY = process.env.BOLDTRAIL_API_KEY;
+
+// Structured logging helpers (log to stderr to not break JSON-RPC)
+function logError(domain: string, action: string, details: Record<string, unknown>) {
+  console.error(`[${domain}.${action}]`, JSON.stringify(details));
+}
+
+function logInfo(domain: string, action: string, details: Record<string, unknown>) {
+  console.error(`[${domain}.${action}]`, JSON.stringify(details));
+}
 
 if (!API_KEY) {
   console.error("BOLDTRAIL_API_KEY environment variable is required");
@@ -43,7 +53,17 @@ async function boldtrailRequest(
     throw new Error(`BoldTrail API error: ${response.status} - ${errorText}`);
   }
 
-  return response.json();
+  // Handle empty responses (common for DELETE requests)
+  const text = await response.text();
+  if (!text) {
+    return { success: true };
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { success: true, message: text };
+  }
 }
 
 // Create MCP Server
@@ -108,7 +128,9 @@ server.tool(
   },
   async ({ contact_id }) => {
     try {
-      const data = await boldtrailRequest(`/contacts/${contact_id}`);
+      // kvCORE V2 uses singular /contact/{id}
+      const data = await boldtrailRequest(`/contact/${contact_id}`);
+      logInfo("mcp.boldtrail", "get_contact.success", { contact_id });
       return {
         content: [
           {
@@ -118,6 +140,10 @@ server.tool(
         ],
       };
     } catch (error) {
+      logError("mcp.boldtrail", "get_contact.failed", {
+        contact_id,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         content: [
           {
@@ -136,18 +162,81 @@ server.tool(
 // ============================================
 server.tool(
   "create_contact",
-  "Create a new contact/lead in BoldTrail",
+  "Create a new contact/lead in BoldTrail with preferences",
   {
     first_name: z.string().describe("Contact's first name"),
     last_name: z.string().describe("Contact's last name"),
     email: z.string().email().optional().describe("Contact's email"),
-    phone: z.string().optional().describe("Contact's phone number"),
-    source: z.string().optional().describe("Lead source"),
-    notes: z.string().optional().describe("Notes about the contact"),
+    cell_phone: z.string().optional().describe("Contact's cell phone (PRIORITY - most valuable)"),
+    phone: z.string().optional().describe("Contact's general phone"),
+    source: z.string().optional().describe("Lead source (e.g., 'sri-collective', 'newhomeshow')"),
+    lead_type: z
+      .enum(["buyer", "seller", "renter", "investor", "general"])
+      .optional()
+      .describe("Type of lead"),
+    average_price: z.number().optional().describe("Target budget for buyers"),
+    average_beds: z.number().optional().describe("Desired bedrooms"),
+    average_bathrooms: z.number().optional().describe("Desired bathrooms"),
+    city: z.string().optional().describe("Preferred city"),
+    hashtags: z
+      .array(z.string())
+      .optional()
+      .describe("Tags for property type, preferences (e.g., 'detached', 'pre-approved')"),
+    notes: z.string().optional().describe("Additional notes or preferences JSON"),
   },
   async (params) => {
     try {
-      const data = await boldtrailRequest("/contacts", "POST", params);
+      // Map to kvCORE V2 field names (based on API response structure)
+      // API uses: cell_phone_1, avg_price, avg_beds, avg_baths, deal_type, primary_city
+      const payload: Record<string, unknown> = {
+        first_name: params.first_name,
+        last_name: params.last_name,
+        email: params.email,
+        source: params.source,
+      };
+
+      // Phone fields - kvCORE uses cell_phone_1
+      if (params.cell_phone) {
+        payload.cell_phone_1 = params.cell_phone;
+      }
+      if (params.phone) {
+        payload.home_phone = params.phone;
+      }
+
+      // Lead type - kvCORE uses deal_type
+      if (params.lead_type) {
+        payload.deal_type = params.lead_type;
+      }
+
+      // Buyer preferences - kvCORE uses avg_* and primary_city
+      if (params.average_price) {
+        payload.avg_price = params.average_price;
+      }
+      if (params.average_beds) {
+        payload.avg_beds = params.average_beds;
+      }
+      if (params.average_bathrooms) {
+        payload.avg_baths = params.average_bathrooms;
+      }
+      if (params.city) {
+        payload.primary_city = params.city;
+      }
+
+      // Tags and notes
+      if (params.hashtags && params.hashtags.length > 0) {
+        payload.hashtags = params.hashtags;
+      }
+      if (params.notes) {
+        payload.notes = params.notes;
+      }
+
+      // kvCORE V2 uses singular /contact
+      const data = await boldtrailRequest("/contact", "POST", payload);
+      logInfo("mcp.boldtrail", "create_contact.success", {
+        email: params.email,
+        lead_type: params.lead_type,
+        has_phone: !!params.cell_phone,
+      });
       return {
         content: [
           {
@@ -157,6 +246,10 @@ server.tool(
         ],
       };
     } catch (error) {
+      logError("mcp.boldtrail", "create_contact.failed", {
+        email: params.email,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         content: [
           {
@@ -186,12 +279,14 @@ server.tool(
   },
   async ({ limit, status }) => {
     try {
-      let endpoint = `/listings?limit=${limit}`;
+      // kvCORE V2 uses /manuallistings
+      let endpoint = `/manuallistings?limit=${limit}`;
       if (status !== "all") {
         endpoint += `&status=${status}`;
       }
 
       const data = await boldtrailRequest(endpoint);
+      logInfo("mcp.boldtrail", "get_listings.success", { limit, status });
       return {
         content: [
           {
@@ -201,6 +296,11 @@ server.tool(
         ],
       };
     } catch (error) {
+      logError("mcp.boldtrail", "get_listings.failed", {
+        limit,
+        status,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         content: [
           {
@@ -215,8 +315,12 @@ server.tool(
 );
 
 // ============================================
-// TOOL: Get Activities
+// TOOL: Get Activities (DEPRECATED - endpoint not documented in kvCORE V2)
 // ============================================
+// NOTE: This endpoint is not documented in kvCORE Public API V2.
+// Commenting out until we confirm the correct endpoint path.
+// If you need activities, consider using the BoldTrail web interface.
+/*
 server.tool(
   "get_activities",
   "Get recent activities/interactions for a contact",
@@ -227,7 +331,7 @@ server.tool(
   async ({ contact_id, limit }) => {
     try {
       const data = await boldtrailRequest(
-        `/contacts/${contact_id}/activities?limit=${limit}`
+        `/contact/${contact_id}/activities?limit=${limit}`
       );
       return {
         content: [
@@ -250,6 +354,7 @@ server.tool(
     }
   }
 );
+*/
 
 // ============================================
 // TOOL: Add Note to Contact
@@ -263,11 +368,13 @@ server.tool(
   },
   async ({ contact_id, note }) => {
     try {
+      // kvCORE V2 uses PUT /contact/{id}/action-note
       const data = await boldtrailRequest(
-        `/contacts/${contact_id}/notes`,
-        "POST",
+        `/contact/${contact_id}/action-note`,
+        "PUT",
         { note }
       );
+      logInfo("mcp.boldtrail", "add_contact_note.success", { contact_id });
       return {
         content: [
           {
@@ -277,11 +384,55 @@ server.tool(
         ],
       };
     } catch (error) {
+      logError("mcp.boldtrail", "add_contact_note.failed", {
+        contact_id,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         content: [
           {
             type: "text" as const,
             text: `Error adding note: ${error instanceof Error ? error.message : String(error)}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// ============================================
+// TOOL: Delete Contact
+// ============================================
+server.tool(
+  "delete_contact",
+  "Delete a contact from BoldTrail CRM",
+  {
+    contact_id: z.string().describe("The contact ID to delete"),
+  },
+  async ({ contact_id }) => {
+    try {
+      // kvCORE V2 uses DELETE /contact/{id}
+      const data = await boldtrailRequest(`/contact/${contact_id}`, "DELETE");
+      logInfo("mcp.boldtrail", "delete_contact.success", { contact_id });
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Contact ${contact_id} deleted successfully`,
+          },
+        ],
+      };
+    } catch (error) {
+      logError("mcp.boldtrail", "delete_contact.failed", {
+        contact_id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Error deleting contact: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         isError: true,

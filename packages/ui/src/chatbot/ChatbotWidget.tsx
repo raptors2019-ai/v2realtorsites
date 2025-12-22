@@ -3,13 +3,39 @@
 import { useState, useRef, useEffect } from "react";
 import { useChatbotStore, Message } from "./chatbot-store";
 
+// Property type for listings display
+interface PropertyListing {
+  id: string;
+  title: string;
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  city: string;
+  address: string;
+  image?: string;
+}
+
 // Survey state type
 interface SurveyState {
-  step: "idle" | "property-type" | "budget" | "bedrooms" | "location" | "complete";
+  step: "idle" | "property-type" | "budget" | "bedrooms" | "location" | "show-listings" | "contact-info" | "complete";
   propertyType?: string;
   budget?: string;
   bedrooms?: string;
   locations?: string[];
+  matchingListings?: PropertyListing[];
+  firstName?: string;
+  email?: string;
+  phone?: string;
+}
+
+// Format price with currency
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat('en-CA', {
+    style: 'currency',
+    currency: 'CAD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
 }
 
 function TypingIndicator() {
@@ -219,6 +245,173 @@ function SurveyLocation({ onSelect }: { onSelect: (locations: string[]) => void 
   );
 }
 
+// Show 3 matching listings - VALUE BEFORE ASK
+function SurveyListingsDisplay({
+  listings,
+  onContinue
+}: {
+  listings: PropertyListing[];
+  onContinue: () => void;
+}) {
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div>
+        <p className="text-sm font-medium text-stone-800 mb-1">
+          Here are 3 properties matching your criteria:
+        </p>
+      </div>
+
+      {/* Display 3 compact property cards */}
+      <div className="space-y-3">
+        {listings.slice(0, 3).map((property) => (
+          <div key={property.id} className="flex gap-3 p-2 bg-stone-50 rounded-lg">
+            <div className="w-20 h-16 bg-gradient-to-br from-stone-200 to-stone-300 rounded flex items-center justify-center shrink-0">
+              {property.image ? (
+                <img
+                  src={property.image}
+                  alt={property.title}
+                  className="w-20 h-16 object-cover rounded"
+                />
+              ) : (
+                <svg className="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-stone-800 truncate">
+                {formatPrice(property.price)}
+              </p>
+              <p className="text-xs text-stone-600 truncate">
+                {property.bedrooms} bed | {property.bathrooms} bath | {property.city}
+              </p>
+              <p className="text-xs text-stone-500 truncate">{property.address}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={onContinue}
+        className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-[#c9a962] to-[#b8944d] text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
+      >
+        Save These & Get Similar Listings
+      </button>
+    </div>
+  );
+}
+
+// Contact info capture - AFTER showing value
+function SurveyContactInfo({
+  onSubmit
+}: {
+  onSubmit: (contact: { firstName: string; email: string; phone?: string }) => void;
+}) {
+  const [firstName, setFirstName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; phone?: string }>({});
+
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone: string) => !phone || phone.replace(/\D/g, '').length === 10 || phone.replace(/\D/g, '').length === 11;
+
+  const handleSubmit = () => {
+    const newErrors: { email?: string; phone?: string } = {};
+    if (!validateEmail(email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    if (phone && !validatePhone(phone)) {
+      newErrors.phone = "Please enter a valid 10-digit phone number";
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    onSubmit({ firstName, email, phone: phone || undefined });
+  };
+
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div>
+        <p className="text-sm font-medium text-stone-800 mb-1">Save these listings</p>
+        <p className="text-xs text-stone-500">
+          We&apos;ll send you similar properties as they become available.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium text-stone-700 mb-1">First Name</label>
+          <input
+            type="text"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-[#c9a962] bg-white"
+            placeholder="Your first name"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-stone-700 mb-1">
+            Email Address <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (errors.email) setErrors({ ...errors, email: undefined });
+            }}
+            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#c9a962] bg-white ${
+              errors.email ? 'border-red-500' : 'border-stone-200'
+            }`}
+            placeholder="your@email.com"
+          />
+          {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-stone-700 mb-1">
+            Cell Phone <span className="text-stone-400">(recommended)</span>
+          </label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => {
+              setPhone(e.target.value);
+              if (errors.phone) setErrors({ ...errors, phone: undefined });
+            }}
+            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#c9a962] bg-white ${
+              errors.phone ? 'border-red-500' : 'border-stone-200'
+            }`}
+            placeholder="(416) 555-0123"
+          />
+          {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+          <p className="text-xs text-stone-400 mt-1">
+            Our agents respond fastest by phone
+          </p>
+        </div>
+      </div>
+
+      <button
+        onClick={handleSubmit}
+        disabled={!firstName || !email}
+        className={`w-full py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+          firstName && email
+            ? "bg-gradient-to-r from-[#c9a962] to-[#b8944d] text-white shadow-md hover:shadow-lg hover:scale-[1.02]"
+            : "bg-stone-100 text-stone-400 cursor-not-allowed"
+        }`}
+      >
+        Save & Send Me Listings
+      </button>
+
+      <p className="text-xs text-stone-400 text-center">
+        We respect your privacy. Your information is only used to send relevant listings.
+      </p>
+    </div>
+  );
+}
+
 export function ChatbotWidget() {
   const {
     isOpen,
@@ -345,11 +538,63 @@ export function ChatbotWidget() {
 
   const handleSurveyLocation = async (locations: string[]) => {
     addMessage({ role: "user", content: locations.join(", ") });
-    setSurvey(prev => ({ ...prev, locations, step: "complete" }));
 
-    // Send summary to AI
+    // Generate mock listings based on preferences (in real implementation, this would call an API)
+    const mockListings: PropertyListing[] = generateMockListings(
+      survey.propertyType || 'detached',
+      survey.budget || '750k-1m',
+      survey.bedrooms || '3',
+      locations
+    );
+
+    addMessage({
+      role: "assistant",
+      content: `Great choices! I found ${mockListings.length} properties matching your criteria in ${locations.join(", ")}. Take a look:`
+    });
+
+    setSurvey(prev => ({
+      ...prev,
+      locations,
+      matchingListings: mockListings,
+      step: "show-listings"
+    }));
+  };
+
+  // Handle transition from listings to contact capture
+  const handleShowListingsContinue = () => {
+    addMessage({
+      role: "assistant",
+      content: "I can save these and send you similar listings as they come up. Just need a few details:"
+    });
+    setSurvey(prev => ({ ...prev, step: "contact-info" }));
+  };
+
+  // Handle contact form submission
+  const handleContactSubmit = async (contact: { firstName: string; email: string; phone?: string }) => {
+    setSurvey(prev => ({
+      ...prev,
+      firstName: contact.firstName,
+      email: contact.email,
+      phone: contact.phone,
+      step: "complete"
+    }));
+
+    const contactMsg = contact.phone
+      ? `${contact.firstName}, ${contact.email}, ${contact.phone}`
+      : `${contact.firstName}, ${contact.email}`;
+    addMessage({ role: "user", content: contactMsg });
+
+    // Send to API to create contact
     setLoading(true);
-    const summary = `I'm looking for a ${survey.propertyType?.replace("-", " ")} with ${survey.bedrooms} bedroom(s), budget ${survey.budget?.replace("-", " to ").replace("k", "K")}, in ${locations.join(" or ")}.`;
+    const summary = `Create a contact for lead capture:
+- Name: ${contact.firstName}
+- Email: ${contact.email}
+- Phone: ${contact.phone || 'Not provided'}
+- Lead Type: buyer
+- Property Type: ${survey.propertyType}
+- Budget: ${survey.budget}
+- Bedrooms: ${survey.bedrooms}
+- Locations: ${survey.locations?.join(", ")}`;
 
     try {
       const response = await fetch("/api/chat", {
@@ -369,15 +614,58 @@ export function ChatbotWidget() {
       addMessage({ role: "assistant", content: data.message });
     } catch (error) {
       console.error("Chat error:", error);
+      const thankYouMsg = contact.phone
+        ? `Thank you ${contact.firstName}! I've saved your preferences and one of our agents will call you at ${contact.phone} soon.`
+        : `Thank you ${contact.firstName}! I'll send personalized recommendations to ${contact.email}.`;
       addMessage({
         role: "assistant",
-        content: "Thank you for sharing your preferences! Our team will curate a selection of properties matching your criteria. Feel free to browse our listings or reach out at (416) 786-0431.",
+        content: thankYouMsg,
       });
     } finally {
       setLoading(false);
       setSurvey({ step: "idle" });
     }
   };
+
+  // Generate mock listings based on preferences
+  function generateMockListings(
+    propertyType: string,
+    budget: string,
+    bedrooms: string,
+    locations: string[]
+  ): PropertyListing[] {
+    const budgetRanges: Record<string, { min: number; max: number }> = {
+      "under-500k": { min: 350000, max: 500000 },
+      "500k-750k": { min: 500000, max: 750000 },
+      "750k-1m": { min: 750000, max: 1000000 },
+      "1m-1.5m": { min: 1000000, max: 1500000 },
+      "1.5m-2m": { min: 1500000, max: 2000000 },
+      "over-2m": { min: 2000000, max: 3500000 },
+    };
+
+    const range = budgetRanges[budget] || { min: 750000, max: 1000000 };
+    const beds = parseInt(bedrooms) || 3;
+    const location = locations[0] || "Toronto";
+
+    const propertyLabels: Record<string, string> = {
+      "detached": "Detached Home",
+      "semi-detached": "Semi-Detached Home",
+      "townhouse": "Townhouse",
+      "condo": "Condo",
+    };
+
+    const streets = ["Maple Ave", "Oak Street", "Elm Drive", "Pine Road", "Cedar Lane"];
+
+    return [1, 2, 3].map((i) => ({
+      id: `listing-${i}`,
+      title: `${propertyLabels[propertyType] || "Home"} in ${location}`,
+      price: Math.floor(range.min + (range.max - range.min) * (i / 4)),
+      bedrooms: beds,
+      bathrooms: Math.max(2, beds - 1),
+      city: location,
+      address: `${100 + i * 50} ${streets[i - 1]}`,
+    }));
+  }
 
   const handleContactUs = () => {
     sendMessage("I'd like to get in touch with the team.");
@@ -457,6 +745,19 @@ export function ChatbotWidget() {
             {survey.step === "location" && (
               <div className="mb-4 p-4 bg-white rounded-2xl border border-stone-100 shadow-sm">
                 <SurveyLocation onSelect={handleSurveyLocation} />
+              </div>
+            )}
+            {survey.step === "show-listings" && survey.matchingListings && (
+              <div className="mb-4 p-4 bg-white rounded-2xl border border-stone-100 shadow-sm">
+                <SurveyListingsDisplay
+                  listings={survey.matchingListings}
+                  onContinue={handleShowListingsContinue}
+                />
+              </div>
+            )}
+            {survey.step === "contact-info" && (
+              <div className="mb-4 p-4 bg-white rounded-2xl border border-stone-100 shadow-sm">
+                <SurveyContactInfo onSubmit={handleContactSubmit} />
               </div>
             )}
 

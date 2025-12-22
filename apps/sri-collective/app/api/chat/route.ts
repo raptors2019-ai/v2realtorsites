@@ -1,6 +1,11 @@
 import { streamText } from 'ai'
 import { openai } from '@ai-sdk/openai'
-import { sriCollectiveSystemPrompt, propertySearchTool, createContactTool } from '@repo/chatbot'
+import {
+  sriCollectiveSystemPrompt,
+  propertySearchTool,
+  capturePreferencesTool,
+  createContactTool,
+} from '@repo/chatbot'
 
 export const runtime = 'edge'
 
@@ -13,9 +18,19 @@ export async function POST(req: Request) {
     messages,
     tools: {
       searchProperties: propertySearchTool,
+      capturePreferences: capturePreferencesTool,
       createContact: createContactTool,
     },
     maxSteps: 5,
+
+    onFinish: async ({ usage, finishReason }) => {
+      // Log conversation completion
+      console.error('[chat.sri-collective.complete]', {
+        messageCount: messages.length,
+        finishReason,
+        usage,
+      })
+    },
   })
 
   return result.toDataStreamResponse()
