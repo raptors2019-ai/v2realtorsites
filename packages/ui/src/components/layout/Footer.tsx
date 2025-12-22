@@ -1,0 +1,185 @@
+import Link from 'next/link'
+
+export interface FooterConfig {
+  siteName: string
+  logoFirstPart?: string
+  logoSecondPart?: string
+  logoSecondPartClass?: string
+  description?: string
+  socialLinks?: Array<{
+    platform: string
+    url: string
+    icon: React.ReactNode
+  }>
+  quickLinks?: Array<{
+    name: string
+    href: string
+  }>
+  services?: Array<{
+    name: string
+    href: string
+  }>
+  teamMembers?: Array<{
+    name: string
+    instagram?: string
+    phone?: string
+  }>
+  tagline?: string
+}
+
+export interface FooterProps {
+  config: FooterConfig
+}
+
+export function Footer({ config }: FooterProps) {
+  const currentYear = new Date().getFullYear()
+
+  return (
+    <footer className="bg-gradient-to-b from-secondary to-secondary-dark dark:from-secondary dark:to-secondary-dark relative overflow-hidden">
+      {/* Subtle accent line at top */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+
+      {/* Decorative elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/3 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+      <div className="container mx-auto px-4 py-16 relative">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+          {/* Brand */}
+          <div className="md:col-span-1">
+            <Link href="/" className="inline-block mb-4">
+              <span className="text-2xl font-bold tracking-wider text-white">
+                {config.logoFirstPart && config.logoSecondPart ? (
+                  <>
+                    {config.logoFirstPart}
+                    <span className={config.logoSecondPartClass || 'text-gradient-primary'}>
+                      {config.logoSecondPart}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-gradient-primary">{config.siteName}</span>
+                )}
+              </span>
+            </Link>
+            {config.description && (
+              <p className="text-white/50 text-sm mb-6 leading-relaxed">
+                {config.description}
+              </p>
+            )}
+            {config.socialLinks && config.socialLinks.length > 0 && (
+              <div className="flex gap-3">
+                {config.socialLinks.map((social) => (
+                  <a
+                    key={social.platform}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary hover:text-white hover:bg-primary hover:border-primary transition-all duration-300"
+                    aria-label={social.platform}
+                  >
+                    {social.icon}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Quick Links */}
+          {config.quickLinks && config.quickLinks.length > 0 && (
+            <div>
+              <h4 className="text-primary font-semibold uppercase tracking-wider text-sm mb-6">
+                Quick Links
+              </h4>
+              <ul className="space-y-3">
+                {config.quickLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      href={link.href}
+                      className="text-white/50 hover:text-primary transition-colors text-sm link-underline"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Services */}
+          {config.services && config.services.length > 0 && (
+            <div>
+              <h4 className="text-primary font-semibold uppercase tracking-wider text-sm mb-6">
+                Services
+              </h4>
+              <ul className="space-y-3">
+                {config.services.map((service) => (
+                  <li key={service.name}>
+                    <Link
+                      href={service.href}
+                      className="text-white/50 hover:text-primary transition-colors text-sm link-underline"
+                    >
+                      {service.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Team Members */}
+          {config.teamMembers && config.teamMembers.length > 0 && (
+            <div>
+              <h4 className="text-primary font-semibold uppercase tracking-wider text-sm mb-6">
+                Our Team
+              </h4>
+              <div className="space-y-4">
+                {config.teamMembers.map((member) => (
+                  <div
+                    key={member.name}
+                    className="bg-primary/5 border border-primary/20 rounded-xl p-4 transition-all duration-300 hover:border-primary/40 hover:bg-primary/10"
+                  >
+                    <p className="font-medium text-white text-sm">
+                      {member.name}
+                    </p>
+                    {member.instagram && (
+                      <a
+                        href={member.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:text-primary-light transition-colors block"
+                      >
+                        {member.instagram.includes('instagram.com')
+                          ? `@${member.instagram.split('/').pop()?.replace('/', '')}`
+                          : member.instagram}
+                      </a>
+                    )}
+                    {member.phone && (
+                      <a
+                        href={`tel:${member.phone}`}
+                        className="text-xs text-white/50 hover:text-primary transition-colors block mt-1"
+                      >
+                        {member.phone}
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="section-divider-light mt-12 mb-8" />
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-white/40 text-sm">
+            &copy; {currentYear} {config.siteName}. All rights reserved.
+          </p>
+          <p className="text-white/30 text-xs flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            {config.tagline || 'Real Estate Professionals • Ontario, Canada'}
+          </p>
+        </div>
+      </div>
+    </footer>
+  )
+}

@@ -1,0 +1,9 @@
+{
+  "extends": "../config/typescript/library.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["ES2017", "dom"],
+    "outDir": "dist"
+  },
+  "include": ["src/**/*"]
+}

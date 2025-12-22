@@ -1,0 +1,364 @@
+/* Sri Collective Theme - Professional Blue & Red */
+
+:root {
+  /* ===== SEMANTIC COLORS ===== */
+  /* Primary = Blue (main brand color) */
+  --primary: #2563eb;
+  --primary-light: #3b82f6;
+  --primary-dark: #1d4ed8;
+  --primary-rgb: 37, 99, 235;
+
+  /* Secondary = Navy/Dark Blue (professional contrast) */
+  --secondary: #1a1a2e;
+  --secondary-light: #2d2d44;
+  --secondary-dark: #0a0a14;
+
+  /* Accent = Red (signature accent color) */
+  --accent: #dc2626;
+  --accent-light: #ef4444;
+  --accent-dark: #b91c1c;
+  --accent-rgb: 220, 38, 38;
+
+  /* Base Colors */
+  --background: #ffffff;
+  --foreground: #1a1a2e;
+  --white: #ffffff;
+  --cream: #faf9f7;
+  --cream-dark: #f5f3f0;
+
+  /* Grays */
+  --gray: #6b7280;
+  --gray-light: #e5e7eb;
+  --gray-dark: #374151;
+
+  /* Text */
+  --text-primary: #1a1a2e;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --text-light: #ffffff;
+
+  /* Borders */
+  --border-light: rgba(0, 0, 0, 0.06);
+  --border-primary: rgba(37, 99, 235, 0.2);
+  --border-accent: rgba(220, 38, 38, 0.2);
+
+  /* States */
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+}
+
+/* ===== GRADIENT TEXT CLASSES ===== */
+.text-gradient-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-accent {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== BUTTON CLASSES ===== */
+.btn-primary {
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+}
+
+.btn-primary:hover {
+  background: var(--primary-light);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: var(--white);
+  border: none;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-light);
+  transform: translateY(-2px);
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: var(--white);
+  border: none;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+}
+
+.btn-accent:hover {
+  background: var(--accent-dark);
+  box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background: var(--primary);
+  color: var(--white);
+}
+
+.btn-outline-secondary {
+  background: transparent;
+  color: var(--secondary);
+  border: 2px solid var(--secondary);
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+  background: var(--secondary);
+  color: var(--white);
+}
+
+.btn-outline-accent {
+  background: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-accent:hover {
+  background: var(--accent);
+  color: var(--white);
+}
+
+/* ===== CARD STYLES ===== */
+.professional-card {
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.professional-card:hover {
+  border-color: var(--border-primary);
+  box-shadow: 0 8px 30px rgba(var(--primary-rgb), 0.12), 0 0 0 1px var(--border-primary);
+  transform: translateY(-2px);
+}
+
+.professional-card-featured {
+  background: var(--white);
+  border: 2px solid var(--accent);
+  box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.professional-card-featured::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+}
+
+/* For backwards compatibility with luxury-card class */
+.luxury-card-premium {
+  background: var(--white);
+  border: 2px solid var(--accent);
+  box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.luxury-card-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+}
+
+/* ===== ACCENT LINES ===== */
+.accent-line {
+  width: 48px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+  border-radius: 2px;
+}
+
+.accent-line-primary {
+  width: 48px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-radius: 2px;
+}
+
+.accent-line-accent {
+  width: 48px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+  border-radius: 2px;
+}
+
+/* ===== SECTION BACKGROUNDS ===== */
+.section-light {
+  background: var(--white);
+}
+
+.section-cream {
+  background: var(--cream);
+}
+
+.section-primary {
+  background: var(--primary);
+  color: var(--white);
+}
+
+.section-accent {
+  background: var(--accent);
+  color: var(--white);
+}
+
+/* ===== SHADOW EFFECTS ===== */
+.shadow-primary {
+  box-shadow: 0 10px 40px rgba(var(--primary-rgb), 0.2);
+}
+
+.shadow-primary-lg {
+  box-shadow: 0 20px 60px rgba(var(--primary-rgb), 0.3);
+}
+
+.shadow-accent {
+  box-shadow: 0 10px 40px rgba(var(--accent-rgb), 0.2);
+}
+
+.shadow-accent-lg {
+  box-shadow: 0 20px 60px rgba(var(--accent-rgb), 0.3);
+}
+
+/* ===== BADGES ===== */
+.price-badge {
+  background: var(--accent);
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.3);
+}
+
+.trust-badge {
+  background: var(--primary);
+  color: var(--white);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.text-primary {
+  color: var(--primary);
+}
+
+.bg-primary {
+  background-color: var(--primary);
+}
+
+.border-primary {
+  border-color: var(--primary);
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+.bg-accent {
+  background-color: var(--accent);
+}
+
+.border-accent {
+  border-color: var(--accent);
+}
+
+/* ===== DARK VARIANT CARDS ===== */
+.luxury-card-dark {
+  background: rgba(26, 45, 77, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.luxury-card-dark:hover {
+  background: rgba(26, 45, 77, 0.5);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+/* ===== DARK FEATURE ICON ===== */
+.feature-icon-dark {
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+/* ===== LINK UNDERLINE ANIMATION ===== */
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--primary);
+  transition: width 0.3s ease;
+}
+
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* ===== LUXURY CARD ===== */
+.luxury-card {
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.luxury-card:hover {
+  border-color: var(--border-primary);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--border-primary);
+  transform: translateY(-2px);
+}
