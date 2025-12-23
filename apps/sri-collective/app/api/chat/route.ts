@@ -5,6 +5,10 @@ import {
   propertySearchTool,
   capturePreferencesTool,
   createContactTool,
+  mortgageEstimatorTool,
+  neighborhoodInfoTool,
+  firstTimeBuyerFAQTool,
+  sellHomeTool,
 } from '@repo/chatbot'
 
 export const runtime = 'edge'
@@ -20,6 +24,10 @@ export async function POST(req: Request) {
       searchProperties: propertySearchTool,
       capturePreferences: capturePreferencesTool,
       createContact: createContactTool,
+      estimateMortgage: mortgageEstimatorTool,
+      getNeighborhoodInfo: neighborhoodInfoTool,
+      answerFirstTimeBuyerQuestion: firstTimeBuyerFAQTool,
+      captureSeller: sellHomeTool,
     },
     maxSteps: 5,
 

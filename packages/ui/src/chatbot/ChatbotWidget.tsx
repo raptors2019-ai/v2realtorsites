@@ -17,10 +17,11 @@ interface PropertyListing {
 
 // Survey state type
 interface SurveyState {
-  step: "idle" | "property-type" | "budget" | "bedrooms" | "location" | "show-listings" | "contact-info" | "complete";
+  step: "idle" | "property-type" | "budget" | "bedrooms" | "timeline" | "location" | "show-listings" | "contact-info" | "complete";
   propertyType?: string;
   budget?: string;
   bedrooms?: string;
+  timeline?: string;
   locations?: string[];
   matchingListings?: PropertyListing[];
   firstName?: string;
@@ -186,6 +187,37 @@ function SurveyBedrooms({ onSelect }: { onSelect: (bedrooms: string) => void }) 
             style={{ animationDelay: `${index * 50}ms` }}
           >
             {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SurveyTimeline({ onSelect }: { onSelect: (timeline: string) => void }) {
+  const options = [
+    { value: "asap", label: "ASAP / As soon as possible", icon: "🔥" },
+    { value: "1-3-months", label: "1-3 months", icon: "📅" },
+    { value: "3-6-months", label: "3-6 months", icon: "🗓️" },
+    { value: "just-exploring", label: "Just exploring", icon: "🔍" },
+  ];
+
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div>
+        <p className="text-sm font-medium text-stone-800 mb-1">Timeline</p>
+        <p className="text-xs text-stone-500">How soon are you looking to purchase?</p>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {options.map((option, index) => (
+          <button
+            key={option.value}
+            onClick={() => onSelect(option.value)}
+            className="group p-3 bg-white border border-stone-200 rounded-xl transition-all duration-300 hover:border-[#c9a962] hover:shadow-md text-left animate-in fade-in duration-300"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <span className="text-lg mr-2">{option.icon}</span>
+            <span className="text-xs font-medium text-stone-700 group-hover:text-stone-900">{option.label}</span>
           </button>
         ))}
       </div>
@@ -430,13 +462,13 @@ export function ChatbotWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Rotating prompts
+  // Rotating prompts - no investment advice
   const prompts = [
-    "How can we help you? 💬",
-    "Tell us about your dream home! 🏡",
-    "Looking for investment opportunities? 💼",
-    "Need help with selling? 🏠",
-    "Questions about the market? 📊"
+    "How can we help you?",
+    "Tell us about your dream home",
+    "Ready to start your home search?",
+    "Need help with selling?",
+    "First-time buyer? We can help!"
   ];
 
   // Scroll to bottom when messages change
@@ -533,31 +565,75 @@ export function ChatbotWidget() {
 
   const handleSurveyBedrooms = (bedrooms: string) => {
     addMessage({ role: "user", content: `${bedrooms} bedroom${bedrooms === "1" ? "" : "s"}` });
-    setSurvey(prev => ({ ...prev, bedrooms, step: "location" }));
+    setSurvey(prev => ({ ...prev, bedrooms, step: "timeline" }));
+  };
+
+  const handleSurveyTimeline = (timeline: string) => {
+    const labels: Record<string, string> = {
+      "asap": "ASAP",
+      "1-3-months": "1-3 months",
+      "3-6-months": "3-6 months",
+      "just-exploring": "Just exploring"
+    };
+    addMessage({ role: "user", content: labels[timeline] });
+    setSurvey(prev => ({ ...prev, timeline, step: "location" }));
   };
 
   const handleSurveyLocation = async (locations: string[]) => {
     addMessage({ role: "user", content: locations.join(", ") });
+    setLoading(true);
 
-    // Generate mock listings based on preferences (in real implementation, this would call an API)
-    const mockListings: PropertyListing[] = generateMockListings(
-      survey.propertyType || 'detached',
-      survey.budget || '750k-1m',
-      survey.bedrooms || '3',
-      locations
-    );
+    try {
+      // Convert budget string to price range
+      const budgetRanges: Record<string, { min: number; max: number }> = {
+        "under-500k": { min: 0, max: 500000 },
+        "500k-750k": { min: 500000, max: 750000 },
+        "750k-1m": { min: 750000, max: 1000000 },
+        "1m-1.5m": { min: 1000000, max: 1500000 },
+        "1.5m-2m": { min: 1500000, max: 2000000 },
+        "over-2m": { min: 2000000, max: 5000000 },
+      };
+      const priceRange = budgetRanges[survey.budget || "750k-1m"];
+      const bedsNum = parseInt(survey.bedrooms || "3");
 
-    addMessage({
-      role: "assistant",
-      content: `Great choices! I found ${mockListings.length} properties matching your criteria in ${locations.join(", ")}. Take a look:`
-    });
+      // Build search prompt for the AI to use the propertySearch tool
+      const searchPrompt = `Search for ${survey.propertyType || 'any'} properties in ${locations.join(" or ")} with ${bedsNum}+ bedrooms between $${priceRange.min.toLocaleString()} and $${priceRange.max.toLocaleString()}`;
 
-    setSurvey(prev => ({
-      ...prev,
-      locations,
-      matchingListings: mockListings,
-      step: "show-listings"
-    }));
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            ...messages.map((m) => ({ role: m.role, content: m.content })),
+            { role: "user", content: searchPrompt }
+          ],
+        }),
+      });
+
+      if (!response.ok) throw new Error("Search failed");
+
+      const data = await response.json();
+
+      // Add the AI response which should include property results
+      addMessage({ role: "assistant", content: data.message || `Great choices! Let me find properties in ${locations.join(", ")} matching your criteria.` });
+
+      // Move to contact info step - the AI response will have shown listings
+      setSurvey(prev => ({
+        ...prev,
+        locations,
+        step: "contact-info"
+      }));
+
+    } catch (error) {
+      console.error("Search error:", error);
+      addMessage({
+        role: "assistant",
+        content: "I had trouble searching right now. Let me save your preferences and have an agent follow up with matching properties."
+      });
+      setSurvey(prev => ({ ...prev, locations, step: "contact-info" }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle transition from listings to contact capture
@@ -594,6 +670,7 @@ export function ChatbotWidget() {
 - Property Type: ${survey.propertyType}
 - Budget: ${survey.budget}
 - Bedrooms: ${survey.bedrooms}
+- Timeline: ${survey.timeline}
 - Locations: ${survey.locations?.join(", ")}`;
 
     try {
@@ -626,46 +703,6 @@ export function ChatbotWidget() {
       setSurvey({ step: "idle" });
     }
   };
-
-  // Generate mock listings based on preferences
-  function generateMockListings(
-    propertyType: string,
-    budget: string,
-    bedrooms: string,
-    locations: string[]
-  ): PropertyListing[] {
-    const budgetRanges: Record<string, { min: number; max: number }> = {
-      "under-500k": { min: 350000, max: 500000 },
-      "500k-750k": { min: 500000, max: 750000 },
-      "750k-1m": { min: 750000, max: 1000000 },
-      "1m-1.5m": { min: 1000000, max: 1500000 },
-      "1.5m-2m": { min: 1500000, max: 2000000 },
-      "over-2m": { min: 2000000, max: 3500000 },
-    };
-
-    const range = budgetRanges[budget] || { min: 750000, max: 1000000 };
-    const beds = parseInt(bedrooms) || 3;
-    const location = locations[0] || "Toronto";
-
-    const propertyLabels: Record<string, string> = {
-      "detached": "Detached Home",
-      "semi-detached": "Semi-Detached Home",
-      "townhouse": "Townhouse",
-      "condo": "Condo",
-    };
-
-    const streets = ["Maple Ave", "Oak Street", "Elm Drive", "Pine Road", "Cedar Lane"];
-
-    return [1, 2, 3].map((i) => ({
-      id: `listing-${i}`,
-      title: `${propertyLabels[propertyType] || "Home"} in ${location}`,
-      price: Math.floor(range.min + (range.max - range.min) * (i / 4)),
-      bedrooms: beds,
-      bathrooms: Math.max(2, beds - 1),
-      city: location,
-      address: `${100 + i * 50} ${streets[i - 1]}`,
-    }));
-  }
 
   const handleContactUs = () => {
     sendMessage("I'd like to get in touch with the team.");
@@ -740,6 +777,11 @@ export function ChatbotWidget() {
             {survey.step === "bedrooms" && (
               <div className="mb-4 p-4 bg-white rounded-2xl border border-stone-100 shadow-sm">
                 <SurveyBedrooms onSelect={handleSurveyBedrooms} />
+              </div>
+            )}
+            {survey.step === "timeline" && (
+              <div className="mb-4 p-4 bg-white rounded-2xl border border-stone-100 shadow-sm">
+                <SurveyTimeline onSelect={handleSurveyTimeline} />
               </div>
             )}
             {survey.step === "location" && (

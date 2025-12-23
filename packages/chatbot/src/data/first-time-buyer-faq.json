@@ -1,0 +1,81 @@
+{
+  "home-buying-process": {
+    "question": "What are the steps to buying a home in Ontario?",
+    "answer": "The home buying process in Ontario typically takes 3-6 months from start to finish. Here's a step-by-step overview:",
+    "steps": [
+      "Get mortgage pre-approval (shows you're a serious buyer and locks in your rate)",
+      "Find a real estate agent (their commission is paid by the seller)",
+      "Search for homes and attend viewings",
+      "Make an offer (Agreement of Purchase and Sale)",
+      "Complete conditions (financing approval, home inspection)",
+      "Finalize mortgage and hire a real estate lawyer",
+      "Closing day (sign documents, get your keys!)"
+    ]
+  },
+  "closing-costs": {
+    "question": "What are closing costs and how much should I budget?",
+    "answer": "Closing costs in Ontario typically range from 1.5-4% of the purchase price, not including your down payment. Plan to have these funds available in addition to your down payment.",
+    "breakdown": {
+      "landTransferTax": "0.5-2.5% of purchase price (doubled in Toronto)",
+      "legalFees": "$1,500-$2,500",
+      "titleInsurance": "$250-$400",
+      "homeInspection": "$500-$800",
+      "appraisal": "$400-$600 (sometimes covered by lender)",
+      "movingCosts": "$500-$2,000",
+      "pstOnCMHC": "8% of CMHC premium (if applicable)"
+    }
+  },
+  "first-time-buyer-incentives": {
+    "question": "What incentives are available for first-time buyers?",
+    "answer": "First-time buyers in Ontario have access to several valuable programs that can save you thousands of dollars:",
+    "programs": [
+      {
+        "name": "Ontario Land Transfer Tax Rebate",
+        "benefit": "Up to $4,000 rebate",
+        "eligibility": "Never owned a home anywhere in the world"
+      },
+      {
+        "name": "Toronto Municipal LTT Rebate",
+        "benefit": "Up to $4,475 additional rebate",
+        "eligibility": "Purchasing in Toronto only"
+      },
+      {
+        "name": "First Home Savings Account (FHSA)",
+        "benefit": "$8,000/year tax-deductible contributions, tax-free withdrawal for home purchase",
+        "eligibility": "Canadian resident, 18+, haven't owned a home in current or past 4 calendar years"
+      },
+      {
+        "name": "Home Buyers' Plan (HBP)",
+        "benefit": "Withdraw up to $60,000 from RRSP tax-free",
+        "eligibility": "First-time buyer (no home owned in past 4 years), 15-year repayment period"
+      },
+      {
+        "name": "Federal First-Time Home Buyers' Tax Credit",
+        "benefit": "$1,500 non-refundable tax credit",
+        "eligibility": "First-time home buyers"
+      }
+    ],
+    "totalPotentialSavings": "Up to $10,000+ in tax savings and rebates (even more in Toronto)"
+  },
+  "pre-approval": {
+    "question": "Do I need mortgage pre-approval?",
+    "answer": "Yes! Getting pre-approved is one of the most important first steps in the home buying process. It's free and gives you a significant advantage.",
+    "benefits": [
+      "Know your exact budget before you start searching",
+      "Sellers take your offer more seriously (shows you're qualified)",
+      "Lock in your interest rate for 90-120 days (protection against rate increases)",
+      "Identify any credit issues early so you have time to address them",
+      "Faster closing process since financing is already reviewed"
+    ]
+  },
+  "down-payment": {
+    "question": "How much down payment do I need?",
+    "answer": "The minimum down payment in Canada depends on the purchase price. Lower down payments require CMHC mortgage insurance.",
+    "requirements": {
+      "under500k": "5% minimum ($25,000 on a $500K home)",
+      "500kTo1M": "5% of first $500K + 10% of amount above $500K",
+      "over1M": "20% minimum (CMHC insurance not available)"
+    },
+    "example": "For a $750,000 home: $25,000 (5% of $500K) + $25,000 (10% of $250K) = $50,000 minimum down payment"
+  }
+}

@@ -1,0 +1,229 @@
+{
+  "Toronto": {
+    "avgPrice": "$1,100,000",
+    "priceRange": { "min": 450000, "max": 3000000 },
+    "vibe": "Urban core with diverse neighborhoods from trendy to family-friendly",
+    "transit": {
+      "goStations": ["Union Station (hub)", "Exhibition", "Danforth", "Scarborough"],
+      "ttc": "Full subway, streetcar, bus network",
+      "commuteToUnion": "0-45 min depending on neighborhood"
+    },
+    "schools": ["Toronto District School Board", "Toronto Catholic DSB"],
+    "topSchools": ["University of Toronto Schools", "Northern SS", "Earl Haig SS"],
+    "recreation": ["High Park", "Toronto Islands", "Harbourfront Centre", "30+ community centres"],
+    "attractions": ["CN Tower", "Eaton Centre", "Distillery District", "St. Lawrence Market", "Kensington Market"],
+    "neighborhoods": [
+      { "name": "Yorkville", "vibe": "Luxury shopping and dining", "avgPrice": "$2,500,000+" },
+      { "name": "Leslieville", "vibe": "Trendy cafes and young professionals", "avgPrice": "$1,200,000" },
+      { "name": "The Beaches", "vibe": "Beachfront community, family-friendly", "avgPrice": "$1,500,000" },
+      { "name": "High Park", "vibe": "Green space, families", "avgPrice": "$1,300,000" },
+      { "name": "North York", "vibe": "Suburban feel with urban amenities", "avgPrice": "$900,000" }
+    ]
+  },
+  "Mississauga": {
+    "avgPrice": "$1,050,000",
+    "priceRange": { "min": 400000, "max": 2500000 },
+    "vibe": "Canada's 6th largest city, suburban with urban pockets",
+    "transit": {
+      "goStations": ["Port Credit", "Clarkson", "Cooksville", "Erindale", "Streetsville"],
+      "local": "MiWay bus, Hurontario LRT",
+      "commuteToUnion": "25-45 min via GO"
+    },
+    "schools": ["Peel District School Board", "Dufferin-Peel Catholic DSB"],
+    "topSchools": ["John Fraser SS", "Glenforest SS", "Applewood Heights SS"],
+    "recreation": ["Credit Valley Golf", "Living Arts Centre", "Riverwood Conservancy", "40+ community centres"],
+    "attractions": ["Square One Shopping Centre", "Port Credit waterfront", "Celebration Square"],
+    "neighborhoods": [
+      { "name": "Port Credit", "vibe": "Waterfront village feel, restaurants", "avgPrice": "$1,400,000" },
+      { "name": "Streetsville", "vibe": "Historic village, community events", "avgPrice": "$1,200,000" },
+      { "name": "Erin Mills", "vibe": "Family-friendly, good schools", "avgPrice": "$1,100,000" },
+      { "name": "Lorne Park", "vibe": "Affluent, ravine lots", "avgPrice": "$2,000,000" },
+      { "name": "City Centre", "vibe": "Urban condos, walkable", "avgPrice": "$600,000" }
+    ]
+  },
+  "Brampton": {
+    "avgPrice": "$950,000",
+    "priceRange": { "min": 500000, "max": 1800000 },
+    "vibe": "Fast-growing, diverse, family-oriented",
+    "transit": {
+      "goStations": ["Bramalea", "Brampton"],
+      "local": "Brampton Transit, Zum rapid transit",
+      "commuteToUnion": "45-60 min via GO"
+    },
+    "schools": ["Peel District School Board", "Dufferin-Peel Catholic DSB"],
+    "topSchools": ["Turner Fenton SS", "Heart Lake SS"],
+    "recreation": ["Gage Park", "Heart Lake Conservation", "CAA Centre", "30+ community centres"],
+    "attractions": ["Garden Square", "Rose Theatre", "Powerade Centre"],
+    "neighborhoods": [
+      { "name": "Heart Lake", "vibe": "Conservation area, nature lovers", "avgPrice": "$1,100,000" },
+      { "name": "Mount Pleasant", "vibe": "New development, young families", "avgPrice": "$1,000,000" },
+      { "name": "Bramalea", "vibe": "Established, diverse", "avgPrice": "$850,000" },
+      { "name": "Downtown Brampton", "vibe": "Historic, revitalizing", "avgPrice": "$800,000" }
+    ]
+  },
+  "Vaughan": {
+    "avgPrice": "$1,250,000",
+    "priceRange": { "min": 600000, "max": 3000000 },
+    "vibe": "Affluent suburbs with TTC subway access",
+    "transit": {
+      "goStations": ["Rutherford", "Maple"],
+      "ttc": "Line 1 extension to VMC",
+      "commuteToUnion": "40-55 min via subway/GO"
+    },
+    "schools": ["York Region DSB", "York Catholic DSB"],
+    "topSchools": ["Vaughan SS", "Thornhill SS", "Maple HS"],
+    "recreation": ["Boyd Conservation Area", "Kortright Centre", "Vaughan Mills area"],
+    "attractions": ["Canada's Wonderland", "Vaughan Mills mall", "Kleinburg village"],
+    "neighborhoods": [
+      { "name": "Thornhill", "vibe": "Established, excellent schools", "avgPrice": "$1,400,000" },
+      { "name": "Woodbridge", "vibe": "Italian heritage, restaurants", "avgPrice": "$1,300,000" },
+      { "name": "Maple", "vibe": "Historic main street, growing", "avgPrice": "$1,200,000" },
+      { "name": "Kleinburg", "vibe": "Village feel, McMichael Gallery", "avgPrice": "$2,000,000" },
+      { "name": "Vaughan Metropolitan Centre", "vibe": "New urban core, condos", "avgPrice": "$700,000" }
+    ]
+  },
+  "Markham": {
+    "avgPrice": "$1,300,000",
+    "priceRange": { "min": 600000, "max": 3500000 },
+    "vibe": "Tech hub, multicultural, excellent schools",
+    "transit": {
+      "goStations": ["Markham", "Unionville", "Centennial"],
+      "local": "York Region Transit, Viva rapid",
+      "commuteToUnion": "45-60 min via GO"
+    },
+    "schools": ["York Region DSB", "York Catholic DSB"],
+    "topSchools": ["Markville SS", "Unionville HS", "Pierre Elliott Trudeau HS"],
+    "recreation": ["Markham Museum", "Toogood Pond", "Frederick Chicken Festival", "25+ community centres"],
+    "attractions": ["Unionville Main Street", "Pacific Mall", "Markville Mall"],
+    "neighborhoods": [
+      { "name": "Unionville", "vibe": "Historic village, boutiques", "avgPrice": "$1,800,000" },
+      { "name": "Cornell", "vibe": "New urbanism, walkable", "avgPrice": "$1,100,000" },
+      { "name": "Markham Village", "vibe": "Heritage area", "avgPrice": "$1,200,000" },
+      { "name": "Thornhill (Markham)", "vibe": "Family-oriented, transit", "avgPrice": "$1,400,000" },
+      { "name": "Wismer", "vibe": "New development", "avgPrice": "$1,300,000" }
+    ]
+  },
+  "Richmond Hill": {
+    "avgPrice": "$1,350,000",
+    "priceRange": { "min": 700000, "max": 3000000 },
+    "vibe": "Affluent, family-focused, good schools",
+    "transit": {
+      "goStations": ["Richmond Hill", "Langstaff", "Gormley"],
+      "local": "York Region Transit, Viva",
+      "commuteToUnion": "50-65 min via GO (Yonge subway extension planned)"
+    },
+    "schools": ["York Region DSB", "York Catholic DSB"],
+    "topSchools": ["Richmond Hill HS", "Bayview SS"],
+    "recreation": ["Mill Pond Park", "Richmond Green", "Oak Ridges Trail", "20+ community centres"],
+    "attractions": ["Hillcrest Mall", "Richmond Hill Centre", "David Dunlap Observatory"],
+    "neighborhoods": [
+      { "name": "Oak Ridges", "vibe": "Nature, trails, larger lots", "avgPrice": "$1,600,000" },
+      { "name": "Jefferson", "vibe": "Established, mature trees", "avgPrice": "$1,400,000" },
+      { "name": "Bayview Hill", "vibe": "Luxury homes, top schools", "avgPrice": "$2,000,000" },
+      { "name": "Elgin Mills", "vibe": "New development", "avgPrice": "$1,200,000" }
+    ]
+  },
+  "Milton": {
+    "avgPrice": "$1,050,000",
+    "priceRange": { "min": 600000, "max": 2000000 },
+    "vibe": "Fastest-growing town, young families, affordable",
+    "transit": {
+      "goStations": ["Milton"],
+      "local": "Milton Transit",
+      "commuteToUnion": "55-70 min via GO"
+    },
+    "schools": ["Halton DSB", "Halton Catholic DSB"],
+    "topSchools": ["Craig Kielburger SS", "Milton District HS"],
+    "recreation": ["Kelso Conservation Area", "Rattlesnake Point", "Milton Leisure Centre"],
+    "attractions": ["Milton Mall", "Kelso/Glen Eden", "Country Heritage Park"],
+    "neighborhoods": [
+      { "name": "Old Milton", "vibe": "Historic downtown, walkable", "avgPrice": "$900,000" },
+      { "name": "Bronte Meadows", "vibe": "New development", "avgPrice": "$1,100,000" },
+      { "name": "Timberlea", "vibe": "Family-friendly, parks", "avgPrice": "$1,000,000" },
+      { "name": "Willmott", "vibe": "New community, amenities", "avgPrice": "$1,050,000" }
+    ]
+  },
+  "Oakville": {
+    "avgPrice": "$1,450,000",
+    "priceRange": { "min": 600000, "max": 5000000 },
+    "vibe": "Affluent lakefront town, excellent schools",
+    "transit": {
+      "goStations": ["Oakville", "Bronte"],
+      "local": "Oakville Transit",
+      "commuteToUnion": "30-45 min via GO"
+    },
+    "schools": ["Halton DSB", "Halton Catholic DSB"],
+    "topSchools": ["Oakville Trafalgar HS", "Abbey Park HS", "Appleby College (private)"],
+    "recreation": ["Bronte Creek Provincial Park", "Coronation Park", "Glen Abbey Golf", "20+ community centres"],
+    "attractions": ["Downtown Oakville", "Bronte Harbour", "Oakville Place Mall"],
+    "neighborhoods": [
+      { "name": "Old Oakville", "vibe": "Historic, lakefront estates", "avgPrice": "$3,000,000+" },
+      { "name": "Bronte", "vibe": "Harbour village, restaurants", "avgPrice": "$1,500,000" },
+      { "name": "Glen Abbey", "vibe": "Golf community, families", "avgPrice": "$1,600,000" },
+      { "name": "River Oaks", "vibe": "Newer homes, parks", "avgPrice": "$1,200,000" },
+      { "name": "Joshua Creek", "vibe": "Family-friendly, trails", "avgPrice": "$1,400,000" }
+    ]
+  },
+  "Burlington": {
+    "avgPrice": "$1,100,000",
+    "priceRange": { "min": 500000, "max": 3000000 },
+    "vibe": "Lakefront city with small-town feel",
+    "transit": {
+      "goStations": ["Burlington", "Appleby", "Aldershot"],
+      "local": "Burlington Transit",
+      "commuteToUnion": "45-55 min via GO"
+    },
+    "schools": ["Halton DSB", "Halton Catholic DSB"],
+    "topSchools": ["Nelson HS", "M.M. Robinson HS"],
+    "recreation": ["Royal Botanical Gardens", "Spencer Smith Park", "Mount Nemo", "Burlington Waterfront Trail"],
+    "attractions": ["Downtown Burlington", "Mapleview Mall", "Village Square"],
+    "neighborhoods": [
+      { "name": "Downtown Burlington", "vibe": "Waterfront, walkable", "avgPrice": "$1,300,000" },
+      { "name": "Aldershot", "vibe": "GO access, diverse housing", "avgPrice": "$900,000" },
+      { "name": "Roseland", "vibe": "Mature, ravine lots", "avgPrice": "$1,400,000" },
+      { "name": "Tyandaga", "vibe": "Golf community", "avgPrice": "$1,200,000" },
+      { "name": "Millcroft", "vibe": "Family-oriented, newer", "avgPrice": "$1,100,000" }
+    ]
+  },
+  "Hamilton": {
+    "avgPrice": "$750,000",
+    "priceRange": { "min": 350000, "max": 2000000 },
+    "vibe": "Revitalizing steel city, arts scene, affordable",
+    "transit": {
+      "goStations": ["Hamilton GO Centre", "West Harbour", "Aldershot"],
+      "local": "HSR, future LRT planned",
+      "commuteToUnion": "60-75 min via GO"
+    },
+    "schools": ["Hamilton-Wentworth DSB", "Hamilton-Wentworth Catholic DSB"],
+    "topSchools": ["Westdale SS", "Ancaster HS"],
+    "recreation": ["Bruce Trail access", "Bayfront Park", "McMaster University", "Dundurn Castle"],
+    "attractions": ["James Street North arts district", "Locke Street", "Canadian Warplane Heritage Museum"],
+    "neighborhoods": [
+      { "name": "Westdale", "vibe": "McMaster area, walkable", "avgPrice": "$1,000,000" },
+      { "name": "Dundas", "vibe": "Small town feel, conservation", "avgPrice": "$900,000" },
+      { "name": "Locke Street", "vibe": "Trendy shops, young professionals", "avgPrice": "$750,000" },
+      { "name": "Ancaster", "vibe": "Affluent, larger lots", "avgPrice": "$1,200,000" },
+      { "name": "Stoney Creek", "vibe": "Waterfront, diverse", "avgPrice": "$800,000" }
+    ]
+  },
+  "Caledon": {
+    "avgPrice": "$1,400,000",
+    "priceRange": { "min": 800000, "max": 4000000 },
+    "vibe": "Rural estate living, horse country",
+    "transit": {
+      "goStations": ["Bolton (planned)"],
+      "local": "Limited, car-dependent",
+      "commuteToUnion": "60-80 min by car"
+    },
+    "schools": ["Peel DSB", "Dufferin-Peel Catholic DSB"],
+    "topSchools": ["Humberview SS", "Mayfield SS"],
+    "recreation": ["Caledon Trailway", "Belfountain Conservation", "Forks of the Credit"],
+    "attractions": ["Cheltenham Badlands", "Alton Mill Arts Centre", "Terra Cotta"],
+    "neighborhoods": [
+      { "name": "Bolton", "vibe": "Town centre, growing", "avgPrice": "$1,100,000" },
+      { "name": "Caledon East", "vibe": "Village feel", "avgPrice": "$1,200,000" },
+      { "name": "Palgrave", "vibe": "Equestrian estates", "avgPrice": "$2,500,000" },
+      { "name": "Inglewood", "vibe": "Quaint village, Credit River", "avgPrice": "$1,500,000" }
+    ]
+  }
+}
