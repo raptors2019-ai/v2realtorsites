@@ -1,94 +1,67 @@
-import { Property } from "@repo/types";
-import propertiesData from "@/data/properties.json";
-import { BoldTrailClient, ListingFilters } from "@repo/crm";
-import { convertToProperty } from "@repo/lib";
+import { Property, IDXSearchParams } from "@repo/types";
+import { IDXClient } from "@repo/crm";
+import { convertIDXToProperty } from "@repo/lib";
 
 // Re-export utilities from shared lib
 export { formatPrice, cn } from "@repo/lib";
 
-// Type for JSON data (listingDate is string in JSON)
-interface PropertyJSON {
-  id: string;
-  title: string;
-  address: string;
-  city: string;
-  province: string;
-  postalCode: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  sqft: number;
-  propertyType: 'detached' | 'semi-detached' | 'townhouse' | 'condo';
-  status: 'active' | 'pending' | 'sold';
-  featured: boolean;
-  images: string[];
-  description: string;
-  listingDate: string; // JSON stores as string
-  mlsNumber?: string;
+/**
+ * Get all properties from IDX API (TRREB/Ampre)
+ * Fetches properties and their media in parallel for performance
+ * Returns empty array with error logged if API fails - NO MOCK DATA
+ */
+export async function getAllProperties(filters?: IDXSearchParams): Promise<Property[]> {
+  const result = await getAllPropertiesWithTotal(filters);
+  return result.properties;
 }
 
 /**
- * Convert JSON property data to Property type
- * Handles listingDate string -> Date conversion
+ * Get properties with total count for pagination
+ * Returns { properties, total } for "Show More" functionality
  */
-function convertJSONToProperty(json: PropertyJSON): Property {
-  return {
-    ...json,
-    listingDate: new Date(json.listingDate),
-  };
-}
+export async function getAllPropertiesWithTotal(
+  filters?: IDXSearchParams
+): Promise<{ properties: Property[]; total: number }> {
+  const client = new IDXClient();
 
-/**
- * Get mock properties with proper type conversion
- */
-function getMockPropertiesConverted(): Property[] {
-  return (propertiesData as PropertyJSON[]).map(convertJSONToProperty);
-}
-
-/**
- * Get all properties from BoldTrail API
- * Falls back to mock data if API is not configured
- */
-export async function getAllProperties(filters?: ListingFilters): Promise<Property[]> {
-  const apiKey = process.env.BOLDTRAIL_API_KEY;
-
-  // Use mock data if API key is not configured
-  if (!apiKey) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[DEV] Using mock property data (BOLDTRAIL_API_KEY not set)');
-    }
-    return getMockPropertiesConverted();
+  if (!client.isConfigured) {
+    console.error('[data.getAllPropertiesWithTotal] IDX_API_KEY not configured');
+    return { properties: [], total: 0 };
   }
 
   try {
-    const client = new BoldTrailClient(apiKey);
-    const response = await client.getListings(filters || { limit: 50, status: 'active' });
+    // Step 1: Fetch listings (default to 20 for performance)
+    const response = await client.searchListings(filters || { limit: 20 });
 
-    if (!response.success || !response.data) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[DEV] BoldTrail API unavailable, using mock data:', response.error);
-      }
-      // Fallback to mock data
-      return getMockPropertiesConverted();
+    if (!response.success) {
+      console.error('[data.getAllPropertiesWithTotal] IDX API error:', response.error);
+      return { properties: [], total: 0 };
     }
 
-    // Convert BoldTrail listings to Property format
-    const properties = response.data.map(convertToProperty);
-    return properties;
+    const listings = response.listings;
+    if (listings.length === 0) {
+      return { properties: [], total: response.total };
+    }
+
+    // Step 2: Fetch media for all listings (batch request)
+    const listingKeys = listings.map(l => l.ListingKey);
+    const mediaMap = await client.fetchMediaForListings(listingKeys);
+
+    // Step 3: Attach media to each listing before converting
+    const listingsWithMedia = listings.map(listing => ({
+      ...listing,
+      Media: mediaMap.get(listing.ListingKey) || [],
+    }));
+
+    // Step 4: Convert to Property format
+    const properties = listingsWithMedia.map(convertIDXToProperty);
+    console.log('[IDX] Loaded', properties.length, 'of', response.total, 'properties');
+
+    return { properties, total: response.total };
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[DEV] BoldTrail API error, using mock data');
-    }
-    // Fallback to mock data on error
-    return getMockPropertiesConverted();
+    console.error('[data.getAllPropertiesWithTotal] Failed:', error);
+    return { properties: [], total: 0 };
   }
-}
-
-/**
- * Get all properties from mock data (synchronous fallback)
- */
-export function getMockProperties(): Property[] {
-  return getMockPropertiesConverted();
 }
 
 /**

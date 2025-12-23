@@ -1,4 +1,4 @@
-import type { Property, PropertyFilters, SortOption } from '@repo/types'
+import type { Property, PropertyFilters, SortOption, IDXListing } from '@repo/types'
 import type { BoldTrailListing } from '@repo/crm'
 
 /**
@@ -81,6 +81,59 @@ export function sortProperties(
 
     default:
       return sorted;
+  }
+}
+
+/**
+ * Convert IDX API listing to Property type
+ */
+export function convertIDXToProperty(listing: IDXListing): Property {
+  // Map IDX PropertyType to our property types
+  const propertyTypeMap: Record<string, Property['propertyType']> = {
+    'residential': 'detached',
+    'condo': 'condo',
+    'townhouse': 'townhouse',
+  }
+  const propertyType = propertyTypeMap[listing.PropertyType?.toLowerCase()] || 'detached'
+
+  // Map IDX status to our status
+  const statusMap: Record<string, Property['status']> = {
+    'active': 'active',
+    'pending': 'pending',
+    'sold': 'sold',
+  }
+  const status = statusMap[listing.StandardStatus?.toLowerCase()] || 'active'
+
+  // Extract images from media
+  // Ampre API returns MediaType as MIME type (e.g., "image/jpeg") and MediaCategory as "Photo"
+  // Filter by MediaCategory === 'Photo' or accept image/* MIME types
+  const images = listing.Media
+    ?.filter(m => m.MediaURL && (
+      m.MediaCategory === 'Photo' ||
+      m.MediaType?.startsWith('image/') ||
+      (!m.MediaCategory && !m.MediaType) // Accept if no type info
+    ))
+    .sort((a, b) => (a.Order ?? 999) - (b.Order ?? 999))
+    .map(m => m.MediaURL) || []
+
+  return {
+    id: listing.ListingKey,
+    title: listing.UnparsedAddress,
+    address: listing.UnparsedAddress,
+    city: listing.City,
+    province: listing.StateOrProvince,
+    postalCode: listing.PostalCode,
+    price: listing.ListPrice,
+    bedrooms: listing.BedroomsTotal,
+    bathrooms: listing.BathroomsTotalInteger,
+    sqft: listing.LivingArea || 0,
+    propertyType,
+    status,
+    featured: false,
+    images,
+    description: listing.PublicRemarks || '',
+    listingDate: new Date(listing.ModificationTimestamp),
+    mlsNumber: listing.ListingId || listing.ListingKey,
   }
 }
 

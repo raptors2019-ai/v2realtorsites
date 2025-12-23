@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { PropertiesPageClient } from '@repo/ui'
-import { getAllProperties } from '@/lib/data'
+import { getAllPropertiesWithTotal } from '@/lib/data'
 
 export const metadata: Metadata = {
   title: 'Browse Properties | Sri Collective Group',
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 }
 
 export default async function PropertiesPage() {
-  const properties = await getAllProperties()
+  const { properties, total } = await getAllPropertiesWithTotal({ limit: 20 })
 
   return (
     <div className="min-h-screen bg-white">
@@ -31,7 +31,7 @@ export default async function PropertiesPage() {
       {/* Properties Grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <PropertiesPageClient initialProperties={properties} />
+          <PropertiesPageClient initialProperties={properties} total={total} />
         </div>
       </section>
     </div>

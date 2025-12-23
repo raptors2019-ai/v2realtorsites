@@ -2,6 +2,7 @@
 export { Header } from './components/layout/Header'
 export { Footer } from './components/layout/Footer'
 export { Button } from './components/Button'
+export { Spinner } from './components/Spinner'
 
 // BentoGrid
 export { BentoGrid, BentoCard, BentoFeatureCard, type BentoCardSize } from './components/BentoGrid'
