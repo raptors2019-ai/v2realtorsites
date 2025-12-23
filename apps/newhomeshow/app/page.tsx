@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { BentoGrid, BentoFeatureCard } from "@repo/ui";
+import {
+  BentoGrid,
+  BentoFeatureCard,
+  AnimatedHeroContent,
+  AnimatedHeroItem,
+  AnimatedHeroButtons,
+} from "@repo/ui";
 
 export default function Home() {
   return (
@@ -19,37 +25,39 @@ export default function Home() {
 
         {/* Hero Content */}
         <div className="relative container mx-auto px-4 h-full flex items-center">
-          <div className="max-w-2xl">
-            <div className="accent-line mb-6" />
-            <p className="text-primary uppercase tracking-[0.25em] text-sm mb-4 font-medium">
-              Exclusive Pre-Construction Access
-            </p>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+          <AnimatedHeroContent className="max-w-2xl">
+            <AnimatedHeroItem index={0} className="mb-6">
+              <div className="accent-line mb-6" />
+              <p className="text-primary uppercase tracking-[0.25em] text-sm mb-4 font-medium">
+                Exclusive Pre-Construction Access
+              </p>
+            </AnimatedHeroItem>
+            <AnimatedHeroItem index={1} as="h1" className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
               Discover Your
               <br />
               <span className="font-light italic text-gradient-primary">Dream</span>
               <br />
               New Home
-            </h1>
-            <p className="text-white/70 text-lg mb-8 max-w-md leading-relaxed">
+            </AnimatedHeroItem>
+            <AnimatedHeroItem index={2} as="p" className="text-white/70 text-lg mb-8 max-w-md leading-relaxed">
               Get VIP access to the hottest pre-construction projects across the
               Greater Toronto Area before they hit the public market.
-            </p>
-            <div className="flex gap-4">
+            </AnimatedHeroItem>
+            <AnimatedHeroButtons index={3} className="flex flex-wrap gap-4">
               <Link
                 href="/builder-projects"
-                className="btn-primary px-8 py-3.5 rounded-lg text-sm font-medium"
+                className="btn-primary px-8 py-3.5 rounded-lg text-sm font-medium shadow-2xl hover:shadow-primary/50 hover:scale-105 transition-all duration-300"
               >
                 View Projects
               </Link>
               <Link
                 href="/contact"
-                className="btn-outline-light px-8 py-3.5 rounded-lg text-sm"
+                className="btn-outline-light px-8 py-3.5 rounded-lg text-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
               >
                 Get VIP Access
               </Link>
-            </div>
-          </div>
+            </AnimatedHeroButtons>
+          </AnimatedHeroContent>
 
           {/* Featured Project Info Card */}
           <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 info-card p-6 rounded-xl max-w-xs">
