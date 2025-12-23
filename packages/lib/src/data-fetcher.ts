@@ -107,7 +107,8 @@ export function convertIDXToProperty(listing: IDXListing): Property {
   // Extract images from media
   // Ampre API returns MediaType as MIME type (e.g., "image/jpeg") and MediaCategory as "Photo"
   // Filter by MediaCategory === 'Photo' or accept image/* MIME types
-  // Deduplicate by Order number (same Order = same image in different sizes)
+  // Deduplicate by MediaKey (unique identifier for each image)
+  // Some MediaKeys end with "-t" for thumbnails - normalize by removing suffix
   const mediaItems = listing.Media
     ?.filter(m => m.MediaURL && (
       m.MediaCategory === 'Photo' ||
@@ -116,14 +117,15 @@ export function convertIDXToProperty(listing: IDXListing): Property {
     ))
     .sort((a, b) => (a.Order ?? 999) - (b.Order ?? 999)) || []
 
-  // Deduplicate: keep only unique images based on Order number
-  // API returns multiple sizes of same image with same Order
-  const seenOrders = new Set<number>()
+  // Deduplicate: keep only unique images based on MediaKey
+  // MediaKey may have "-t" suffix for thumbnails - normalize to base key
+  const seenKeys = new Set<string>()
   const images = mediaItems
     .filter(m => {
-      const order = m.Order ?? 0
-      if (seenOrders.has(order)) return false
-      seenOrders.add(order)
+      // Normalize MediaKey by removing thumbnail suffix
+      const baseKey = m.MediaKey?.replace(/-t$/, '') || m.MediaURL
+      if (seenKeys.has(baseKey)) return false
+      seenKeys.add(baseKey)
       return true
     })
     .map(m => m.MediaURL)
