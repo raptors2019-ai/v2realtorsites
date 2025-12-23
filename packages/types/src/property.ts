@@ -45,7 +45,8 @@ export interface PropertyFilters {
   priceRange?: { min?: number; max?: number }
   bedrooms?: number
   bathrooms?: number
-  location?: string
+  location?: string // Single city
+  locations?: string[] // Multiple cities (for regions)
   listingType?: ListingType // 'sale' or 'lease'
 }
 

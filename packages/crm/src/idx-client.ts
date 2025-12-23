@@ -27,9 +27,23 @@ export class IDXClient {
   private buildFilter(params: IDXSearchParams): string {
     const filters: string[] = []
 
-    if (params.city) {
+    // Listing type filter (sale vs lease based on price threshold)
+    // Properties under $10,000 are leases (monthly rent), above are sales
+    const LEASE_PRICE_THRESHOLD = 10000
+    if (params.listingType === 'sale') {
+      filters.push(`ListPrice ge ${LEASE_PRICE_THRESHOLD}`)
+    } else if (params.listingType === 'lease') {
+      filters.push(`ListPrice lt ${LEASE_PRICE_THRESHOLD}`)
+    }
+
+    // Support multiple cities with OR condition
+    if (params.cities && params.cities.length > 0) {
+      const cityFilters = params.cities.map(city => `City eq '${city}'`).join(' or ')
+      filters.push(`(${cityFilters})`)
+    } else if (params.city) {
       filters.push(`City eq '${params.city}'`)
     }
+
     if (params.minPrice) {
       filters.push(`ListPrice ge ${params.minPrice}`)
     }

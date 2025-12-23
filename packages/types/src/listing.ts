@@ -92,11 +92,13 @@ export interface IDXMediaResponse {
 
 export interface IDXSearchParams {
   city?: string
+  cities?: string[] // Multiple cities with OR condition
   minPrice?: number
   maxPrice?: number
   bedrooms?: number
   bathrooms?: number
   propertyType?: string
+  listingType?: 'sale' | 'lease' // Filters by price threshold ($10k)
   status?: 'Active' | 'Pending' | 'Sold' | 'all'
   limit?: number
   offset?: number
