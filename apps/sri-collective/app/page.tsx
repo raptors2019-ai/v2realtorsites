@@ -1,4 +1,11 @@
-import { PropertyCard, BentoGrid, BentoFeatureCard } from "@repo/ui";
+import {
+  PropertyCard,
+  BentoGrid,
+  BentoFeatureCard,
+  AnimatedHeroContent,
+  AnimatedHeroItem,
+  AnimatedHeroButtons,
+} from "@repo/ui";
 import { getFeaturedProperties } from "@/lib/data";
 import Link from "next/link";
 
@@ -22,23 +29,25 @@ export default async function Home() {
 
         {/* Hero Content */}
         <div className="relative container mx-auto px-4 h-full flex items-center">
-          <div className="max-w-2xl">
-            <div className="accent-line mb-6" />
-            <p className="text-primary uppercase tracking-[0.25em] text-sm mb-4 font-medium">
-              Your Trusted Real Estate Partners
-            </p>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+          <AnimatedHeroContent className="max-w-2xl">
+            <AnimatedHeroItem index={0} className="mb-6">
+              <div className="accent-line mb-6" />
+              <p className="text-primary uppercase tracking-[0.25em] text-sm mb-4 font-medium">
+                Your Trusted Real Estate Partners
+              </p>
+            </AnimatedHeroItem>
+            <AnimatedHeroItem index={1} as="h1" className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
               Find Your
               <br />
               <span className="font-light italic text-gradient-primary">Perfect</span>
               <br />
               Home
-            </h1>
-            <p className="text-white/70 text-lg mb-8 max-w-md leading-relaxed">
+            </AnimatedHeroItem>
+            <AnimatedHeroItem index={2} as="p" className="text-white/70 text-lg mb-8 max-w-md leading-relaxed">
               Browse thousands of listings across the Greater Toronto Area.
               Expert guidance from search to closing and beyond.
-            </p>
-            <div className="flex flex-wrap gap-4">
+            </AnimatedHeroItem>
+            <AnimatedHeroButtons index={3} className="flex flex-wrap gap-4">
               <Link
                 href="/properties"
                 className="px-8 py-4 rounded-lg text-base font-semibold bg-white text-primary border-2 border-primary hover:bg-primary hover:text-white shadow-2xl hover:shadow-primary/50 hover:scale-105 transition-all duration-300"
@@ -51,8 +60,8 @@ export default async function Home() {
               >
                 Sell Your Home
               </Link>
-            </div>
-          </div>
+            </AnimatedHeroButtons>
+          </AnimatedHeroContent>
 
           {/* Search Card */}
           <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-md p-6 rounded-xl max-w-xs shadow-2xl border-2 border-white">

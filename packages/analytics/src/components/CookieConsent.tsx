@@ -38,16 +38,44 @@ export function CookieConsent() {
   if (!showBanner) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white p-4 z-50">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-        <p className="text-sm">
+    <div
+      className="fixed bottom-6 left-6 max-w-sm rounded-2xl shadow-2xl overflow-hidden"
+      style={{
+        zIndex: 9998,
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%)',
+      }}
+    >
+      <div className="p-5">
+        <p
+          className="text-sm leading-relaxed mb-4"
+          style={{ color: '#e5e5e5' }}
+        >
           We use cookies to analyze site traffic and improve your experience.
         </p>
-        <div className="flex gap-4">
-          <button onClick={handleReject} className="px-4 py-2 border rounded">
+        <div className="flex gap-3">
+          <button
+            onClick={handleReject}
+            className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200"
+            style={{
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: '#ffffff',
+              background: 'transparent'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+          >
             Reject
           </button>
-          <button onClick={handleAccept} className="px-4 py-2 bg-white text-gray-900 rounded">
+          <button
+            onClick={handleAccept}
+            className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200"
+            style={{
+              background: '#c9a962',
+              color: '#1a1a2e'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = '#d4b978'}
+            onMouseOut={(e) => e.currentTarget.style.background = '#c9a962'}
+          >
             Accept
           </button>
         </div>

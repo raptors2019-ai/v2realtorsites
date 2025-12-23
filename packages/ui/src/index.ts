@@ -46,6 +46,13 @@ export {
   MotionH2,
   MotionH3,
   MotionH4,
+  // Animated hero components
+  AnimatedHeroContent,
+  AnimatedHeroItem,
+  AnimatedHeroTitle,
+  AnimatedHeroSubtitle,
+  AnimatedHeroButtons,
+  AnimatedAccentLine,
   // Animation variants
   easings,
   cardHoverVariants,

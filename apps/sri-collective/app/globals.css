@@ -2,6 +2,9 @@
 @import "@repo/ui/src/styles/base.css";
 @import "@repo/ui/src/styles/themes/sri-collective.css";
 
+/* Tell Tailwind v4 to scan the shared UI package for classes */
+@source "../../../packages/ui/src/**/*.tsx";
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

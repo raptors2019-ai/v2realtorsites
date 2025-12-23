@@ -675,7 +675,7 @@ export function ChatbotWidget() {
   const showQuickActions = messages.length === 1 && !isLoading && survey.step === "idle";
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-6 z-[9999]">
       {/* Chatbot Window */}
       {isOpen && (
         <div className="mb-4 w-[360px] md:w-[420px] h-[580px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -822,7 +822,7 @@ export function ChatbotWidget() {
       {/* Prompt Bubble - Premium styling with rotating messages */}
       {!isOpen && isPromptVisible && (
         <div className="absolute bottom-16 right-0 mb-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <div className="relative bg-white dark:bg-[#0f1d32] rounded-2xl shadow-xl border border-stone-200 dark:border-[#c9a962]/30 px-5 py-3.5 w-[260px]">
+          <div className="relative bg-white dark:bg-[#0f1d32] rounded-2xl shadow-xl border border-stone-200 dark:border-[#c9a962]/30 px-5 py-3.5 w-[240px]">
             <button
               onClick={dismissPrompt}
               className="absolute -top-2 -right-2 w-6 h-6 bg-stone-100 dark:bg-[#1a2d4d] hover:bg-stone-200 dark:hover:bg-[#243a5e] rounded-full flex items-center justify-center text-stone-400 dark:text-gray-400 hover:text-stone-600 dark:hover:text-white transition-all duration-200 shadow-sm"
@@ -844,15 +844,23 @@ export function ChatbotWidget() {
         </div>
       )}
 
-      {/* Floating Button - Clean simple design */}
+      {/* Floating Button - Premium with subtle animation */}
       <button
         onClick={toggleOpen}
-        className="bg-[#1a2332] hover:bg-[#242d3f] text-white rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+        className="group bg-gradient-to-br from-[#0a1628] to-[#1a2d4d] hover:from-[#0f1d32] hover:to-[#243a5e] text-white rounded-full w-14 h-14 shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center relative overflow-hidden"
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
+        {/* Subtle gold ring on hover */}
+        <div className="absolute inset-0 rounded-full border-2 border-[#c9a962]/0 group-hover:border-[#c9a962]/30 transition-all duration-300" />
+
+        {/* Pulse animation when closed */}
+        {!isOpen && (
+          <div className="absolute inset-0 rounded-full bg-[#c9a962]/20 animate-ping" style={{ animationDuration: '2s' }} />
+        )}
+
         {isOpen ? (
           <svg
-            className="w-6 h-6"
+            className="w-6 h-6 relative z-10"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -865,12 +873,19 @@ export function ChatbotWidget() {
             />
           </svg>
         ) : (
+          /* Outline speech bubble icon when closed */
           <svg
-            className="w-6 h-6"
-            fill="currentColor"
+            className="w-6 h-6 relative z-10 group-hover:scale-110 transition-transform duration-300"
+            fill="none"
+            stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
           </svg>
         )}
       </button>

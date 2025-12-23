@@ -31,6 +31,16 @@ export {
   type MotionAProps,
 } from "./motion-primitives";
 
+// Animated hero components
+export {
+  AnimatedHeroContent,
+  AnimatedHeroItem,
+  AnimatedHeroTitle,
+  AnimatedHeroSubtitle,
+  AnimatedHeroButtons,
+  AnimatedAccentLine,
+} from "./AnimatedHeroContent";
+
 // Animation variants
 export {
   easings,
