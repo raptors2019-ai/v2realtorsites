@@ -36,7 +36,10 @@ export interface IDXListing {
   OriginalListPrice?: number
   BedroomsTotal: number
   BathroomsTotalInteger: number
-  LivingArea?: number // Square feet
+  LivingArea?: number // Square feet - primary field
+  LivingAreaUnits?: string
+  BuildingAreaTotal?: number // Alternative sqft field
+  AboveGradeFinishedArea?: number // Another alternative
   LotSizeArea?: number
   PropertyType: 'Residential' | 'Condo' | 'Townhouse' | 'Land' | 'Commercial'
   PropertySubType?: string

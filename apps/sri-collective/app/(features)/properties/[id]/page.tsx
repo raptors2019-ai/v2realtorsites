@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPropertyById, getSimilarProperties, formatPrice } from '@/lib/data'
-import { PropertyCard, PropertyGallery } from '@repo/ui'
+import { PropertyCard, PropertyGallery, CopyButton, PropertyJsonLd } from '@repo/ui'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -30,19 +30,32 @@ export default async function PropertyDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  const similarProperties = await getSimilarProperties(property, 3)
+  const similarProperties = await getSimilarProperties(property, 6)
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Breadcrumb */}
+    <>
+      <PropertyJsonLd property={property} />
+      <div className="min-h-screen bg-white">
+        {/* Breadcrumb & Back Button */}
       <div className="container mx-auto px-4 py-4">
-        <nav className="flex items-center gap-2 text-sm text-text-secondary">
-          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-          <span>/</span>
-          <Link href="/properties" className="hover:text-primary transition-colors">Properties</Link>
-          <span>/</span>
-          <span className="text-secondary">{property.title}</span>
-        </nav>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <nav className="flex items-center gap-2 text-sm text-text-secondary flex-wrap">
+            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/properties" className="hover:text-primary transition-colors">Properties</Link>
+            <span>/</span>
+            <span className="text-secondary">{property.address}, {property.city}, {property.province} {property.postalCode}</span>
+          </nav>
+          <Link
+            href="/properties"
+            className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Properties
+          </Link>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -58,13 +71,16 @@ export default async function PropertyDetailPage({ params }: PageProps) {
               <h1 className="text-3xl font-bold text-secondary mb-2">
                 {property.title}
               </h1>
-              <p className="text-text-secondary flex items-center gap-2 mb-6">
+              <div className="flex items-center gap-2 mb-6">
                 <svg className="w-5 h-5 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                {property.address}, {property.city}, {property.province} {property.postalCode}
-              </p>
+                <p className="text-text-secondary">
+                  {property.address}, {property.city}, {property.province} {property.postalCode}
+                </p>
+                <CopyButton text={`${property.address}, ${property.city}, ${property.province} ${property.postalCode}`} />
+              </div>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6 border-y border-primary/20">
@@ -154,6 +170,7 @@ export default async function PropertyDetailPage({ params }: PageProps) {
           </div>
         </section>
       )}
-    </div>
+      </div>
+    </>
   )
 }

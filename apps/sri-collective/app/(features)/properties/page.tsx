@@ -8,7 +8,8 @@ export const metadata: Metadata = {
 }
 
 export default async function PropertiesPage() {
-  const { properties, total } = await getAllPropertiesWithTotal({ limit: 20 })
+  // Fetch more initially since we filter client-side (For Sale by default)
+  const { properties, total, cities } = await getAllPropertiesWithTotal({ limit: 50 })
 
   return (
     <div className="min-h-screen bg-white">
@@ -31,7 +32,7 @@ export default async function PropertiesPage() {
       {/* Properties Grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <PropertiesPageClient initialProperties={properties} total={total} />
+          <PropertiesPageClient initialProperties={properties} initialCities={cities} total={total} />
         </div>
       </section>
     </div>

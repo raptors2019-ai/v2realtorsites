@@ -1,4 +1,4 @@
-import type { Property, PropertyFilters, SortOption, IDXListing } from '@repo/types'
+import type { Property, PropertyFilters, SortOption, IDXListing, ListingType } from '@repo/types'
 import type { BoldTrailListing } from '@repo/crm'
 
 /**
@@ -17,12 +17,14 @@ export function filterProperties(
     );
   }
 
-  // Filter by price range
+  // Filter by price range (handles partial min/max)
   if (filters.priceRange) {
     const { min, max } = filters.priceRange;
     filtered = filtered.filter((property) => {
       const price = property.price;
-      return price >= min && price <= max;
+      if (min !== undefined && price < min) return false;
+      if (max !== undefined && price > max) return false;
+      return true;
     });
   }
 
@@ -44,6 +46,13 @@ export function filterProperties(
   if (filters.location) {
     filtered = filtered.filter((property) =>
       property.city.toLowerCase().includes(filters.location!.toLowerCase())
+    );
+  }
+
+  // Filter by listing type (sale/lease)
+  if (filters.listingType) {
+    filtered = filtered.filter((property) =>
+      property.listingType === filters.listingType
     );
   }
 
@@ -104,6 +113,11 @@ export function convertIDXToProperty(listing: IDXListing): Property {
   }
   const status = statusMap[listing.StandardStatus?.toLowerCase()] || 'active'
 
+  // Determine listing type based on price threshold
+  // Properties under $10,000 are likely rentals/leases (monthly amount)
+  const LEASE_PRICE_THRESHOLD = 10000
+  const listingType: ListingType = listing.ListPrice < LEASE_PRICE_THRESHOLD ? 'lease' : 'sale'
+
   // Extract images from media
   // Ampre API returns MediaType as MIME type (e.g., "image/jpeg") and MediaCategory as "Photo"
   // Filter by MediaCategory === 'Photo' or accept image/* MIME types
@@ -130,6 +144,21 @@ export function convertIDXToProperty(listing: IDXListing): Property {
     })
     .map(m => m.MediaURL)
 
+  // Try multiple fields for square footage
+  // TRREB/Ampre API returns LivingAreaRange as a string like "0-499", "500-999", etc.
+  // We parse this to get a midpoint estimate, or use direct values if available
+  let sqft = listing.LivingArea || listing.BuildingAreaTotal || listing.AboveGradeFinishedArea || 0
+
+  if (!sqft && (listing as any).LivingAreaRange) {
+    const range = (listing as any).LivingAreaRange as string
+    const match = range.match(/(\d+)-(\d+)/)
+    if (match) {
+      const min = parseInt(match[1], 10)
+      const max = parseInt(match[2], 10)
+      sqft = Math.round((min + max) / 2) // Use midpoint of range
+    }
+  }
+
   return {
     id: listing.ListingKey,
     title: listing.UnparsedAddress,
@@ -140,9 +169,10 @@ export function convertIDXToProperty(listing: IDXListing): Property {
     price: listing.ListPrice,
     bedrooms: listing.BedroomsTotal,
     bathrooms: listing.BathroomsTotalInteger,
-    sqft: listing.LivingArea || 0,
+    sqft,
     propertyType,
     status,
+    listingType,
     featured: false,
     images,
     description: listing.PublicRemarks || '',
@@ -164,6 +194,10 @@ export function convertToProperty(listing: BoldTrailListing): Property {
   }
   const propertyType = propertyTypeMap[listing.propertyType?.toLowerCase()] || 'detached'
 
+  // Determine listing type based on price threshold
+  const LEASE_PRICE_THRESHOLD = 10000
+  const listingType: ListingType = listing.price < LEASE_PRICE_THRESHOLD ? 'lease' : 'sale'
+
   return {
     id: listing.id,
     title: listing.address,
@@ -177,6 +211,7 @@ export function convertToProperty(listing: BoldTrailListing): Property {
     sqft: listing.sqft || 0,
     propertyType,
     status: listing.status,
+    listingType,
     featured: false,
     images: listing.photos,
     description: listing.description || '',

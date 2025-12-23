@@ -1,8 +1,12 @@
 // Components
 export { Header } from './components/layout/Header'
+
+// SEO
+export { PropertyJsonLd, SearchResultsJsonLd } from './seo'
 export { Footer } from './components/layout/Footer'
 export { Button } from './components/Button'
 export { Spinner } from './components/Spinner'
+export { CopyButton } from './components/CopyButton'
 
 // BentoGrid
 export { BentoGrid, BentoCard, BentoFeatureCard, type BentoCardSize } from './components/BentoGrid'

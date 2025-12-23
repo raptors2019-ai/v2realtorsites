@@ -1,5 +1,7 @@
 export type PropertyType = 'detached' | 'semi-detached' | 'townhouse' | 'condo'
 
+export type ListingType = 'sale' | 'lease'
+
 export interface Property {
   id: string
   title: string
@@ -13,6 +15,7 @@ export interface Property {
   sqft: number
   propertyType: 'detached' | 'semi-detached' | 'townhouse' | 'condo'
   status: 'active' | 'pending' | 'sold'
+  listingType: ListingType // 'sale' or 'lease' - derived from price threshold
   featured: boolean
   images: string[]
   description: string
@@ -39,10 +42,11 @@ export interface BuilderProject {
 // Filter Types
 export interface PropertyFilters {
   type?: Property['propertyType'][]
-  priceRange?: { min: number; max: number }
+  priceRange?: { min?: number; max?: number }
   bedrooms?: number
   bathrooms?: number
   location?: string
+  listingType?: ListingType // 'sale' or 'lease'
 }
 
 // Sort Options

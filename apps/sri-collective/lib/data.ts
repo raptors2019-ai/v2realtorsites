@@ -17,16 +17,16 @@ export async function getAllProperties(filters?: IDXSearchParams): Promise<Prope
 
 /**
  * Get properties with total count for pagination
- * Returns { properties, total } for "Show More" functionality
+ * Returns { properties, total, cities } for "Show More" functionality and filtering
  */
 export async function getAllPropertiesWithTotal(
   filters?: IDXSearchParams
-): Promise<{ properties: Property[]; total: number }> {
+): Promise<{ properties: Property[]; total: number; cities: string[] }> {
   const client = new IDXClient();
 
   if (!client.isConfigured) {
     console.error('[data.getAllPropertiesWithTotal] IDX_API_KEY not configured');
-    return { properties: [], total: 0 };
+    return { properties: [], total: 0, cities: [] };
   }
 
   try {
@@ -35,12 +35,12 @@ export async function getAllPropertiesWithTotal(
 
     if (!response.success) {
       console.error('[data.getAllPropertiesWithTotal] IDX API error:', response.error);
-      return { properties: [], total: 0 };
+      return { properties: [], total: 0, cities: [] };
     }
 
     const listings = response.listings;
     if (listings.length === 0) {
-      return { properties: [], total: response.total };
+      return { properties: [], total: response.total, cities: [] };
     }
 
     // Step 2: Fetch media for all listings (batch request)
@@ -55,12 +55,20 @@ export async function getAllPropertiesWithTotal(
 
     // Step 4: Convert to Property format
     const properties = listingsWithMedia.map(convertIDXToProperty);
-    console.log('[IDX] Loaded', properties.length, 'of', response.total, 'properties');
 
-    return { properties, total: response.total };
+    // Step 5: Extract unique cities for filtering
+    const citySet = new Set<string>();
+    listings.forEach(listing => {
+      if (listing.City) citySet.add(listing.City);
+    });
+    const cities = Array.from(citySet).sort();
+
+    console.log('[IDX] Loaded', properties.length, 'of', response.total, 'properties,', cities.length, 'cities');
+
+    return { properties, total: response.total, cities };
   } catch (error) {
     console.error('[data.getAllPropertiesWithTotal] Failed:', error);
-    return { properties: [], total: 0 };
+    return { properties: [], total: 0, cities: [] };
   }
 }
 

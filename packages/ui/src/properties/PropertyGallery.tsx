@@ -5,6 +5,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@repo/lib";
 
+// Fallback placeholder for failed images
+const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect fill='%23f5f5f4' width='800' height='600'/%3E%3Cpath fill='%23d4d4d4' d='M400 250c-27.6 0-50 22.4-50 50s22.4 50 50 50 50-22.4 50-50-22.4-50-50-50zm0 80c-16.5 0-30-13.5-30-30s13.5-30 30-30 30 13.5 30 30-13.5 30-30 30z'/%3E%3Cpath fill='%23d4d4d4' d='M550 200H250c-27.6 0-50 22.4-50 50v200c0 27.6 22.4 50 50 50h300c27.6 0 50-22.4 50-50V250c0-27.6-22.4-50-50-50zm30 250c0 16.5-13.5 30-30 30H250c-16.5 0-30-13.5-30-30V250c0-16.5 13.5-30 30-30h300c16.5 0 30 13.5 30 30v200z'/%3E%3C/svg%3E";
+
 interface PropertyGalleryProps {
   images: string[];
   alt: string;
@@ -32,6 +35,18 @@ export function PropertyGallery({
   className,
 }: PropertyGalleryProps) {
   const [[currentIndex, direction], setCurrentIndex] = useState([0, 0]);
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
+
+  const handleImageError = (index: number) => {
+    setFailedImages(prev => new Set(prev).add(index));
+  };
+
+  const getImageSrc = (index: number) => {
+    if (failedImages.has(index) || !images[index]) {
+      return PLACEHOLDER_IMAGE;
+    }
+    return images[index];
+  };
 
   const paginate = useCallback(
     (newDirection: number) => {
@@ -80,12 +95,14 @@ export function PropertyGallery({
             className="absolute inset-0"
           >
             <Image
-              src={images[currentIndex]}
+              src={getImageSrc(currentIndex)}
               alt={`${alt} - Image ${currentIndex + 1}`}
               fill
               className="object-cover"
               priority={currentIndex === 0}
               sizes="(max-width: 1024px) 100vw, 66vw"
+              onError={() => handleImageError(currentIndex)}
+              unoptimized={images[currentIndex]?.includes('ampre.ca')}
             />
           </motion.div>
         </AnimatePresence>
@@ -156,11 +173,13 @@ export function PropertyGallery({
               aria-label={`View image ${index + 1}`}
             >
               <Image
-                src={image}
+                src={getImageSrc(index)}
                 alt={`${alt} thumbnail ${index + 1}`}
                 fill
                 className="object-cover"
                 sizes="80px"
+                onError={() => handleImageError(index)}
+                unoptimized={image?.includes('ampre.ca')}
               />
             </button>
           ))}

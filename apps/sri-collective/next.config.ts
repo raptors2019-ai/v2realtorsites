@@ -11,6 +11,18 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'trreb-image.ampre.ca',
       },
+      {
+        protocol: 'https',
+        hostname: '*.ampre.ca',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.ampre.ca',
+      },
+      {
+        protocol: 'http',
+        hostname: 'trreb-image.ampre.ca',
+      },
     ],
   },
   // Transpile workspace packages
