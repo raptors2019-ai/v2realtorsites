@@ -1,0 +1,176 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
+import { cn } from "@repo/lib";
+
+interface PropertyGalleryProps {
+  images: string[];
+  alt: string;
+  className?: string;
+}
+
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? "100%" : "-100%",
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? "100%" : "-100%",
+    opacity: 0,
+  }),
+};
+
+export function PropertyGallery({
+  images,
+  alt,
+  className,
+}: PropertyGalleryProps) {
+  const [[currentIndex, direction], setCurrentIndex] = useState([0, 0]);
+
+  const paginate = useCallback(
+    (newDirection: number) => {
+      setCurrentIndex(([prev]) => {
+        let next = prev + newDirection;
+        if (next < 0) next = images.length - 1;
+        if (next >= images.length) next = 0;
+        return [next, newDirection];
+      });
+    },
+    [images.length]
+  );
+
+  const goToImage = useCallback((index: number) => {
+    setCurrentIndex(([prev]) => [index, index > prev ? 1 : -1]);
+  }, []);
+
+  if (images.length === 0) {
+    return (
+      <div className={cn("relative aspect-[16/10] rounded-xl overflow-hidden bg-cream", className)}>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <svg className="w-16 h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("space-y-4", className)}>
+      {/* Main Image */}
+      <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-cream">
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+          <motion.div
+            key={currentIndex}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 },
+            }}
+            className="absolute inset-0"
+          >
+            <Image
+              src={images[currentIndex]}
+              alt={`${alt} - Image ${currentIndex + 1}`}
+              fill
+              className="object-cover"
+              priority={currentIndex === 0}
+              sizes="(max-width: 1024px) 100vw, 66vw"
+            />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Navigation Arrows */}
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={() => paginate(-1)}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300"
+              aria-label="Previous image"
+            >
+              <svg
+                className="w-6 h-6 text-secondary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <button
+              onClick={() => paginate(1)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300"
+              aria-label="Next image"
+            >
+              <svg
+                className="w-6 h-6 text-secondary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+
+            {/* Image Counter */}
+            <div className="absolute bottom-4 right-4 z-10 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
+              {currentIndex + 1} / {images.length}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Thumbnail Strip */}
+      {images.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {images.slice(0, 8).map((image, index) => (
+            <button
+              key={index}
+              onClick={() => goToImage(index)}
+              className={cn(
+                "relative flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden transition-all duration-300",
+                currentIndex === index
+                  ? "ring-2 ring-primary ring-offset-2"
+                  : "opacity-60 hover:opacity-100"
+              )}
+              aria-label={`View image ${index + 1}`}
+            >
+              <Image
+                src={image}
+                alt={`${alt} thumbnail ${index + 1}`}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            </button>
+          ))}
+          {images.length > 8 && (
+            <div className="relative flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden bg-secondary/80 flex items-center justify-center text-white text-sm font-medium">
+              +{images.length - 8}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

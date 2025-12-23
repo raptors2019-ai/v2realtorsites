@@ -8,7 +8,7 @@ export { Spinner } from './components/Spinner'
 export { BentoGrid, BentoCard, BentoFeatureCard, type BentoCardSize } from './components/BentoGrid'
 
 // Properties
-export { PropertyCard, PropertyCardCarousel, PropertyGrid, PropertyFilters, PropertiesPageClient } from './properties'
+export { PropertyCard, PropertyCardCarousel, PropertyGallery, PropertyGrid, PropertyFilters, PropertiesPageClient } from './properties'
 
 // Chatbot
 export { ChatbotWidget } from './chatbot'

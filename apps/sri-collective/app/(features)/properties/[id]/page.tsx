@@ -1,9 +1,8 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import Link from 'next/link'
 import { getPropertyById, getSimilarProperties, formatPrice } from '@/lib/data'
-import { PropertyCard } from '@repo/ui'
+import { PropertyCard, PropertyGallery } from '@repo/ui'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -52,35 +51,7 @@ export default async function PropertyDetailPage({ params }: PageProps) {
           {/* Left Column - Images & Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Image Gallery */}
-            <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-cream">
-              {property.images[0] ? (
-                <Image
-                  src={property.images[0]}
-                  alt={property.title}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 66vw"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <svg className="w-16 h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-              )}
-              {property.status === 'active' && (
-                <div className="absolute top-4 left-4 badge-sale">For Sale</div>
-              )}
-              {property.status === 'pending' && (
-                <div className="absolute top-4 left-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                  Pending
-                </div>
-              )}
-              {property.featured && (
-                <div className="absolute top-4 right-4 badge-premium">Premium</div>
-              )}
-            </div>
+            <PropertyGallery images={property.images} alt={property.title} />
 
             {/* Property Details */}
             <div className="luxury-card-premium rounded-xl p-8">

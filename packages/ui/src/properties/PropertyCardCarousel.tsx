@@ -59,7 +59,7 @@ export function PropertyCardCarousel({
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation arrows - visible on hover */}
+      {/* Navigation arrows - always visible */}
       {images.length > 1 && (
         <>
           <button
@@ -68,11 +68,11 @@ export function PropertyCardCarousel({
               e.stopPropagation();
               paginate(-1);
             }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white shadow-md"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-70 hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110 shadow-md"
             aria-label="Previous image"
           >
             <svg
-              className="w-4 h-4"
+              className="w-4 h-4 text-secondary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -91,11 +91,11 @@ export function PropertyCardCarousel({
               e.stopPropagation();
               paginate(1);
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white shadow-md"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-70 hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110 shadow-md"
             aria-label="Next image"
           >
             <svg
-              className="w-4 h-4"
+              className="w-4 h-4 text-secondary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

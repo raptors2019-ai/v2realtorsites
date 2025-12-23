@@ -107,14 +107,26 @@ export function convertIDXToProperty(listing: IDXListing): Property {
   // Extract images from media
   // Ampre API returns MediaType as MIME type (e.g., "image/jpeg") and MediaCategory as "Photo"
   // Filter by MediaCategory === 'Photo' or accept image/* MIME types
-  const images = listing.Media
+  // Deduplicate by Order number (same Order = same image in different sizes)
+  const mediaItems = listing.Media
     ?.filter(m => m.MediaURL && (
       m.MediaCategory === 'Photo' ||
       m.MediaType?.startsWith('image/') ||
       (!m.MediaCategory && !m.MediaType) // Accept if no type info
     ))
-    .sort((a, b) => (a.Order ?? 999) - (b.Order ?? 999))
-    .map(m => m.MediaURL) || []
+    .sort((a, b) => (a.Order ?? 999) - (b.Order ?? 999)) || []
+
+  // Deduplicate: keep only unique images based on Order number
+  // API returns multiple sizes of same image with same Order
+  const seenOrders = new Set<number>()
+  const images = mediaItems
+    .filter(m => {
+      const order = m.Order ?? 0
+      if (seenOrders.has(order)) return false
+      seenOrders.add(order)
+      return true
+    })
+    .map(m => m.MediaURL)
 
   return {
     id: listing.ListingKey,
