@@ -9,6 +9,7 @@ import { sortProperties } from "@repo/lib";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { PropertyFilters as PropertyFiltersComponent } from "./PropertyFilters";
 import { PropertyGrid } from "./PropertyGrid";
+import { trackPropertyListView, type PropertyItem } from "@repo/analytics";
 
 interface PropertiesPageClientProps {
   initialProperties: Property[];
@@ -164,6 +165,35 @@ export function PropertiesPageClient({
       setProperties(prev => sortProperties([...prev], sortBy));
     }
   }, [sortBy]);
+
+  // Track property list view when properties change
+  useEffect(() => {
+    if (properties.length > 0 && !isLoading) {
+      const propertyItems: PropertyItem[] = properties.map((p, index) => ({
+        item_id: p.id,
+        item_name: p.address,
+        item_category: p.propertyType,
+        item_category2: p.listingType === 'lease' ? 'For Lease' : 'For Sale',
+        item_category3: p.city,
+        price: p.price,
+        index,
+        bedrooms: p.bedrooms,
+        bathrooms: p.bathrooms,
+        square_feet: p.sqft,
+      }));
+
+      const listName = filters.location
+        ? `${filters.location} Properties`
+        : filters.listingType === 'lease'
+        ? 'Properties For Lease'
+        : 'Properties For Sale';
+
+      trackPropertyListView(propertyItems, {
+        list_id: 'search_results',
+        list_name: listName,
+      });
+    }
+  }, [properties, isLoading, filters.location, filters.listingType]);
 
   // Handle filter change
   const handleFilterChange = useCallback((newFilters: PropertyFiltersType) => {

@@ -1,3 +1,6 @@
 export { pageview, event } from './ga4'
 export * from './real-estate-events'
+export * from './types'
 export { CookieConsent } from './components/CookieConsent'
+export { PageViewTracker } from './components/PageViewTracker'
+export { PropertyDetailTracker } from './components/PropertyDetailTracker'

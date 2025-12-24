@@ -2,6 +2,7 @@
 
 import { Property } from "@repo/types";
 import { formatPrice, cn } from "@repo/lib";
+import { trackPropertySelect } from "@repo/analytics";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { PropertyCardCarousel } from "./PropertyCardCarousel";
@@ -40,6 +41,25 @@ export function PropertyCard({ property, className, index = 0, citySlug }: Prope
   const slug = citySlug || createCitySlug(property.city);
   const propertyUrl = `/properties/${slug}/${property.id}`;
 
+  // Track property selection for analytics
+  const handleClick = () => {
+    trackPropertySelect(
+      {
+        item_id: property.id,
+        item_name: property.address,
+        item_category: property.propertyType,
+        item_category2: property.listingType === 'lease' ? 'For Lease' : 'For Sale',
+        item_category3: property.city,
+        price: property.price,
+        index,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        square_feet: property.sqft,
+      },
+      { list_id: 'property_list', list_name: 'Properties' }
+    );
+  };
+
   return (
     <motion.div
       initial="initial"
@@ -50,6 +70,7 @@ export function PropertyCard({ property, className, index = 0, citySlug }: Prope
     >
       <Link
         href={propertyUrl}
+        onClick={handleClick}
         className={cn(
           "group block luxury-card-premium rounded-xl overflow-hidden",
           className

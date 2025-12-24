@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useChatbotStore, Message } from "./chatbot-store";
+import { trackChatbotInteraction, trackLeadFormSubmit } from "@repo/analytics";
 
 // Property type for listings display
 interface PropertyListing {
@@ -476,10 +477,11 @@ export function ChatbotWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading, survey.step]);
 
-  // Focus input when chat opens
+  // Focus input when chat opens and track interaction
   useEffect(() => {
     if (isOpen) {
       inputRef.current?.focus();
+      trackChatbotInteraction('start');
     }
   }, [isOpen]);
 
@@ -497,6 +499,7 @@ export function ChatbotWidget() {
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
+    trackChatbotInteraction('message');
     addMessage({ role: "user", content: content.trim() });
     setInput("");
     setLoading(true);
@@ -534,6 +537,7 @@ export function ChatbotWidget() {
   };
 
   const startDreamHomeSurvey = () => {
+    trackChatbotInteraction('survey_start');
     addMessage({ role: "user", content: "I want to tell you about my dream home." });
     addMessage({ role: "assistant", content: "Wonderful! Let me help you find the perfect property. I'll guide you through a few quick questions." });
     setSurvey({ step: "property-type" });
@@ -647,6 +651,11 @@ export function ChatbotWidget() {
 
   // Handle contact form submission
   const handleContactSubmit = async (contact: { firstName: string; email: string; phone?: string }) => {
+    // Track lead capture and survey completion
+    trackChatbotInteraction('lead');
+    trackChatbotInteraction('survey_complete');
+    trackLeadFormSubmit('chatbot');
+
     setSurvey(prev => ({
       ...prev,
       firstName: contact.firstName,

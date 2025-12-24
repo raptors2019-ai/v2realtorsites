@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPropertyById, getSimilarProperties, formatPrice } from '@/lib/data'
 import { PropertyCard, PropertyGallery, CopyButton, PropertyJsonLd } from '@repo/ui'
+import { PropertyDetailTracker } from '@repo/analytics'
 
 interface PageProps {
   params: Promise<{ city: string; id: string }>
@@ -47,6 +48,19 @@ export default async function PropertyDetailPage({ params }: PageProps) {
   return (
     <>
       <PropertyJsonLd property={property} />
+      <PropertyDetailTracker
+        property={{
+          id: property.id,
+          price: property.price,
+          address: property.address,
+          propertyType: property.propertyType,
+          city: property.city,
+          listingType: property.listingType,
+          bedrooms: property.bedrooms,
+          bathrooms: property.bathrooms,
+          sqft: property.sqft,
+        }}
+      />
       <div className="min-h-screen bg-white">
         {/* Breadcrumb & Back Button */}
         <div className="container mx-auto px-4 py-4">
