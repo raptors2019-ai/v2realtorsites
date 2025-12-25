@@ -1,4 +1,4 @@
-import type { Property, PropertyFilters, SortOption, IDXListing, ListingType } from '@repo/types'
+import type { Property, PropertyFilters, SortOption, IDXListing, ListingType, IDXMedia } from '@repo/types'
 import type { BoldTrailListing } from '@repo/crm'
 
 /**
@@ -122,7 +122,7 @@ export function convertIDXToProperty(listing: IDXListing): Property {
   // Ampre API returns MediaType as MIME type (e.g., "image/jpeg") and MediaCategory as "Photo"
   // Filter by MediaCategory === 'Photo' or accept image/* MIME types
   // Deduplicate by MediaKey (unique identifier for each image)
-  // Some MediaKeys end with "-t" for thumbnails - normalize by removing suffix
+  // TRREB API returns many duplicate images with different resize params in the URL path
   const mediaItems = listing.Media
     ?.filter(m => m.MediaURL && (
       m.MediaCategory === 'Photo' ||
@@ -131,18 +131,66 @@ export function convertIDXToProperty(listing: IDXListing): Property {
     ))
     .sort((a, b) => (a.Order ?? 999) - (b.Order ?? 999)) || []
 
-  // Deduplicate: keep only unique images based on MediaKey
-  // MediaKey may have "-t" suffix for thumbnails - normalize to base key
-  const seenKeys = new Set<string>()
-  const images = mediaItems
-    .filter(m => {
-      // Normalize MediaKey by removing thumbnail suffix
-      const baseKey = m.MediaKey?.replace(/-t$/, '') || m.MediaURL
-      if (seenKeys.has(baseKey)) return false
-      seenKeys.add(baseKey)
-      return true
-    })
-    .map(m => m.MediaURL)
+  /**
+   * Extract base image ID from Ampre CDN URL
+   * Ampre uses format: https://trreb-image.ampre.ca/{IMAGE_ID}/rs:fit:240:240/wm:.5.../path.jpg
+   * The IMAGE_ID is the unique identifier - everything after is resize/watermark params
+   */
+  const extractImageId = (url: string): string => {
+    try {
+      const urlObj = new URL(url)
+      const pathParts = urlObj.pathname.split('/').filter(Boolean)
+      // First part is the unique image ID (hash)
+      return pathParts[0] || url
+    } catch {
+      return url
+    }
+  }
+
+  /**
+   * Extract size from Ampre CDN URL (e.g., rs:fit:800:600 returns 800)
+   */
+  const extractSize = (url: string): number => {
+    const match = url.match(/rs:fit:(\d+):/)
+    return match ? parseInt(match[1], 10) : 0
+  }
+
+  // Group by image ID (MediaKey or URL-based), keeping the largest version of each
+  const imageMap = new Map<string, IDXMedia>()
+
+  for (const media of mediaItems) {
+    // Get unique ID (MediaKey or URL-based image ID)
+    const id = media.MediaKey?.replace(/-t$/, '') || extractImageId(media.MediaURL)
+
+    // Get existing entry or add new one
+    const existing = imageMap.get(id)
+    if (!existing) {
+      imageMap.set(id, media)
+      continue
+    }
+
+    // If this version is larger, replace the existing one
+    const existingSize = extractSize(existing.MediaURL)
+    const currentSize = extractSize(media.MediaURL)
+    if (currentSize > existingSize) {
+      imageMap.set(id, media)
+    }
+  }
+
+  // Convert map to array, sort by original Order, limit to 40 images
+  const uniqueMedia = Array.from(imageMap.values())
+    .sort((a, b) => (a.Order ?? 999) - (b.Order ?? 999))
+    .slice(0, 40)
+
+  const images = uniqueMedia.map(m => m.MediaURL)
+
+  console.log('[convertIDXToProperty.images]', {
+    listingKey: listing.ListingKey,
+    total: mediaItems.length,
+    unique: uniqueMedia.length,
+    final: images.length,
+    duplicatesRemoved: mediaItems.length - uniqueMedia.length
+  })
 
   // Try multiple fields for square footage
   // TRREB/Ampre API returns LivingAreaRange as a string like "0-499", "500-999", etc.

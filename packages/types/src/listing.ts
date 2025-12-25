@@ -71,7 +71,7 @@ export interface IDXListing {
 }
 
 export interface IDXMedia {
-  MediaKey: string
+  MediaKey?: string
   MediaURL: string
   MediaType?: string // MIME type like "image/jpeg" or legacy "Photo"
   MediaCategory?: 'Photo' | 'Video' | 'VirtualTour' // Ampre uses this for media classification
@@ -98,6 +98,7 @@ export interface IDXSearchParams {
   bedrooms?: number
   bathrooms?: number
   propertyType?: string
+  propertyClass?: 'residential' | 'commercial' // Filter by residential/commercial
   listingType?: 'sale' | 'lease' // Filters by price threshold ($10k)
   status?: 'Active' | 'Pending' | 'Sold' | 'all'
   limit?: number

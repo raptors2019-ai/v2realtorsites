@@ -15,6 +15,7 @@ interface PropertiesPageClientProps {
   initialProperties: Property[];
   initialCities?: string[];
   total: number;
+  initialFilters?: Partial<PropertyFiltersType>;
 }
 
 const PAGE_SIZE = 20;
@@ -23,6 +24,7 @@ export function PropertiesPageClient({
   initialProperties,
   initialCities = [],
   total: initialTotal,
+  initialFilters,
 }: PropertiesPageClientProps) {
   // Properties state
   const [properties, setProperties] = useState<Property[]>(initialProperties.slice(0, PAGE_SIZE));
@@ -30,8 +32,10 @@ export function PropertiesPageClient({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Filter state
-  const [filters, setFilters] = useState<PropertyFiltersType>({ listingType: 'sale' });
+  // Filter state - initialize from URL params or default to sale
+  const [filters, setFilters] = useState<PropertyFiltersType>(
+    initialFilters || { listingType: 'sale' }
+  );
   const [sortBy, setSortBy] = useState<SortOption>("price-desc");
 
   // Cities for the dropdown (from initial server-side fetch)

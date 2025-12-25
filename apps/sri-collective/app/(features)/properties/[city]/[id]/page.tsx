@@ -94,6 +94,26 @@ export default async function PropertyDetailPage({ params }: PageProps) {
               {/* Image Gallery */}
               <PropertyGallery images={property.images} alt={property.title} />
 
+              {/* Mobile Pricing CTA */}
+              <div className="lg:hidden luxury-card-premium rounded-xl p-6">
+                <p className="text-sm text-text-secondary mb-1">Listed Price</p>
+                <p className="text-4xl font-bold text-gradient-primary mb-6">
+                  {formatPrice(property.price)}
+                </p>
+                <Link
+                  href="/contact"
+                  className="btn-primary w-full py-4 rounded-lg text-center font-semibold block mb-4 transition-transform hover:scale-[1.02]"
+                >
+                  Schedule a Viewing
+                </Link>
+                <Link
+                  href="/contact"
+                  className="btn-outline w-full py-4 rounded-lg text-center font-medium block transition-transform hover:scale-[1.02]"
+                >
+                  Ask a Question
+                </Link>
+              </div>
+
               {/* Property Details */}
               <div className="luxury-card-premium rounded-xl p-8">
                 <h1 className="text-3xl font-bold text-secondary mb-2">
@@ -148,8 +168,8 @@ export default async function PropertyDetailPage({ params }: PageProps) {
 
             {/* Right Column - Pricing & Contact */}
             <div className="space-y-6">
-              {/* Pricing Card */}
-              <div className="luxury-card-premium rounded-xl p-6 sticky top-24">
+              {/* Pricing Card - Desktop Sticky */}
+              <div className="luxury-card-premium rounded-xl p-6 hidden lg:block lg:sticky lg:top-24">
                 <p className="text-sm text-text-secondary mb-1">Listed Price</p>
                 <p className="text-4xl font-bold text-gradient-primary mb-6">
                   {formatPrice(property.price)}

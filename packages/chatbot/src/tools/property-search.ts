@@ -70,13 +70,24 @@ Always use this BEFORE asking for contact information to provide value first.`,
         returned: formattedListings.length,
       })
 
+      // Build viewAllUrl with proper parameter format matching the survey
+      const urlParams = new URLSearchParams()
+      if (city) urlParams.set('cities', city)
+      if (minPrice) urlParams.set('budgetMin', String(minPrice))
+      if (maxPrice) urlParams.set('budgetMax', String(maxPrice))
+      if (bedrooms) urlParams.set('bedrooms', String(bedrooms))
+      if (bathrooms) urlParams.set('bathrooms', String(bathrooms))
+      // Determine listing type based on price (properties under $10k are likely leases)
+      const listingType = maxPrice && maxPrice < 10000 ? 'lease' : 'sale'
+      urlParams.set('listingType', listingType)
+
       return {
         success: true,
         message,
         listings: formattedListings,
         total: result.total,
         searchParams: { city, minPrice, maxPrice, bedrooms, bathrooms, propertyType },
-        viewAllUrl: `/properties?city=${city || ''}&minPrice=${minPrice || ''}&maxPrice=${maxPrice || ''}&bedrooms=${bedrooms || ''}`,
+        viewAllUrl: `/properties?${urlParams.toString()}`,
       }
     } catch (error) {
       console.error('[chatbot.propertySearch.error]', error)

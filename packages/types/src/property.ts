@@ -39,6 +39,9 @@ export interface BuilderProject {
   description: string
 }
 
+// Property Class for filtering
+export type PropertyClass = 'residential' | 'commercial'
+
 // Filter Types
 export interface PropertyFilters {
   type?: Property['propertyType'][]
@@ -48,6 +51,7 @@ export interface PropertyFilters {
   location?: string // Single city
   locations?: string[] // Multiple cities (for regions)
   listingType?: ListingType // 'sale' or 'lease'
+  propertyClass?: PropertyClass // 'residential' or 'commercial'
 }
 
 // Sort Options

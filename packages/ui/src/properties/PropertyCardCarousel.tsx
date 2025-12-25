@@ -37,7 +37,7 @@ export function PropertyCardCarousel({
     <div className={cn("relative h-full w-full overflow-hidden", className)}>
       <AnimatePresence initial={false} custom={direction} mode="popLayout">
         <motion.div
-          key={currentIndex}
+          key={images[currentIndex]}
           custom={direction}
           variants={carouselSlideVariants}
           initial="enter"
@@ -55,6 +55,7 @@ export function PropertyCardCarousel({
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={currentIndex === 0}
           />
         </motion.div>
       </AnimatePresence>

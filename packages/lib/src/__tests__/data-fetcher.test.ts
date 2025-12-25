@@ -296,6 +296,26 @@ describe('data-fetcher', () => {
       expect(result.images).toHaveLength(2)
     })
 
+    it('should deduplicate images when MediaKey is missing', () => {
+      const listingWithoutKeys: IDXListing = {
+        ...mockIDXListing,
+        Media: [
+          // Ampre CDN format: same image ID (ABC123) with different resize params
+          { MediaKey: undefined, MediaURL: 'https://trreb-image.ampre.ca/ABC123/rs:fit:800:600/image.jpg', Order: 1 },
+          { MediaKey: undefined, MediaURL: 'https://trreb-image.ampre.ca/ABC123/rs:fit:240:240/image.jpg', Order: 2 }, // Duplicate (smaller)
+          { MediaKey: undefined, MediaURL: 'https://trreb-image.ampre.ca/ABC123/rs:fit:1200:900/image.jpg', Order: 3 }, // Duplicate (larger)
+          { MediaKey: undefined, MediaURL: 'https://trreb-image.ampre.ca/XYZ789/rs:fit:800:600/image2.jpg', Order: 4 }, // Different image
+        ],
+      }
+      const result = convertIDXToProperty(listingWithoutKeys)
+      // Should keep only 2 unique images (ABC123 and XYZ789)
+      // Should prefer larger size (1200:900) for ABC123
+      expect(result.images).toHaveLength(2)
+      expect(result.images[0]).toContain('ABC123')
+      expect(result.images[0]).toContain('rs:fit:1200:900')
+      expect(result.images[1]).toContain('XYZ789')
+    })
+
     it('should handle LivingAreaRange fallback', () => {
       const listingWithRange = {
         ...mockIDXListing,

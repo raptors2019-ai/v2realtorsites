@@ -5,36 +5,10 @@ import {
   PropertyType,
   SortOption,
   ListingType,
+  PropertyClass,
 } from "@repo/types";
 import { cn } from "@repo/lib";
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-
-// Toronto region mappings - maps display name to all city codes in that region
-const TORONTO_REGIONS: Record<string, string[]> = {
-  "Toronto Central": ["Toronto", "Toronto C01", "Toronto C02", "Toronto C03", "Toronto C04", "Toronto C06", "Toronto C07", "Toronto C08", "Toronto C09", "Toronto C10", "Toronto C11", "Toronto C12", "Toronto C13", "Toronto C14", "Toronto C15"],
-  "Toronto East": ["Toronto E01", "Toronto E02", "Toronto E03", "Toronto E04", "Toronto E05", "Toronto E06", "Toronto E07", "Toronto E08", "Toronto E09", "Toronto E10", "Toronto E11"],
-  "Toronto West": ["Toronto W01", "Toronto W02", "Toronto W03", "Toronto W04", "Toronto W05", "Toronto W06", "Toronto W07", "Toronto W08", "Toronto W09", "Toronto W10"],
-  "North York": ["North York", "Willowdale"],
-  "Scarborough": ["Scarborough"],
-  "Etobicoke": ["Etobicoke"],
-};
-
-// Other GTA regions
-const GTA_REGIONS: Record<string, string[]> = {
-  "York Region": ["Markham", "Richmond Hill", "Vaughan", "Aurora", "Newmarket", "Stouffville", "King", "East Gwillimbury", "Georgina", "Whitchurch-Stouffville"],
-  "Peel Region": ["Mississauga", "Brampton", "Caledon"],
-  "Durham Region": ["Oshawa", "Whitby", "Ajax", "Pickering", "Clarington", "Uxbridge", "Scugog", "Brock"],
-  "Halton Region": ["Oakville", "Burlington", "Milton", "Halton Hills"],
-  "Hamilton Area": ["Hamilton", "Ancaster", "Dundas", "Stoney Creek", "Flamborough"],
-};
-
-interface AreaOption {
-  label: string;
-  value: string; // Single city or region name
-  cities: string[]; // All cities this option represents
-  isRegion: boolean;
-  isHeader?: boolean;
-}
+import { useState, useCallback, useRef, useEffect } from "react";
 
 interface PropertyFiltersProps {
   onFilterChange: (filters: PropertyFiltersType) => void;
@@ -57,119 +31,60 @@ export function PropertyFilters({
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const propertyTypes: PropertyType[] = ["detached", "semi-detached", "townhouse", "condo"];
 
+  // All GTA cities for the dropdown (not just filtered results)
+  const allCities = [
+    'Toronto', 'Mississauga', 'Brampton', 'Vaughan',
+    'Markham', 'Richmond Hill', 'Milton', 'Oakville',
+    'Burlington', 'Hamilton', 'Caledon'
+  ];
+
   // Price range state
   const MIN_PRICE = 0;
   const MAX_PRICE = 5000000;
   const STEP = 50000;
   const [priceRange, setPriceRange] = useState<[number, number]>([
-    filters.priceRange?.min ?? MIN_PRICE,
-    filters.priceRange?.max ?? MAX_PRICE,
+    initialFilters.priceRange?.min ?? MIN_PRICE,
+    initialFilters.priceRange?.max ?? MAX_PRICE,
   ]);
 
-  // Build area options from available cities
-  const areaOptions = useMemo(() => {
-    const options: AreaOption[] = [];
-    const citySet = new Set(cities.map(c => c.toLowerCase()));
-    const usedCities = new Set<string>();
-
-    // Helper to get matching cities from a list
-    const getMatchingCities = (cityList: string[]) =>
-      cityList.filter(c => citySet.has(c.toLowerCase()));
-
-    // Toronto Areas
-    const torontoOptions: AreaOption[] = [];
-    Object.entries(TORONTO_REGIONS).forEach(([regionName, regionCities]) => {
-      const matching = getMatchingCities(regionCities);
-      if (matching.length > 0) {
-        matching.forEach(c => usedCities.add(c.toLowerCase()));
-        // If region has multiple cities, show as region. If single, show city directly.
-        if (matching.length > 1 || regionName === "Toronto Central") {
-          torontoOptions.push({
-            label: regionName,
-            value: regionName,
-            cities: matching,
-            isRegion: true,
-          });
-        } else {
-          // Single city - show it directly without region wrapper
-          torontoOptions.push({
-            label: matching[0],
-            value: matching[0],
-            cities: matching,
-            isRegion: false,
-          });
-        }
-      }
-    });
-
-    if (torontoOptions.length > 0) {
-      options.push({ label: "── Toronto ──", value: "", cities: [], isRegion: false, isHeader: true });
-      options.push(...torontoOptions);
-    }
-
-    // GTA Regions
-    Object.entries(GTA_REGIONS).forEach(([regionName, regionCities]) => {
-      const matching = getMatchingCities(regionCities);
-      if (matching.length > 0) {
-        matching.forEach(c => usedCities.add(c.toLowerCase()));
-
-        if (matching.length > 1) {
-          // Multiple cities - show region header then individual cities OR just region
-          options.push({ label: `── ${regionName} ──`, value: "", cities: [], isRegion: false, isHeader: true });
-          // Add "All [Region]" option
-          options.push({
-            label: `All ${regionName}`,
-            value: regionName,
-            cities: matching,
-            isRegion: true,
-          });
-          // Add individual cities
-          matching.forEach(city => {
-            options.push({
-              label: city,
-              value: city,
-              cities: [city],
-              isRegion: false,
-            });
-          });
-        } else {
-          // Single city - just add it directly (no region header needed)
-          options.push({
-            label: matching[0],
-            value: matching[0],
-            cities: matching,
-            isRegion: false,
-          });
-        }
-      }
-    });
-
-    // Other cities not in any region
-    const otherCities = cities.filter(c =>
-      !usedCities.has(c.toLowerCase()) &&
-      !c.match(/Toronto [CEW]\d+/i) // Exclude raw Toronto codes
-    );
-
-    if (otherCities.length > 0) {
-      options.push({ label: "── Other ──", value: "", cities: [], isRegion: false, isHeader: true });
-      otherCities.forEach(city => {
-        options.push({
-          label: city,
-          value: city,
-          cities: [city],
-          isRegion: false,
-        });
-      });
-    }
-
-    return options;
-  }, [cities]);
-
-  // Track selected area option
-  const [selectedArea, setSelectedArea] = useState<string>("");
+  // Track selected cities for multi-select
+  const [selectedCities, setSelectedCities] = useState<string[]>(
+    initialFilters.locations || []
+  );
+  const [isAreaDropdownOpen, setIsAreaDropdownOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
+  const areaButtonRef = useRef<HTMLButtonElement>(null);
 
   // Track initial mount
   const isInitialMount = useRef(true);
+
+  // Update dropdown position when it opens or on scroll
+  useEffect(() => {
+    const updatePosition = () => {
+      if (areaButtonRef.current) {
+        const rect = areaButtonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + 4, // Fixed positioning, no scroll offset needed
+          left: rect.left,
+          width: rect.width,
+        });
+      }
+    };
+
+    if (isAreaDropdownOpen) {
+      updatePosition();
+      // Update position on scroll
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+    } else {
+      setDropdownPosition(null);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isAreaDropdownOpen]);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -189,35 +104,29 @@ export function PropertyFilters({
   };
 
   const handleClearFilters = () => {
-    setFilters({ listingType: 'sale' });
+    setFilters({ listingType: 'sale', propertyClass: 'residential' });
     setSortBy("price-desc");
     setPriceRange([MIN_PRICE, MAX_PRICE]);
-    setSelectedArea("");
+    setSelectedCities([]);
     onSortChange("price-desc");
   };
 
-  const handleAreaChange = (value: string) => {
-    setSelectedArea(value);
+  const handleCityToggle = (city: string) => {
+    const newSelectedCities = selectedCities.includes(city)
+      ? selectedCities.filter(c => c !== city)
+      : [...selectedCities, city];
 
-    if (!value) {
-      // Clear location filters
+    setSelectedCities(newSelectedCities);
+
+    if (newSelectedCities.length === 0) {
       handleFilterChange("location", undefined);
       handleFilterChange("locations", undefined);
-      return;
-    }
-
-    // Find the selected option
-    const option = areaOptions.find(o => o.value === value);
-    if (!option) return;
-
-    if (option.cities.length === 1) {
-      // Single city
-      handleFilterChange("location", option.cities[0]);
+    } else if (newSelectedCities.length === 1) {
+      handleFilterChange("location", newSelectedCities[0]);
       handleFilterChange("locations", undefined);
     } else {
-      // Multiple cities (region)
       handleFilterChange("location", undefined);
-      handleFilterChange("locations", option.cities);
+      handleFilterChange("locations", newSelectedCities);
     }
   };
 
@@ -255,7 +164,7 @@ export function PropertyFilters({
   return (
     <div className={cn("bg-white rounded-xl shadow-sm border border-stone-200 p-4", className)}>
       {/* Grid Layout for Filters */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
         {/* Listing Type */}
         <div>
           <label className="block text-[10px] text-stone-500 mb-1.5 uppercase tracking-wide font-medium">
@@ -269,6 +178,21 @@ export function PropertyFilters({
             <option value="">All</option>
             <option value="sale">For Sale</option>
             <option value="lease">For Lease</option>
+          </select>
+        </div>
+
+        {/* Property Class - Residential/Commercial */}
+        <div>
+          <label className="block text-[10px] text-stone-500 mb-1.5 uppercase tracking-wide font-medium">
+            Class
+          </label>
+          <select
+            value={filters.propertyClass || "residential"}
+            onChange={(e) => handleFilterChange("propertyClass", e.target.value ? (e.target.value as PropertyClass) : undefined)}
+            className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+          >
+            <option value="residential">Residential</option>
+            <option value="commercial">Commercial</option>
           </select>
         </div>
 
@@ -291,29 +215,66 @@ export function PropertyFilters({
           </select>
         </div>
 
-        {/* Area with Regions */}
-        <div className="col-span-2 sm:col-span-1">
+        {/* Area - Multi-Select */}
+        <div className="col-span-2 sm:col-span-1 relative">
           <label className="block text-[10px] text-stone-500 mb-1.5 uppercase tracking-wide font-medium">
             Area
           </label>
-          <select
-            value={selectedArea}
-            onChange={(e) => handleAreaChange(e.target.value)}
-            className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+          <button
+            ref={areaButtonRef}
+            type="button"
+            onClick={() => setIsAreaDropdownOpen(!isAreaDropdownOpen)}
+            className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer flex items-center justify-between text-left"
           >
-            <option value="">All Areas</option>
-            {areaOptions.map((opt, i) => (
-              opt.isHeader ? (
-                <option key={i} value="" disabled className="font-semibold text-stone-500 bg-stone-100">
-                  {opt.label}
-                </option>
-              ) : (
-                <option key={i} value={opt.value}>
-                  {opt.isRegion ? `${opt.label} (${opt.cities.length} areas)` : opt.label}
-                </option>
-              )
-            ))}
-          </select>
+            <span className="truncate">
+              {selectedCities.length === 0
+                ? "All Areas"
+                : selectedCities.join(", ")}
+            </span>
+            <svg
+              className={`w-4 h-4 text-stone-400 transition-transform ${isAreaDropdownOpen ? "rotate-180" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Dropdown */}
+          {isAreaDropdownOpen && dropdownPosition && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 z-[100]"
+                onClick={() => setIsAreaDropdownOpen(false)}
+              />
+              {/* Dropdown content */}
+              <div
+                className="fixed bg-white border border-stone-200 rounded-lg shadow-lg z-[101] max-h-60 overflow-y-auto"
+                style={{
+                  top: `${dropdownPosition.top}px`,
+                  left: `${dropdownPosition.left}px`,
+                  width: `${dropdownPosition.width}px`,
+                }}
+              >
+                {allCities.map((city) => (
+                  <label
+                    key={city}
+                    className="flex items-center gap-2 px-3 py-2 hover:bg-stone-50 cursor-pointer transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCities.includes(city)}
+                      onChange={() => handleCityToggle(city)}
+                      className="w-4 h-4 text-primary border-stone-300 rounded focus:ring-2 focus:ring-primary/20"
+                    />
+                    <span className="text-sm text-stone-700">{city}</span>
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Bedrooms */}

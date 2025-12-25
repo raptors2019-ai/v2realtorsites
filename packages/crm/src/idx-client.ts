@@ -56,6 +56,16 @@ export class IDXClient {
     if (params.bathrooms) {
       filters.push(`BathroomsTotalInteger ge ${params.bathrooms}`)
     }
+
+    // Property class filter (residential vs commercial)
+    if (params.propertyClass === 'residential') {
+      // Residential includes: Residential Freehold and Residential Condo & Other
+      filters.push(`(PropertyType eq 'Residential Freehold' or PropertyType eq 'Residential Condo & Other')`)
+    } else if (params.propertyClass === 'commercial') {
+      // Commercial
+      filters.push(`PropertyType eq 'Commercial'`)
+    }
+
     if (params.propertyType && params.propertyType !== 'all') {
       filters.push(`PropertyType eq '${params.propertyType}'`)
     }
@@ -123,6 +133,12 @@ export class IDXClient {
       }
 
       const data = await response.json() as { value: IDXListing[]; '@odata.count'?: number }
+
+      // Debug: Log unique cities from results
+      if (data.value && data.value.length > 0) {
+        const cities = new Set(data.value.map(l => l.City).filter(Boolean))
+        console.log('[idx.client.searchListings.cities]', Array.from(cities).slice(0, 10))
+      }
 
       console.log('[idx.client.searchListings.success]', {
         count: data.value?.length || 0,

@@ -58,12 +58,17 @@ export async function getAllPropertiesWithTotal(
 
     // Step 5: Extract unique cities for filtering
     const citySet = new Set<string>();
+    const propertyTypeSet = new Set<string>();
     listings.forEach(listing => {
       if (listing.City) citySet.add(listing.City);
+      if (listing.PropertyType) propertyTypeSet.add(listing.PropertyType);
     });
     const cities = Array.from(citySet).sort();
+    const propertyTypes = Array.from(propertyTypeSet).sort();
 
     console.log('[IDX] Loaded', properties.length, 'of', response.total, 'properties,', cities.length, 'cities');
+    console.log('[IDX.cities]', cities);
+    console.log('[IDX.propertyTypes]', propertyTypes);
 
     return { properties, total: response.total, cities };
   } catch (error) {
@@ -74,10 +79,38 @@ export async function getAllPropertiesWithTotal(
 
 /**
  * Get a single property by ID
+ * Uses direct API lookup instead of searching through all properties
  */
 export async function getPropertyById(id: string): Promise<Property | undefined> {
-  const properties = await getAllProperties();
-  return properties.find((property) => property.id === id);
+  const client = new IDXClient();
+
+  if (!client.isConfigured) {
+    console.error('[data.getPropertyById] IDX_API_KEY not configured');
+    return undefined;
+  }
+
+  try {
+    // Fetch the listing directly from the API
+    const listing = await client.getListing(id);
+    if (!listing) {
+      console.log('[data.getPropertyById] Property not found:', id);
+      return undefined;
+    }
+
+    // Fetch media for this listing
+    const mediaMap = await client.fetchMediaForListings([listing.ListingKey]);
+    const listingWithMedia = {
+      ...listing,
+      Media: mediaMap.get(listing.ListingKey) || [],
+    };
+
+    // Convert to Property format
+    const property = convertIDXToProperty(listingWithMedia);
+    return property;
+  } catch (error) {
+    console.error('[data.getPropertyById] Failed:', error);
+    return undefined;
+  }
 }
 
 /**
