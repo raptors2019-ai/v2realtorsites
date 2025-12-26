@@ -35,13 +35,17 @@ export function ContactForm() {
     if (interest) {
       const messageMap: Record<string, string> = {
         selling: "I'm interested in selling a house. ",
+        valuation: "I'm interested in getting a free home valuation. ",
         buying: "I'm interested in buying a property. ",
         renting: "I'm looking to rent a property. ",
       }
 
+      // Map valuation to selling in dropdown (valuation option removed)
+      const dropdownInterest = interest === 'valuation' ? 'selling' : interest
+
       setFormData((prev) => ({
         ...prev,
-        interest,
+        interest: dropdownInterest,
         message: messageMap[interest] || prev.message,
       }))
     }
@@ -219,7 +223,6 @@ export function ContactForm() {
           <option value="buying">Buying a Property</option>
           <option value="selling">Selling a Property</option>
           <option value="renting">Renting a Property</option>
-          <option value="valuation">Home Valuation</option>
           <option value="general">General Inquiry</option>
         </select>
       </div>

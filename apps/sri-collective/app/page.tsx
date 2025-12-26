@@ -239,7 +239,7 @@ export default async function Home() {
                   </li>
                 </ul>
                 <Link
-                  href="/contact?interest=selling"
+                  href="/contact?interest=valuation"
                   className="btn-primary px-8 py-3.5 rounded-lg text-sm font-medium inline-block"
                 >
                   Get Your Free Valuation
