@@ -133,14 +133,37 @@ export function convertIDXToProperty(listing: IDXListing): Property {
 
   /**
    * Extract base image ID from Ampre CDN URL
-   * Ampre uses format: https://trreb-image.ampre.ca/{IMAGE_ID}/rs:fit:240:240/wm:.5.../path.jpg
-   * The IMAGE_ID is the unique identifier - everything after is resize/watermark params
+   * Ampre uses format: https://trreb-image.ampre.ca/{HASH}/rs:fit:240:240/.../BASE64_PATH
+   * The HASH changes per size, so we need to extract the actual filename from BASE64_PATH
+   * BASE64_PATH decodes to: /trreb/listings/.../UUID.jpg
+   * We extract the UUID.jpg as the unique identifier
    */
   const extractImageId = (url: string): string => {
     try {
       const urlObj = new URL(url)
       const pathParts = urlObj.pathname.split('/').filter(Boolean)
-      // First part is the unique image ID (hash)
+
+      // Find the last part that looks like a base64-encoded path (starts with 'L3')
+      const base64Part = pathParts.find(part => part.startsWith('L3') && part.includes('.jpg'))
+
+      if (base64Part) {
+        // Decode the base64 path to get the actual filename
+        try {
+          // Use Buffer for Node.js compatibility (atob is browser-only!)
+          const decoded = Buffer.from(base64Part.replace(/\.jpg$/, ''), 'base64').toString('utf-8')
+          // Extract the filename (UUID.jpg) from the decoded path
+          // Format: /trreb/listings/42/70/13/26/p/42f9bbff-e8fd-4934-9875-329690403ad5.jpg
+          const filenamMatch = decoded.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\.jpg$/i)
+          if (filenamMatch) {
+            return filenamMatch[1] // Return just the UUID
+          }
+        } catch (e) {
+          // Base64 decode failed, fall back to other method
+          console.warn('[extractImageId] Base64 decode failed for:', base64Part, e)
+        }
+      }
+
+      // Fallback: use the first part (hash)
       return pathParts[0] || url
     } catch {
       return url
@@ -159,8 +182,11 @@ export function convertIDXToProperty(listing: IDXListing): Property {
   const imageMap = new Map<string, IDXMedia>()
 
   for (const media of mediaItems) {
-    // Get unique ID (MediaKey or URL-based image ID)
-    const id = media.MediaKey?.replace(/-t$/, '') || extractImageId(media.MediaURL)
+    // Get unique ID - prioritize MediaKey (most reliable), then URL extraction
+    // Remove ALL size suffixes from MediaKey (any letters after last hyphen)
+    // Examples: -t, -s, -m, -l, -xl, -xxl, -nw, etc.
+    const cleanMediaKey = media.MediaKey?.replace(/-[a-z]+$/i, '')
+    const id = cleanMediaKey || extractImageId(media.MediaURL)
 
     // Get existing entry or add new one
     const existing = imageMap.get(id)
@@ -184,13 +210,18 @@ export function convertIDXToProperty(listing: IDXListing): Property {
 
   const images = uniqueMedia.map(m => m.MediaURL)
 
-  console.log('[convertIDXToProperty.images]', {
-    listingKey: listing.ListingKey,
-    total: mediaItems.length,
-    unique: uniqueMedia.length,
-    final: images.length,
-    duplicatesRemoved: mediaItems.length - uniqueMedia.length
-  })
+  // Enhanced logging to debug deduplication
+  const duplicatesRemoved = mediaItems.length - uniqueMedia.length
+  if (duplicatesRemoved > 0) {
+    console.log('[convertIDXToProperty.images]', {
+      listingKey: listing.ListingKey,
+      total: mediaItems.length,
+      unique: uniqueMedia.length,
+      final: images.length,
+      duplicatesRemoved,
+      deduplicationRate: `${Math.round((duplicatesRemoved / mediaItems.length) * 100)}%`
+    })
+  }
 
   // Try multiple fields for square footage
   // TRREB/Ampre API returns LivingAreaRange as a string like "0-499", "500-999", etc.
