@@ -50,10 +50,17 @@ export default async function CityPropertiesPage({ params }: PageProps) {
   const displayName = cityInfo?.display || city.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 
   // Fetch properties for this city
+  const cityFilter = cityInfo?.filter || displayName
   const { properties, total, cities } = await getAllPropertiesWithTotal({
-    city: cityInfo?.filter || displayName,
+    city: cityFilter,
     limit: 50,
   })
+
+  // Build initial filters to show the selected city in the filter dropdown
+  const initialFilters = {
+    listingType: 'sale' as const,
+    locations: [cityFilter],
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -76,9 +83,18 @@ export default async function CityPropertiesPage({ params }: PageProps) {
             <h1 className="text-4xl md:text-5xl font-bold text-secondary mb-4">
               Properties in {displayName}
             </h1>
-            <p className="text-text-secondary max-w-2xl mx-auto">
+            <p className="text-text-secondary max-w-2xl mx-auto mb-6">
               Discover your perfect home in {displayName}. Browse our curated selection of houses, condos, and townhouses.
             </p>
+            <Link
+              href="/properties?reset=true"
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 text-sm font-medium transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Change Preferences
+            </Link>
           </div>
         </div>
       </section>
@@ -90,6 +106,7 @@ export default async function CityPropertiesPage({ params }: PageProps) {
             initialProperties={properties}
             initialCities={cities}
             total={total}
+            initialFilters={initialFilters}
           />
         </div>
       </section>

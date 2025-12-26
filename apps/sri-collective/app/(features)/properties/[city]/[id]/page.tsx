@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPropertyById, getSimilarProperties, formatPrice } from '@/lib/data'
-import { PropertyCard, PropertyGallery, CopyButton, PropertyJsonLd } from '@repo/ui'
+import { PropertyGallery, CopyButton, PropertyJsonLd, BackButton, SimilarProperties } from '@repo/ui'
 import { PropertyDetailTracker } from '@repo/analytics'
 
 interface PageProps {
@@ -41,7 +41,7 @@ export default async function PropertyDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  const similarProperties = await getSimilarProperties(property, 6)
+  const similarProperties = await getSimilarProperties(property) // Default: 3-5 properties
   const citySlug = createCitySlug(property.city)
   const cityDisplay = formatCityName(city)
 
@@ -64,7 +64,10 @@ export default async function PropertyDetailPage({ params }: PageProps) {
       <div className="min-h-screen bg-white overflow-x-hidden">
         {/* Breadcrumb & Back Button */}
         <div className="container mx-auto px-4 py-3 sm:py-4 max-w-full">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col gap-3">
+            {/* Back Button - Left aligned */}
+            <BackButton />
+            {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-xs sm:text-sm text-text-secondary flex-wrap">
               <Link href="/" className="hover:text-primary transition-colors">Home</Link>
               <span>/</span>
@@ -74,15 +77,6 @@ export default async function PropertyDetailPage({ params }: PageProps) {
               <span>/</span>
               <span className="text-secondary truncate max-w-[250px] sm:max-w-none">{property.address}</span>
             </nav>
-            <Link
-              href={`/properties/${citySlug}`}
-              className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors font-medium"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to {property.city}
-            </Link>
           </div>
         </div>
 
@@ -205,42 +199,12 @@ export default async function PropertyDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Similar Properties */}
-        {similarProperties.length > 0 && (
-          <section className="py-16 bg-cream">
-            <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-secondary">Similar Properties in {property.city}</h2>
-                <p className="text-sm text-text-secondary hidden sm:block">{similarProperties.length} {similarProperties.length === 1 ? 'property' : 'properties'}</p>
-              </div>
-
-              {/* Mobile: Horizontal scroll with snap */}
-              <div className="md:hidden overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory">
-                <div className="flex gap-4 w-max">
-                  {similarProperties.map((p, index) => (
-                    <div key={p.id} className="w-[85vw] max-w-sm snap-center">
-                      <PropertyCard property={p} citySlug={createCitySlug(p.city)} index={index} />
-                    </div>
-                  ))}
-                </div>
-                {similarProperties.length > 1 && (
-                  <div className="flex justify-center gap-2 mt-4">
-                    {similarProperties.map((_, index) => (
-                      <div key={index} className="w-2 h-2 rounded-full bg-primary/30" />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Desktop: Grid */}
-              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {similarProperties.map((p) => (
-                  <PropertyCard key={p.id} property={p} citySlug={createCitySlug(p.city)} />
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+        {/* Similar Properties - Smart Recommendations */}
+        <SimilarProperties
+          currentProperty={property}
+          initialSimilar={similarProperties}
+          citySlug={citySlug}
+        />
       </div>
     </>
   )

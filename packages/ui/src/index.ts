@@ -12,7 +12,7 @@ export { CopyButton } from './components/CopyButton'
 export { BentoGrid, BentoCard, BentoFeatureCard, type BentoCardSize } from './components/BentoGrid'
 
 // Properties
-export { PropertyCard, PropertyCardCarousel, PropertyGallery, PropertyGrid, PropertyFilters, PropertiesPageClient, PropertySurvey } from './properties'
+export { PropertyCard, PropertyCardCarousel, PropertyGallery, PropertyGrid, PropertyFilters, PropertiesPageClient, PropertySurvey, BackButton, SimilarProperties } from './properties'
 
 // Chatbot
 export { ChatbotWidget } from './chatbot'

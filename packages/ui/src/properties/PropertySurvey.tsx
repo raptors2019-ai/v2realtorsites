@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 interface SurveyState {
   listingType: 'sale' | 'lease'
@@ -15,14 +15,61 @@ const cities = [
   'Burlington', 'Hamilton', 'Caledon'
 ]
 
+const STORAGE_KEY = 'propertyPreferences'
+
 export function PropertySurvey() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isResetting = searchParams.get('reset') === 'true'
+
   // Set defaults: sale and 500k-1M (most common range)
   const [survey, setSurvey] = useState<SurveyState>({
     listingType: 'sale',
     budgetRange: '500k-1m',
     locations: []
   })
+
+  // Check for existing preferences on mount
+  useEffect(() => {
+    // Check if preferences exist in sessionStorage
+    const stored = sessionStorage.getItem(STORAGE_KEY)
+
+    if (stored) {
+      try {
+        const preferences = JSON.parse(stored)
+
+        // If user is resetting, load their previous selections but allow editing
+        if (isResetting) {
+          // Pre-populate the survey with their previous choices
+          // Try new format first (with filters), fallback to old format (just survey)
+          if (preferences.survey) {
+            setSurvey(preferences.survey)
+          } else if (preferences.filters) {
+            // Convert filters back to survey format
+            const surveyFromFilters = {
+              listingType: preferences.filters.listingType?.[0] || 'sale',
+              budgetRange: (() => {
+                const max = preferences.filters.priceRange?.max || 1000000;
+                if (max <= 500000) return '0-500k';
+                if (max <= 1000000) return '500k-1m';
+                if (max <= 2000000) return '1m-2m';
+                return '2m+';
+              })(),
+              locations: preferences.filters.locations || [],
+            };
+            setSurvey(surveyFromFilters as SurveyState);
+          }
+          return // Don't auto-redirect, let them edit
+        }
+
+        // Auto-redirect to properties page with stored preferences
+        router.push(preferences.url)
+      } catch (error) {
+        console.error('[survey.load.error]', error)
+        sessionStorage.removeItem(STORAGE_KEY)
+      }
+    }
+  }, [router, isResetting])
 
   const toggleLocation = (city: string) => {
     setSurvey(prev => ({
@@ -61,8 +108,23 @@ export function PropertySurvey() {
 
     if (survey.locations.length > 0) params.set('cities', survey.locations.join(','))
 
+    const url = `/properties?${params.toString()}`
+
+    // Save preferences to sessionStorage
+    try {
+      const preferences = {
+        survey,
+        url,
+        timestamp: Date.now(),
+      }
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(preferences))
+      console.log('[survey.save]', { preferences })
+    } catch (error) {
+      console.error('[survey.save.error]', error)
+    }
+
     // Navigate to results
-    router.push(`/properties?${params.toString()}`)
+    router.push(url)
   }
 
   // Only require city selection - defaults are set for listing type and budget

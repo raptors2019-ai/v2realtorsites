@@ -19,6 +19,7 @@ interface PropertiesPageClientProps {
 }
 
 const PAGE_SIZE = 20;
+const STORAGE_KEY = 'propertyPreferences';
 
 export function PropertiesPageClient({
   initialProperties,
@@ -44,6 +45,85 @@ export function PropertiesPageClient({
   // Track if filters have changed from initial
   const isInitialMount = useRef(true);
   const currentFiltersRef = useRef<PropertyFiltersType>(filters);
+
+  // Helper to safely convert to array and join
+  const toCommaSeparated = <T,>(value: T | T[] | undefined): string | undefined => {
+    if (!value) return undefined;
+    const arr = Array.isArray(value) ? value : [value];
+    return arr.length > 0 ? arr.join(',') : undefined;
+  };
+
+  // Build user-facing URL from filters
+  const buildUserURL = useCallback((currentFilters: PropertyFiltersType) => {
+    const params = new URLSearchParams();
+
+    // Listing type (array)
+    const listingType = toCommaSeparated(currentFilters.listingType);
+    if (listingType) params.set('listingType', listingType);
+
+    // Property class (array)
+    const propertyClass = toCommaSeparated(currentFilters.propertyClass);
+    if (propertyClass) params.set('propertyClass', propertyClass);
+
+    // Price range
+    if (currentFilters.priceRange?.min) {
+      params.set('budgetMin', String(currentFilters.priceRange.min));
+    }
+    if (currentFilters.priceRange?.max) {
+      params.set('budgetMax', String(currentFilters.priceRange.max));
+    }
+
+    // Cities
+    const cities = toCommaSeparated(currentFilters.locations);
+    if (cities) params.set('cities', cities);
+
+    // Property types (array)
+    const propertyType = toCommaSeparated(currentFilters.type);
+    if (propertyType) params.set('propertyType', propertyType);
+
+    // Bedrooms (array)
+    const bedrooms = toCommaSeparated(currentFilters.bedrooms);
+    if (bedrooms) params.set('bedrooms', bedrooms);
+
+    // Bathrooms (array)
+    const bathrooms = toCommaSeparated(currentFilters.bathrooms);
+    if (bathrooms) params.set('bathrooms', bathrooms);
+
+    return `/properties?${params.toString()}`;
+  }, []);
+
+  // Save preferences to sessionStorage
+  const savePreferences = useCallback((currentFilters: PropertyFiltersType) => {
+    try {
+      const url = buildUserURL(currentFilters);
+
+      // Try to build survey-compatible format for backwards compatibility
+      const survey = {
+        listingType: currentFilters.listingType?.[0] || 'sale',
+        budgetRange: (() => {
+          const min = currentFilters.priceRange?.min || 0;
+          const max = currentFilters.priceRange?.max || 5000000;
+          if (max <= 500000) return '0-500k';
+          if (max <= 1000000) return '500k-1m';
+          if (max <= 2000000) return '1m-2m';
+          return '2m+';
+        })(),
+        locations: currentFilters.locations || [],
+      };
+
+      const preferences = {
+        filters: currentFilters,
+        survey,
+        url,
+        timestamp: Date.now(),
+      };
+
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+      console.log('[properties.preferences.save]', { preferences });
+    } catch (error) {
+      console.error('[properties.preferences.save.error]', error);
+    }
+  }, [buildUserURL]);
 
   // Build API query string from filters
   const buildQueryString = useCallback((offset = 0) => {
@@ -151,6 +231,9 @@ export function PropertiesPageClient({
 
     currentFiltersRef.current = filters;
 
+    // Save updated preferences to sessionStorage
+    savePreferences(filters);
+
     // Debounce price changes, immediate for other filters
     if (priceChanged && !otherChanged) {
       const timer = setTimeout(() => {
@@ -161,7 +244,7 @@ export function PropertiesPageClient({
       fetchProperties(0, false);
       return;
     }
-  }, [filters, fetchProperties]);
+  }, [filters, fetchProperties, savePreferences]);
 
   // Re-sort when sort changes (client-side only)
   useEffect(() => {

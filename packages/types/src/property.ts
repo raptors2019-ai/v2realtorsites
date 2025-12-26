@@ -46,12 +46,12 @@ export type PropertyClass = 'residential' | 'commercial'
 export interface PropertyFilters {
   type?: Property['propertyType'][]
   priceRange?: { min?: number; max?: number }
-  bedrooms?: number
-  bathrooms?: number
+  bedrooms?: number[] // Multiple bedroom counts
+  bathrooms?: number[] // Multiple bathroom counts
   location?: string // Single city
   locations?: string[] // Multiple cities (for regions)
-  listingType?: ListingType // 'sale' or 'lease'
-  propertyClass?: PropertyClass // 'residential' or 'commercial'
+  listingType?: ListingType[] // Multiple listing types ('sale' and/or 'lease')
+  propertyClass?: PropertyClass[] // Multiple property classes ('residential' and/or 'commercial')
 }
 
 // Sort Options
