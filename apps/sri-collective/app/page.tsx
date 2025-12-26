@@ -55,7 +55,7 @@ export default async function Home() {
                 Browse Properties
               </Link>
               <Link
-                href="/sell"
+                href="/contact?interest=selling"
                 className="px-8 py-4 rounded-lg text-base font-semibold bg-white text-[#1a1a2e] border-2 border-primary hover:bg-primary hover:text-white shadow-2xl hover:shadow-primary/50 hover:scale-105 transition-all duration-300"
               >
                 Sell Your Home
@@ -79,7 +79,7 @@ export default async function Home() {
               </Link>
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <p className="text-xs text-gray-600 text-center font-medium">
-                  Or chat with our AI assistant
+                  Or get instant answers via chat
                 </p>
               </div>
             </div>
@@ -157,12 +157,12 @@ export default async function Home() {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
+                    d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
                   />
                 </svg>
               }
-              title="24/7 AI Support"
-              description="Our AI-powered chatbot is always available to answer questions, schedule viewings, and help you find your perfect home."
+              title="White Glove Service"
+              description="Sri and Niru personally handle every aspect of your transaction. From your first call to closing day, you'll receive dedicated, one-on-one support."
             />
           </BentoGrid>
         </div>
@@ -239,7 +239,7 @@ export default async function Home() {
                   </li>
                 </ul>
                 <Link
-                  href="/sell"
+                  href="/contact?interest=selling"
                   className="btn-primary px-8 py-3.5 rounded-lg text-sm font-medium inline-block"
                 >
                   Get Your Free Valuation
@@ -248,16 +248,12 @@ export default async function Home() {
 
               <div className="relative">
                 <div
-                  className="aspect-[4/3] rounded-xl bg-cover bg-center"
+                  className="aspect-[4/3] rounded-xl bg-cover bg-center shadow-xl"
                   style={{
                     backgroundImage:
                       "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop')",
                   }}
                 />
-                <div className="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-xl p-6 max-w-[200px]">
-                  <p className="text-3xl font-bold text-primary">98%</p>
-                  <p className="text-sm text-text-secondary">of our listings sell within 30 days</p>
-                </div>
               </div>
             </div>
           </div>
@@ -348,8 +344,8 @@ export default async function Home() {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-secondary font-medium mb-1">AI-Powered Tools</h4>
-                      <p className="text-text-secondary text-sm">Modern technology meets personalized service</p>
+                      <h4 className="text-secondary font-medium mb-1">Modern Technology</h4>
+                      <p className="text-text-secondary text-sm">Helpful tools to support your home search</p>
                     </div>
                   </div>
                 </div>

@@ -22,10 +22,6 @@ const headerConfig: HeaderConfig = {
     { label: 'Properties', href: '/properties' },
     { label: 'Contact', href: '/contact' },
   ],
-  ctaButton: {
-    text: 'Get Started',
-    href: '/contact',
-  },
 }
 
 const footerConfig: FooterConfig = {
@@ -40,8 +36,6 @@ const footerConfig: FooterConfig = {
   ],
   quickLinks: [
     { name: 'Properties', href: '/properties' },
-    { name: 'Sell Your House', href: '/sell' },
-    { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
   ],
 }

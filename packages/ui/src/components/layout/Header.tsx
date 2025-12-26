@@ -62,7 +62,7 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <span className="text-2xl font-semibold tracking-tight transition-all duration-300 group-hover:scale-[1.02]">
+            <span className="text-3xl md:text-3xl font-bold tracking-wide transition-all duration-300 group-hover:scale-[1.02]">
               {config.logoFirstPart && (
                 <span className="text-secondary dark:text-white transition-colors duration-300">
                   {config.logoFirstPart}
@@ -75,7 +75,7 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
                     'text-gradient-primary transition-colors duration-300'
                   }
                 >
-                  {config.logoSecondPart}
+                  {' '}{config.logoSecondPart}
                 </span>
               )}
               {!config.logoFirstPart && !config.logoSecondPart && (
@@ -109,8 +109,8 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
                   }`}
                   style={{ background: 'var(--primary)' }}
                 />
-                {/* Background hover effect */}
-                <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#c9a962]/20 to-[#b8944d]/15 dark:from-[#c9a962]/30 dark:to-[#b8944d]/20 scale-0 group-hover:scale-100 transition-transform duration-300 ease-out -z-10" />
+                {/* Background hover effect - Brighter golden yellow */}
+                <span className="absolute inset-0 rounded-lg border-2 border-[#EAB308]/40 bg-gradient-to-br from-[#EAB308]/15 to-[#F59E0B]/10 dark:from-[#EAB308]/20 dark:to-[#F59E0B]/15 scale-0 group-hover:scale-100 transition-transform duration-300 ease-out -z-10" />
               </Link>
             ))}
             {config.ctaButton && (
