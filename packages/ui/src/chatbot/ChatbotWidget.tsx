@@ -19,6 +19,7 @@ interface PropertyListing {
 // Survey state type
 interface SurveyState {
   step: "idle" | "property-type" | "budget" | "bedrooms" | "timeline" | "location" | "show-listings" | "contact-info" | "complete";
+  type?: "dream-home" | "general-contact";
   propertyType?: string;
   budget?: string;
   bedrooms?: string;
@@ -247,7 +248,7 @@ function SurveyLocation({ onSelect }: { onSelect: (locations: string[]) => void 
         <p className="text-sm font-medium text-stone-800 mb-1">Preferred Locations</p>
         <p className="text-xs text-stone-500">Select all areas you&apos;re interested in</p>
       </div>
-      <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
+      <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-[#1a2332] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-[#242d3f]">
         {locations.map((loc, index) => (
           <button
             key={loc}
@@ -336,76 +337,75 @@ function SurveyListingsDisplay({
 
 // Contact info capture - AFTER showing value
 function SurveyContactInfo({
-  onSubmit
+  onSubmit,
+  surveyType
 }: {
-  onSubmit: (contact: { firstName: string; email: string; phone?: string }) => void;
+  onSubmit: (contact: { fullName: string; phone: string; email?: string }) => void;
+  surveyType?: "dream-home" | "general-contact";
 }) {
-  const [firstName, setFirstName] = useState('');
-  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; phone?: string }>({});
+  const [email, setEmail] = useState('');
+  const [errors, setErrors] = useState<{ fullName?: string; phone?: string; email?: string }>({});
 
-  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePhone = (phone: string) => !phone || phone.replace(/\D/g, '').length === 10 || phone.replace(/\D/g, '').length === 11;
+  const validateEmail = (email: string) => !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone: string) => phone.replace(/\D/g, '').length === 10 || phone.replace(/\D/g, '').length === 11;
 
   const handleSubmit = () => {
-    const newErrors: { email?: string; phone?: string } = {};
-    if (!validateEmail(email)) {
-      newErrors.email = "Please enter a valid email address";
+    const newErrors: { fullName?: string; phone?: string; email?: string } = {};
+
+    if (!fullName.trim()) {
+      newErrors.fullName = "Please enter your full name";
     }
-    if (phone && !validatePhone(phone)) {
+    if (!phone || !validatePhone(phone)) {
       newErrors.phone = "Please enter a valid 10-digit phone number";
     }
+    if (email && !validateEmail(email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    onSubmit({ firstName, email, phone: phone || undefined });
+    onSubmit({ fullName, phone, email: email || undefined });
   };
+
+  const headerText = surveyType === 'general-contact' ? 'Get in Touch' : 'Get in Touch';
+  const subText = surveyType === 'general-contact'
+    ? 'One of our expert agents will contact you ASAP to assist with your real estate needs.'
+    : 'One of our expert agents will contact you ASAP to help you find the perfect property.';
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div>
-        <p className="text-sm font-medium text-stone-800 mb-1">Save these listings</p>
-        <p className="text-xs text-stone-500">
-          We&apos;ll send you similar properties as they become available.
-        </p>
+        <p className="text-sm font-medium text-stone-800 mb-1">{headerText}</p>
+        <p className="text-xs text-stone-500">{subText}</p>
       </div>
 
       <div className="space-y-3">
         <div>
-          <label className="block text-xs font-medium text-stone-700 mb-1">First Name</label>
-          <input
-            type="text"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-[#c9a962] bg-white"
-            placeholder="Your first name"
-          />
-        </div>
-
-        <div>
           <label className="block text-xs font-medium text-stone-700 mb-1">
-            Email Address <span className="text-red-500">*</span>
+            Full Name <span className="text-red-500">*</span>
           </label>
           <input
-            type="email"
-            value={email}
+            type="text"
+            value={fullName}
             onChange={(e) => {
-              setEmail(e.target.value);
-              if (errors.email) setErrors({ ...errors, email: undefined });
+              setFullName(e.target.value);
+              if (errors.fullName) setErrors({ ...errors, fullName: undefined });
             }}
             className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#c9a962] bg-white ${
-              errors.email ? 'border-red-500' : 'border-stone-200'
+              errors.fullName ? 'border-red-500' : 'border-stone-200'
             }`}
-            placeholder="your@email.com"
+            placeholder="John Smith"
           />
-          {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+          {errors.fullName && <p className="text-xs text-red-500 mt-1">{errors.fullName}</p>}
         </div>
 
         <div>
           <label className="block text-xs font-medium text-stone-700 mb-1">
-            Cell Phone <span className="text-stone-400">(recommended)</span>
+            Cell Phone <span className="text-red-500">*</span>
           </label>
           <input
             type="tel"
@@ -424,22 +424,41 @@ function SurveyContactInfo({
             Our agents respond fastest by phone
           </p>
         </div>
+
+        <div>
+          <label className="block text-xs font-medium text-stone-700 mb-1">
+            Email Address <span className="text-stone-400">(recommended)</span>
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (errors.email) setErrors({ ...errors, email: undefined });
+            }}
+            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#c9a962] bg-white ${
+              errors.email ? 'border-red-500' : 'border-stone-200'
+            }`}
+            placeholder="your@email.com"
+          />
+          {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+        </div>
       </div>
 
       <button
         onClick={handleSubmit}
-        disabled={!firstName || !email}
+        disabled={!fullName || !phone}
         className={`w-full py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
-          firstName && email
+          fullName && phone
             ? "bg-gradient-to-r from-[#c9a962] to-[#b8944d] text-white shadow-md hover:shadow-lg hover:scale-[1.02]"
             : "bg-stone-100 text-stone-400 cursor-not-allowed"
         }`}
       >
-        Save & Send Me Listings
+        Have an Agent Contact Me ASAP
       </button>
 
       <p className="text-xs text-stone-400 text-center">
-        We respect your privacy. Your information is only used to send relevant listings.
+        We respect your privacy. Your information will only be used by our agents to contact you.
       </p>
     </div>
   );
@@ -518,8 +537,38 @@ export function ChatbotWidget() {
 
       if (!response.ok) throw new Error("Failed to send message");
 
-      const data = await response.json();
-      addMessage({ role: "assistant", content: data.message });
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('0:')) {
+              // Text delta from AI SDK
+              try {
+                const data = JSON.parse(line.slice(2));
+                if (data) {
+                  fullText += data;
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+
+        if (fullText) {
+          addMessage({ role: "assistant", content: fullText });
+        }
+      }
     } catch (error) {
       console.error("Chat error:", error);
       addMessage({
@@ -534,13 +583,6 @@ export function ChatbotWidget() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     sendMessage(input);
-  };
-
-  const startDreamHomeSurvey = () => {
-    trackChatbotInteraction('survey_start');
-    addMessage({ role: "user", content: "I want to tell you about my dream home." });
-    addMessage({ role: "assistant", content: "Wonderful! Let me help you find the perfect property. I'll guide you through a few quick questions." });
-    setSurvey({ step: "property-type" });
   };
 
   const handleSurveyPropertyType = (type: string) => {
@@ -650,37 +692,52 @@ export function ChatbotWidget() {
   };
 
   // Handle contact form submission
-  const handleContactSubmit = async (contact: { firstName: string; email: string; phone?: string }) => {
+  const handleContactSubmit = async (contact: { fullName: string; phone: string; email?: string }) => {
     // Track lead capture and survey completion
     trackChatbotInteraction('lead');
-    trackChatbotInteraction('survey_complete');
+    if (survey.type === 'dream-home') {
+      trackChatbotInteraction('survey_complete');
+    }
     trackLeadFormSubmit('chatbot');
 
     setSurvey(prev => ({
       ...prev,
-      firstName: contact.firstName,
+      firstName: contact.fullName,
       email: contact.email,
       phone: contact.phone,
       step: "complete"
     }));
 
-    const contactMsg = contact.phone
-      ? `${contact.firstName}, ${contact.email}, ${contact.phone}`
-      : `${contact.firstName}, ${contact.email}`;
+    const contactMsg = contact.email
+      ? `${contact.fullName}, ${contact.phone}, ${contact.email}`
+      : `${contact.fullName}, ${contact.phone}`;
     addMessage({ role: "user", content: contactMsg });
 
     // Send to API to create contact
     setLoading(true);
-    const summary = `Create a contact for lead capture:
-- Name: ${contact.firstName}
-- Email: ${contact.email}
-- Phone: ${contact.phone || 'Not provided'}
+
+    // Build summary based on survey type
+    let summary = '';
+    if (survey.type === 'dream-home') {
+      // Full property preferences for dream home survey
+      summary = `Create a contact for lead capture:
+- Name: ${contact.fullName}
+- Phone: ${contact.phone}
+- Email: ${contact.email || 'Not provided'}
 - Lead Type: buyer
 - Property Type: ${survey.propertyType}
 - Budget: ${survey.budget}
 - Bedrooms: ${survey.bedrooms}
 - Timeline: ${survey.timeline}
 - Locations: ${survey.locations?.join(", ")}`;
+    } else {
+      // General contact - no property preferences
+      summary = `Create a contact for general inquiry:
+- Name: ${contact.fullName}
+- Phone: ${contact.phone}
+- Email: ${contact.email || 'Not provided'}
+- Lead Type: general inquiry`;
+    }
 
     try {
       const response = await fetch("/api/chat", {
@@ -700,9 +757,9 @@ export function ChatbotWidget() {
       addMessage({ role: "assistant", content: data.message });
     } catch (error) {
       console.error("Chat error:", error);
-      const thankYouMsg = contact.phone
-        ? `Thank you ${contact.firstName}! I've saved your preferences and one of our agents will call you at ${contact.phone} soon.`
-        : `Thank you ${contact.firstName}! I'll send personalized recommendations to ${contact.email}.`;
+      const thankYouMsg = survey.type === 'dream-home'
+        ? `Thank you ${contact.fullName}! One of our agents will call you at ${contact.phone} ASAP to help you find the perfect property.`
+        : `Thank you ${contact.fullName}! One of our agents will call you at ${contact.phone} shortly to assist you.`;
       addMessage({
         role: "assistant",
         content: thankYouMsg,
@@ -714,7 +771,25 @@ export function ChatbotWidget() {
   };
 
   const handleContactUs = () => {
-    sendMessage("I'd like to get in touch with the team.");
+    trackChatbotInteraction('contact_start');
+    addMessage({ role: "user", content: "I'd like to get in touch with an agent." });
+    addMessage({ role: "assistant", content: "Great! I'll connect you with one of our expert agents. Just need a few quick details:" });
+    setSurvey({ step: "contact-info", type: "general-contact" });
+  };
+
+  const startDreamHomeSurvey = () => {
+    trackChatbotInteraction('survey_start');
+    addMessage({ role: "user", content: "I want to tell you about my dream home." });
+    addMessage({ role: "assistant", content: "Wonderful! Let me help you find the perfect property. I'll guide you through a few quick questions." });
+    setSurvey({ step: "property-type", type: "dream-home" });
+  };
+
+  const handleMortgageCalculator = () => {
+    sendMessage("I'd like to calculate what I can afford.");
+  };
+
+  const handleExploreNeighborhoods = () => {
+    sendMessage("Tell me about neighborhoods in the GTA.");
   };
 
   // Check if we should show quick actions (only at start, no survey active)
@@ -763,7 +838,7 @@ export function ChatbotWidget() {
           </div>
 
           {/* Chat Body - Clean white */}
-          <div className="flex-1 p-5 overflow-y-auto bg-[#f8f9fa]">
+          <div className="flex-1 p-5 overflow-y-auto bg-[#f8f9fa] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-[#1a2332] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-[#242d3f]">
             {messages.map((message, index) => (
               <MessageBubble
                 key={message.id}
@@ -808,7 +883,7 @@ export function ChatbotWidget() {
             )}
             {survey.step === "contact-info" && (
               <div className="mb-4 p-4 bg-white rounded-2xl border border-stone-100 shadow-sm">
-                <SurveyContactInfo onSubmit={handleContactSubmit} />
+                <SurveyContactInfo onSubmit={handleContactSubmit} surveyType={survey.type} />
               </div>
             )}
 
@@ -816,27 +891,50 @@ export function ChatbotWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Actions - Clean modern buttons */}
+          {/* Quick Actions - Featured Tools */}
           {showQuickActions && (
-            <div className="px-5 pb-4 bg-[#f8f9fa] flex gap-2">
-              <button
-                onClick={handleContactUs}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Contact Us
-              </button>
-              <button
-                onClick={startDreamHomeSurvey}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-[#1a2332] text-white rounded-lg hover:bg-[#242d3f] transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                Find Your Dream Home
-              </button>
+            <div className="px-5 pb-4 bg-[#f8f9fa] space-y-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={startDreamHomeSurvey}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold bg-[#1a2332] text-white rounded-lg hover:bg-[#242d3f] transition-all duration-300"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  Find Your Dream Home
+                </button>
+                <button
+                  onClick={handleMortgageCalculator}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold bg-[#1a2332] text-white rounded-lg hover:bg-[#242d3f] transition-all duration-300"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Calculate Affordability
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleExploreNeighborhoods}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold bg-[#1a2332] text-white rounded-lg hover:bg-[#242d3f] transition-all duration-300"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Explore Neighborhoods
+                </button>
+                <button
+                  onClick={handleContactUs}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold bg-[#1a2332] text-white rounded-lg hover:bg-[#242d3f] transition-all duration-300"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Contact Agent
+                </button>
+              </div>
             </div>
           )}
 

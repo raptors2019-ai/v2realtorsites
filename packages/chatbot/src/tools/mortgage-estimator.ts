@@ -56,7 +56,44 @@ export const mortgageEstimatorTool: CoreTool = {
     })
 
     try {
+      // Validation
+      if (annualIncome <= 0) {
+        return {
+          success: false,
+          message: "Please provide a valid annual income (greater than $0).",
+          error: 'Invalid income'
+        }
+      }
+
+      if (downPayment < 0) {
+        return {
+          success: false,
+          message: "Down payment cannot be negative.",
+          error: 'Invalid down payment'
+        }
+      }
+
       const monthlyIncome = annualIncome / 12
+
+      // Validate monthly debts - if they're >= monthly income, something is wrong
+      if (monthlyDebts >= monthlyIncome) {
+        return {
+          success: false,
+          message: `It looks like your monthly debt payments ($${monthlyDebts.toLocaleString()}/month) are equal to or greater than your monthly income ($${Math.round(monthlyIncome).toLocaleString()}/month). Please verify your debt amount. If this is correct, I'd recommend speaking with one of our agents for personalized advice.`,
+          error: 'Monthly debts exceed income'
+        }
+      }
+
+      // Warn if debts are very high (>50% of income)
+      if (monthlyDebts > monthlyIncome * 0.5) {
+        console.error('[chatbot.mortgageEstimator.warning]', {
+          message: 'High debt-to-income ratio',
+          monthlyDebts,
+          monthlyIncome,
+          ratio: (monthlyDebts / monthlyIncome * 100).toFixed(1) + '%'
+        })
+      }
+
       const stressTestRate = getStressTestRate(currentMortgageRate)
 
       // Calculate max housing cost (GDS)
@@ -122,22 +159,30 @@ export const mortgageEstimatorTool: CoreTool = {
           gdsRatio: Math.round((maxHousingCost / monthlyIncome) * 100),
           tdsRatio: Math.round(((maxHousingCost + monthlyDebts) / monthlyIncome) * 100),
         },
-        message: `Based on your income of ${formatCurrency(annualIncome)} and down payment of ${formatCurrency(downPayment)}, you could potentially afford a home up to ${formatCurrency(maxHomePrice)}.`,
-        formattedSummary: `
-**Affordability Estimate**
+        message: `Great! Based on your income of ${formatCurrency(annualIncome)} and down payment of ${formatCurrency(downPayment)}, here's what you could afford:
 
-**Max Home Price:** ${formatCurrency(maxHomePrice)}
-**Down Payment:** ${formatCurrency(downPayment)} (${Math.round(downPaymentPercent)}%)
-**Mortgage Amount:** ${formatCurrency(maxMortgage)}${cmhcPremium > 0 ? `\n**CMHC Insurance:** ${formatCurrency(cmhcPremium)}` : ''}
+🏠 Maximum Home Price: ${formatCurrency(maxHomePrice)}
 
-**Monthly Costs (estimated):**
-- Mortgage Payment: ${formatCurrency(monthlyPayment)}
-- Property Tax: ${formatCurrency(monthlyPropertyTax)}
-- Heating: ${formatCurrency(DEFAULT_HEATING_MONTHLY)}
-- **Total:** ${formatCurrency(monthlyPayment + monthlyPropertyTax + DEFAULT_HEATING_MONTHLY)}/month
+💰 Breakdown:
+• Down Payment: ${formatCurrency(downPayment)} (${Math.round(downPaymentPercent)}%)
+• Mortgage Amount: ${formatCurrency(maxMortgage)}${cmhcPremium > 0 ? `\n• CMHC Insurance: ${formatCurrency(cmhcPremium)}` : ''}
 
-*This is an estimate only, not financial advice. Actual approval depends on credit history, employment, and lender policies. Please consult a mortgage broker for accurate pre-approval.*
-`.trim(),
+📊 Estimated Monthly Costs:
+• Mortgage Payment: ${formatCurrency(monthlyPayment)}
+• Property Tax: ${formatCurrency(monthlyPropertyTax)}
+• Heating: ${formatCurrency(DEFAULT_HEATING_MONTHLY)}
+• Total: ${formatCurrency(monthlyPayment + monthlyPropertyTax + DEFAULT_HEATING_MONTHLY)}/month
+
+⚠️ Please note: This is an estimate only, not financial advice. Actual approval depends on your credit history, employment stability, and lender policies. I'd recommend speaking with a mortgage broker for accurate pre-approval.
+
+Would you like me to search for properties under ${formatCurrency(maxHomePrice)}?`,
+        formattedSummary: `Max Home Price: ${formatCurrency(maxHomePrice)}
+Down Payment: ${formatCurrency(downPayment)} (${Math.round(downPaymentPercent)}%)
+Mortgage Amount: ${formatCurrency(maxMortgage)}${cmhcPremium > 0 ? `\nCMHC Insurance: ${formatCurrency(cmhcPremium)}` : ''}
+Monthly Payment: ${formatCurrency(monthlyPayment)}
+Property Tax: ${formatCurrency(monthlyPropertyTax)}
+Heating: ${formatCurrency(DEFAULT_HEATING_MONTHLY)}
+Total Monthly: ${formatCurrency(monthlyPayment + monthlyPropertyTax + DEFAULT_HEATING_MONTHLY)}`,
         searchSuggestion: {
           maxPrice: maxHomePrice,
           message: `Would you like me to search for properties under ${formatCurrency(maxHomePrice)}?`

@@ -76,7 +76,7 @@ interface ChatbotState {
 const INITIAL_MESSAGE: Message = {
   id: "welcome",
   role: "assistant",
-  content: "Hi! I'm here to help you find your perfect home. What can I assist you with today?",
+  content: "Hi! I'm here to help you find your perfect home. I can search properties, estimate affordability, explore neighborhoods, answer first-time buyer questions, and more. What can I assist you with today?",
   timestamp: new Date(),
 };
 
