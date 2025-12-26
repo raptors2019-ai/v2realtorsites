@@ -19,7 +19,6 @@ const headerConfig: HeaderConfig = {
   logoSecondPartClass: 'text-gradient-primary',
   navigation: [
     { label: 'Home', href: '/' },
-    { label: 'Builder Projects', href: '/builder-projects' },
     { label: 'Properties', href: '/properties' },
     { label: 'Contact', href: '/contact' },
   ],
@@ -71,7 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="antialiased">
         <Header config={headerConfig} />
-        <main className="pt-16">
+        <main>
           {children}
         </main>
         <Footer config={footerConfig} />

@@ -35,13 +35,9 @@ export function Footer({ config }: FooterProps) {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-gradient-to-b from-secondary to-secondary-dark dark:from-secondary dark:to-secondary-dark relative overflow-hidden">
+    <footer className="bg-[#1a1a2e] relative overflow-hidden">
       {/* Subtle accent line at top */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
-
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/3 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent" />
 
       <div className="container mx-auto px-4 py-16 relative">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
@@ -62,7 +58,7 @@ export function Footer({ config }: FooterProps) {
               </span>
             </Link>
             {config.description && (
-              <p className="text-white/50 text-sm mb-6 leading-relaxed">
+              <p className="text-gray-400 text-sm mb-6 leading-relaxed">
                 {config.description}
               </p>
             )}
@@ -95,7 +91,7 @@ export function Footer({ config }: FooterProps) {
                   <li key={link.name}>
                     <Link
                       href={link.href}
-                      className="text-white/50 hover:text-primary transition-colors text-sm link-underline"
+                      className="text-gray-400 hover:text-primary transition-colors text-sm"
                     >
                       {link.name}
                     </Link>
@@ -116,7 +112,7 @@ export function Footer({ config }: FooterProps) {
                   <li key={service.name}>
                     <Link
                       href={service.href}
-                      className="text-white/50 hover:text-primary transition-colors text-sm link-underline"
+                      className="text-gray-400 hover:text-primary transition-colors text-sm"
                     >
                       {service.name}
                     </Link>
@@ -136,7 +132,7 @@ export function Footer({ config }: FooterProps) {
                 {config.teamMembers.map((member) => (
                   <div
                     key={member.name}
-                    className="bg-primary/5 border border-primary/20 rounded-xl p-4 transition-all duration-300 hover:border-primary/40 hover:bg-primary/10"
+                    className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all duration-300 hover:border-primary/40 hover:bg-white/10"
                   >
                     <p className="font-medium text-white text-sm">
                       {member.name}
@@ -146,7 +142,7 @@ export function Footer({ config }: FooterProps) {
                         href={member.instagram}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-primary hover:text-primary-light transition-colors block"
+                        className="text-xs text-primary hover:text-primary/80 transition-colors block"
                       >
                         {member.instagram.includes('instagram.com')
                           ? `@${member.instagram.split('/').pop()?.replace('/', '')}`
@@ -156,7 +152,7 @@ export function Footer({ config }: FooterProps) {
                     {member.phone && (
                       <a
                         href={`tel:${member.phone}`}
-                        className="text-xs text-white/50 hover:text-primary transition-colors block mt-1"
+                        className="text-xs text-gray-400 hover:text-primary transition-colors block mt-1"
                       >
                         {member.phone}
                       </a>
@@ -169,12 +165,12 @@ export function Footer({ config }: FooterProps) {
         </div>
 
         {/* Bottom Bar */}
-        <div className="section-divider-light mt-12 mb-8" />
+        <div className="border-t border-white/10 mt-12 pt-8" />
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-white/40 text-sm">
+          <p className="text-gray-400 text-sm">
             &copy; {currentYear} {config.siteName}. All rights reserved.
           </p>
-          <p className="text-white/30 text-xs flex items-center gap-2">
+          <p className="text-gray-500 text-xs flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
             {config.tagline || 'Real Estate Professionals • Ontario, Canada'}
           </p>

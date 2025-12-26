@@ -160,24 +160,20 @@ export function BentoFeatureCard({
   return (
     <motion.div
       variants={bentoCardVariants}
-      whileHover={{
-        scale: 1.02,
-        transition: easings.spring,
-      }}
       className={cn(
-        "group luxury-card-premium rounded-xl p-8 text-center",
-        "hover:shadow-[0_8px_30px_rgba(0,0,0,.12)]",
-        "transition-shadow duration-300",
+        "group bg-white border border-gray-200 rounded-xl p-8 text-center",
+        "hover:shadow-lg hover:border-primary/30",
+        "transition-all duration-300",
         className
       )}
     >
-      <div className="feature-icon mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+      <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
         {icon}
       </div>
-      <h3 className="text-lg font-semibold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">
+      <h3 className="text-lg font-semibold text-primary mb-3">
         {title}
       </h3>
-      <p className="text-text-secondary dark:text-gray-300 text-sm leading-relaxed">
+      <p className="text-gray-700 text-sm leading-relaxed">
         {description}
       </p>
     </motion.div>

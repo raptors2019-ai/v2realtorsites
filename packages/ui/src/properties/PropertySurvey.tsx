@@ -84,7 +84,7 @@ export function PropertySurvey() {
             <h3 className="text-base font-semibold text-secondary mb-3">Are you looking to buy or rent?</h3>
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => setSurvey(prev => ({ ...prev, listingType: 'sale' }))}
+                onClick={() => setSurvey(prev => ({ ...prev, listingType: 'sale', budgetRange: '500k-1m' }))}
                 className={`p-3 border-2 rounded-lg transition-all duration-200 ${
                   survey.listingType === 'sale'
                     ? 'border-primary bg-primary/5 text-primary font-semibold'
@@ -98,7 +98,7 @@ export function PropertySurvey() {
               </button>
 
               <button
-                onClick={() => setSurvey(prev => ({ ...prev, listingType: 'lease' }))}
+                onClick={() => setSurvey(prev => ({ ...prev, listingType: 'lease', budgetRange: '0-500k' }))}
                 className={`p-3 border-2 rounded-lg transition-all duration-200 ${
                   survey.listingType === 'lease'
                     ? 'border-primary bg-primary/5 text-primary font-semibold'
@@ -115,7 +115,8 @@ export function PropertySurvey() {
 
           {/* Question 2: Budget */}
           <div className="bg-white rounded-xl border-2 border-gray-100 p-5">
-            <h3 className="text-base font-semibold text-secondary mb-3">What's your budget?</h3>
+            <h3 className="text-base font-semibold text-secondary mb-1">What's your budget?</h3>
+            <p className="text-xs text-gray-500 mb-3">Just a starting point</p>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setSurvey(prev => ({ ...prev, budgetRange: '0-500k' }))}

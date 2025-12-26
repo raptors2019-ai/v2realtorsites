@@ -110,7 +110,7 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
                   style={{ background: 'var(--primary)' }}
                 />
                 {/* Background hover effect */}
-                <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#faf9f7] to-[#f5f3f0] dark:from-secondary-light dark:to-secondary scale-0 group-hover:scale-100 transition-transform duration-300 ease-out -z-10" />
+                <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#c9a962]/20 to-[#b8944d]/15 dark:from-[#c9a962]/30 dark:to-[#b8944d]/20 scale-0 group-hover:scale-100 transition-transform duration-300 ease-out -z-10" />
               </Link>
             ))}
             {config.ctaButton && (

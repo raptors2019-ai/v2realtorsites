@@ -50,13 +50,13 @@ export default async function Home() {
             <AnimatedHeroButtons index={3} className="flex flex-wrap gap-4">
               <Link
                 href="/properties"
-                className="px-8 py-4 rounded-lg text-base font-semibold bg-white text-primary border-2 border-primary hover:bg-primary hover:text-white shadow-2xl hover:shadow-primary/50 hover:scale-105 transition-all duration-300"
+                className="px-8 py-4 rounded-lg text-base font-semibold bg-white text-[#1a1a2e] border-2 border-primary hover:bg-primary hover:text-white shadow-2xl hover:shadow-primary/50 hover:scale-105 transition-all duration-300"
               >
                 Browse Properties
               </Link>
               <Link
                 href="/sell"
-                className="px-8 py-4 rounded-lg text-base font-semibold bg-white text-primary border-2 border-primary hover:bg-primary hover:text-white shadow-2xl hover:shadow-primary/50 hover:scale-105 transition-all duration-300"
+                className="px-8 py-4 rounded-lg text-base font-semibold bg-white text-[#1a1a2e] border-2 border-primary hover:bg-primary hover:text-white shadow-2xl hover:shadow-primary/50 hover:scale-105 transition-all duration-300"
               >
                 Sell Your Home
               </Link>
@@ -73,7 +73,7 @@ export default async function Home() {
               </p>
               <Link
                 href="/properties"
-                className="block text-center px-4 py-3 rounded-lg text-sm font-semibold bg-white text-primary border-2 border-primary hover:bg-primary hover:text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                className="block text-center px-4 py-3 rounded-lg text-sm font-semibold bg-white text-primary border-2 border-primary hover:bg-primary hover:!text-white shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Start Searching
               </Link>
@@ -360,19 +360,15 @@ export default async function Home() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-28 bg-gradient-to-b from-secondary to-secondary-dark relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/3 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-        <div className="container mx-auto px-4 relative">
+      <section className="py-28 bg-white border-t border-gray-100">
+        <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
-              <div className="section-divider-light w-24 mx-auto mb-6" />
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              <div className="accent-line mx-auto mb-6" />
+              <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-4">
                 Let&apos;s Work <span className="text-gradient-primary">Together</span>
               </h2>
-              <p className="text-white/60 max-w-2xl mx-auto">
+              <p className="text-gray-600 max-w-2xl mx-auto">
                 Whether you&apos;re looking to buy your dream home or sell your property,
                 we&apos;re here to guide you every step of the way.
               </p>
@@ -380,40 +376,40 @@ export default async function Home() {
 
             <div className="grid md:grid-cols-3 gap-6">
               {/* Contact Card 1 */}
-              <div className="luxury-card-dark rounded-xl p-6 text-center group">
-                <div className="feature-icon-dark mx-auto mb-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center group hover:border-primary/30 hover:shadow-lg transition-all duration-300">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
                   </svg>
                 </div>
-                <h3 className="text-white font-medium mb-2">Phone</h3>
-                <a href="tel:+14167860431" className="text-primary hover:text-accent transition-colors">
+                <h3 className="text-secondary font-medium mb-2">Phone</h3>
+                <a href="tel:+14167860431" className="text-primary hover:text-primary/80 transition-colors">
                   +1 (416) 786-0431
                 </a>
               </div>
 
               {/* Contact Card 2 */}
-              <div className="luxury-card-dark rounded-xl p-6 text-center group">
-                <div className="feature-icon-dark mx-auto mb-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center group hover:border-primary/30 hover:shadow-lg transition-all duration-300">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                   </svg>
                 </div>
-                <h3 className="text-white font-medium mb-2">Email</h3>
-                <a href="mailto:info@sricollectivegroup.com" className="text-primary hover:text-accent transition-colors break-all text-sm">
+                <h3 className="text-secondary font-medium mb-2">Email</h3>
+                <a href="mailto:info@sricollectivegroup.com" className="text-primary hover:text-primary/80 transition-colors break-all text-sm">
                   info@sricollectivegroup.com
                 </a>
               </div>
 
               {/* Contact Card 3 */}
-              <div className="luxury-card-dark rounded-xl p-6 text-center group">
-                <div className="feature-icon-dark mx-auto mb-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center group hover:border-primary/30 hover:shadow-lg transition-all duration-300">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                   </svg>
                 </div>
-                <h3 className="text-white font-medium mb-2">Schedule</h3>
-                <Link href="/contact" className="text-primary hover:text-accent transition-colors">
+                <h3 className="text-secondary font-medium mb-2">Schedule</h3>
+                <Link href="/contact" className="text-primary hover:text-primary/80 transition-colors">
                   Book Consultation
                 </Link>
               </div>
