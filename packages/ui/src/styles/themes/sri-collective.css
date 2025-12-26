@@ -72,12 +72,29 @@
   font-weight: 600;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+  max-width: 100%;
 }
 
 .btn-primary:hover {
   background: var(--primary-light);
   box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.4);
   transform: translateY(-2px);
+}
+
+/* Base outline button */
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  max-width: 100%;
+}
+
+.btn-outline:hover {
+  background: var(--primary);
+  color: var(--white);
 }
 
 .btn-secondary {
@@ -117,6 +134,7 @@
   padding: 0.75rem 2rem;
   font-weight: 600;
   transition: all 0.3s ease;
+  max-width: 100%;
 }
 
 .btn-outline-primary:hover {
@@ -191,6 +209,8 @@
   box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.15);
   position: relative;
   overflow: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 
 .luxury-card-premium::before {

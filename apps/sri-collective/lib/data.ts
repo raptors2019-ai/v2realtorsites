@@ -129,6 +129,7 @@ export async function getFeaturedProperties(limit?: number): Promise<Property[]>
 
 /**
  * Get similar properties
+ * Filters by: same city, same property type, similar price (±20%)
  */
 export async function getSimilarProperties(
   property: Property,
@@ -140,6 +141,7 @@ export async function getSimilarProperties(
   const similar = allProperties
     .filter((p) => {
       if (p.id === property.id) return false;
+      if (p.city !== property.city) return false; // Same city only
       if (p.propertyType !== property.propertyType) return false;
       const priceDiff = Math.abs(p.price - property.price);
       if (priceDiff > priceRange) return false;

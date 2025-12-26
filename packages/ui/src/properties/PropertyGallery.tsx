@@ -77,9 +77,9 @@ export function PropertyGallery({
   }
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("space-y-4 w-full max-w-full", className)}>
       {/* Main Image */}
-      <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-cream">
+      <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-cream w-full">
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
             key={currentIndex}
@@ -112,7 +112,7 @@ export function PropertyGallery({
           <>
             <button
               onClick={() => paginate(-1)}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300"
+              className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300"
               aria-label="Previous image"
             >
               <svg
@@ -131,7 +131,7 @@ export function PropertyGallery({
             </button>
             <button
               onClick={() => paginate(1)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300"
+              className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-300"
               aria-label="Next image"
             >
               <svg
@@ -149,23 +149,23 @@ export function PropertyGallery({
               </svg>
             </button>
 
-            {/* Image Counter */}
-            <div className="absolute bottom-4 right-4 z-10 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
+            {/* Image Counter - centered on mobile to avoid arrow overlap */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:translate-x-0 z-10 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
               {currentIndex + 1} / {images.length}
             </div>
           </>
         )}
       </div>
 
-      {/* Thumbnail Strip */}
+      {/* Thumbnail Strip - larger touch targets on mobile */}
       {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide w-full max-w-full">
           {images.slice(0, 8).map((image, index) => (
             <button
               key={index}
               onClick={() => goToImage(index)}
               className={cn(
-                "relative flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden transition-all duration-300",
+                "relative flex-shrink-0 w-24 h-20 md:w-20 md:h-16 rounded-lg overflow-hidden transition-all duration-300",
                 currentIndex === index
                   ? "ring-2 ring-primary ring-offset-2"
                   : "opacity-60 hover:opacity-100"
@@ -177,14 +177,14 @@ export function PropertyGallery({
                 alt={`${alt} thumbnail ${index + 1}`}
                 fill
                 className="object-cover"
-                sizes="80px"
+                sizes="(max-width: 768px) 96px, 80px"
                 onError={() => handleImageError(index)}
                 unoptimized={image?.includes('ampre.ca')}
               />
             </button>
           ))}
           {images.length > 8 && (
-            <div className="relative flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden bg-secondary/80 flex items-center justify-center text-white text-sm font-medium">
+            <div className="relative flex-shrink-0 w-24 h-20 md:w-20 md:h-16 rounded-lg overflow-hidden bg-secondary/80 flex items-center justify-center text-white text-sm font-medium">
               +{images.length - 8}
             </div>
           )}

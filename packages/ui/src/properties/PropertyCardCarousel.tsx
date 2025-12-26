@@ -69,7 +69,7 @@ export function PropertyCardCarousel({
               e.stopPropagation();
               paginate(-1);
             }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-70 hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110 shadow-md"
+            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-85 hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110 shadow-md"
             aria-label="Previous image"
           >
             <svg
@@ -92,7 +92,7 @@ export function PropertyCardCarousel({
               e.stopPropagation();
               paginate(1);
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-70 hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110 shadow-md"
+            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-85 hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110 shadow-md"
             aria-label="Next image"
           >
             <svg
@@ -110,9 +110,9 @@ export function PropertyCardCarousel({
             </svg>
           </button>
 
-          {/* Pagination dots */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-            {images.map((_, index) => (
+          {/* Pagination dots - improved touch targets for mobile */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {images.slice(0, 6).map((_, index) => (
               <button
                 key={index}
                 onClick={(e) => {
@@ -121,14 +121,24 @@ export function PropertyCardCarousel({
                   setCurrentIndex([index, index > currentIndex ? 1 : -1]);
                 }}
                 className={cn(
-                  "h-1.5 rounded-full transition-all duration-300",
-                  currentIndex === index
-                    ? "w-4 bg-white"
-                    : "w-1.5 bg-white/50 hover:bg-white/75"
+                  "p-1.5 rounded-full transition-all duration-300",
+                  "min-w-[20px] min-h-[20px] flex items-center justify-center"
                 )}
                 aria-label={`Go to image ${index + 1}`}
-              />
+              >
+                <span className={cn(
+                  "block h-2 rounded-full transition-all duration-300",
+                  currentIndex === index
+                    ? "w-4 bg-white"
+                    : "w-2 bg-white/50 hover:bg-white/75"
+                )} />
+              </button>
             ))}
+            {images.length > 6 && (
+              <div className="px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-full min-w-[20px] min-h-[20px] flex items-center justify-center">
+                +{images.length - 6}
+              </div>
+            )}
           </div>
         </>
       )}
