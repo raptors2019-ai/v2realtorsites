@@ -24,7 +24,7 @@ export function PropertyFilters({
   onSortChange,
   initialFilters = {},
   initialSort = "price-desc",
-  cities = [],
+  // cities parameter not currently used - cities are hardcoded in component
   className,
 }: PropertyFiltersProps) {
   const [filters, setFilters] = useState<PropertyFiltersType>(initialFilters);
@@ -91,7 +91,7 @@ export function PropertyFilters({
   // Update dropdown position when it opens or on scroll
   useEffect(() => {
     const updatePosition = () => {
-      const refMap: Record<string, React.RefObject<HTMLButtonElement>> = {
+      const refMap: Record<string, React.RefObject<HTMLButtonElement | null>> = {
         listingType: listingTypeRef,
         propertyClass: propertyClassRef,
         propertyType: propertyTypeRef,
@@ -239,7 +239,7 @@ export function PropertyFilters({
   }: {
     label: string;
     dropdownKey: string;
-    buttonRef: React.RefObject<HTMLButtonElement>;
+    buttonRef: React.RefObject<HTMLButtonElement | null>;
     selected: T[];
     options: { value: T; label: string }[];
     onToggle: (value: T) => void;

@@ -35,8 +35,9 @@ export async function POST(req: Request) {
 
     onStepFinish: async ({ toolResults }) => {
       // Capture mortgage estimator results for rich rendering
-      for (const toolResult of toolResults || []) {
-        if (toolResult.toolName === 'estimateMortgage' && toolResult.result.success) {
+      const results = toolResults as any[] || []
+      for (const toolResult of results) {
+        if (toolResult.toolName === 'estimateMortgage' && toolResult.result?.success) {
           data.append({
             type: 'mortgageEstimate',
             data: toolResult.result.estimate,

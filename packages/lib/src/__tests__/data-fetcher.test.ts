@@ -117,17 +117,17 @@ describe('data-fetcher', () => {
       expect(result[0].id).toBe('2')
     })
 
-    it('should filter by minimum bedrooms', () => {
+    it('should filter by bedrooms (array)', () => {
       const result = filterProperties(mockProperties, {
-        bedrooms: 2,
+        bedrooms: [2, 3],
       })
       expect(result).toHaveLength(2)
-      expect(result.every(p => p.bedrooms >= 2)).toBe(true)
+      expect(result.every(p => p.bedrooms === 2 || p.bedrooms === 3)).toBe(true)
     })
 
-    it('should filter by minimum bathrooms', () => {
+    it('should filter by bathrooms (array)', () => {
       const result = filterProperties(mockProperties, {
-        bathrooms: 2,
+        bathrooms: [2],
       })
       expect(result).toHaveLength(1)
       expect(result[0].id).toBe('1')
@@ -148,9 +148,9 @@ describe('data-fetcher', () => {
       expect(result[0].city).toBe('Mississauga')
     })
 
-    it('should filter by listing type', () => {
+    it('should filter by listing type (array)', () => {
       const result = filterProperties(mockProperties, {
-        listingType: 'lease',
+        listingType: ['lease'],
       })
       expect(result).toHaveLength(1)
       expect(result[0].listingType).toBe('lease')
@@ -161,7 +161,7 @@ describe('data-fetcher', () => {
         type: ['condo'],
         priceRange: { min: 1000 },
         location: 'Toronto',
-        listingType: 'lease',
+        listingType: ['lease'],
       })
       expect(result).toHaveLength(1)
       expect(result[0].id).toBe('3')

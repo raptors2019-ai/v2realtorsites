@@ -50,7 +50,7 @@ export type FormType = 'contact' | 'vip' | 'valuation' | 'showing_request' | 'ch
 /**
  * Chatbot interaction types
  */
-export type ChatbotAction = 'start' | 'message' | 'lead' | 'survey_start' | 'survey_complete'
+export type ChatbotAction = 'start' | 'message' | 'lead' | 'survey_start' | 'survey_complete' | 'contact_start'
 
 /**
  * Filter parameters for search tracking

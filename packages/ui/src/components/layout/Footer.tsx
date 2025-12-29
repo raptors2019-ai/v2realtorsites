@@ -167,9 +167,20 @@ export function Footer({ config }: FooterProps) {
         {/* Bottom Bar */}
         <div className="border-t border-white/10 mt-12 pt-8" />
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-400 text-sm">
-            &copy; {currentYear} {config.siteName}. All rights reserved.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <p className="text-gray-400 text-sm">
+              &copy; {currentYear} {config.siteName}. All rights reserved.
+            </p>
+            <div className="flex items-center gap-4 text-sm">
+              <Link href="/privacy" className="text-gray-400 hover:text-primary transition-colors">
+                Privacy Policy
+              </Link>
+              <span className="text-gray-600">•</span>
+              <Link href="/terms" className="text-gray-400 hover:text-primary transition-colors">
+                Terms of Service
+              </Link>
+            </div>
+          </div>
           <p className="text-gray-500 text-xs flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
             {config.tagline || 'Real Estate Professionals • Ontario, Canada'}

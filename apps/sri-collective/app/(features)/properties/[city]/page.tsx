@@ -58,7 +58,7 @@ export default async function CityPropertiesPage({ params }: PageProps) {
 
   // Build initial filters to show the selected city in the filter dropdown
   const initialFilters = {
-    listingType: 'sale' as const,
+    listingType: ['sale' as const],
     locations: [cityFilter],
   }
 

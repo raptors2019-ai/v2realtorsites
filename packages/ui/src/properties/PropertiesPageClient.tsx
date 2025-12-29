@@ -35,7 +35,7 @@ export function PropertiesPageClient({
 
   // Filter state - initialize from URL params or default to sale
   const [filters, setFilters] = useState<PropertyFiltersType>(
-    initialFilters || { listingType: 'sale' }
+    initialFilters || { listingType: ['sale'] }
   );
   const [sortBy, setSortBy] = useState<SortOption>("price-desc");
 
@@ -101,7 +101,7 @@ export function PropertiesPageClient({
       const survey = {
         listingType: currentFilters.listingType?.[0] || 'sale',
         budgetRange: (() => {
-          const min = currentFilters.priceRange?.min || 0;
+          // min not currently used in budget range logic
           const max = currentFilters.priceRange?.max || 5000000;
           if (max <= 500000) return '0-500k';
           if (max <= 1000000) return '500k-1m';
@@ -153,8 +153,8 @@ export function PropertiesPageClient({
     if (filters.type?.[0]) {
       params.set('propertyType', filters.type[0]);
     }
-    if (filters.listingType) {
-      params.set('listingType', filters.listingType);
+    if (filters.listingType && filters.listingType.length > 0) {
+      params.set('listingType', filters.listingType.join(','));
     }
 
     return params.toString();
@@ -271,7 +271,7 @@ export function PropertiesPageClient({
 
       const listName = filters.location
         ? `${filters.location} Properties`
-        : filters.listingType === 'lease'
+        : filters.listingType?.includes('lease')
         ? 'Properties For Lease'
         : 'Properties For Sale';
 

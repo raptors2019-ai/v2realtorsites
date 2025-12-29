@@ -59,8 +59,8 @@ export default async function PropertiesPage({
 
   // Build initial filters for the client component
   const initialFilters = {
-    listingType: params.listingType as 'sale' | 'lease' | undefined,
-    propertyClass: (params.propertyClass as 'residential' | 'commercial' | undefined) || 'residential',
+    listingType: params.listingType ? [params.listingType as 'sale' | 'lease'] : undefined,
+    propertyClass: params.propertyClass ? [params.propertyClass as 'residential' | 'commercial'] : ['residential' as const],
     priceRange: {
       min: params.budgetMin ? parseInt(params.budgetMin) : undefined,
       max: params.budgetMax ? parseInt(params.budgetMax) : undefined,

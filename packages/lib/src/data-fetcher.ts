@@ -28,17 +28,17 @@ export function filterProperties(
     });
   }
 
-  // Filter by bedrooms (minimum)
-  if (filters.bedrooms !== undefined) {
+  // Filter by bedrooms (array of counts)
+  if (filters.bedrooms !== undefined && filters.bedrooms.length > 0) {
     filtered = filtered.filter(
-      (property) => property.bedrooms >= filters.bedrooms!
+      (property) => filters.bedrooms!.includes(property.bedrooms)
     );
   }
 
-  // Filter by bathrooms (minimum)
-  if (filters.bathrooms !== undefined) {
+  // Filter by bathrooms (array of counts)
+  if (filters.bathrooms !== undefined && filters.bathrooms.length > 0) {
     filtered = filtered.filter(
-      (property) => property.bathrooms >= filters.bathrooms!
+      (property) => filters.bathrooms!.includes(property.bathrooms)
     );
   }
 
@@ -49,10 +49,10 @@ export function filterProperties(
     );
   }
 
-  // Filter by listing type (sale/lease)
-  if (filters.listingType) {
+  // Filter by listing type (sale/lease) - array of types
+  if (filters.listingType && filters.listingType.length > 0) {
     filtered = filtered.filter((property) =>
-      property.listingType === filters.listingType
+      filters.listingType!.includes(property.listingType)
     );
   }
 

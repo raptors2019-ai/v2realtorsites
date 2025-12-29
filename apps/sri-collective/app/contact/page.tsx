@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { ContactForm } from './ContactForm'
 import { ContactPageClient } from './ContactPageClient'
 
@@ -86,7 +87,13 @@ export default function ContactPage() {
                   <p className="text-text-secondary mb-8">
                     Fill out the form below and we&apos;ll get back to you within 24 hours.
                   </p>
-                  <ContactForm />
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  }>
+                    <ContactForm />
+                  </Suspense>
                 </div>
               </div>
             </div>
