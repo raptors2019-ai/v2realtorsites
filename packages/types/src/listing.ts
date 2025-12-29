@@ -97,7 +97,8 @@ export interface IDXSearchParams {
   maxPrice?: number
   bedrooms?: number
   bathrooms?: number
-  propertyType?: string
+  propertyType?: string // Single property type (for backwards compatibility)
+  propertyTypes?: string[] // Multiple property types with OR condition
   propertyClass?: 'residential' | 'commercial' // Filter by residential/commercial
   listingType?: 'sale' | 'lease' // Filters by price threshold ($10k)
   status?: 'Active' | 'Pending' | 'Sold' | 'all'

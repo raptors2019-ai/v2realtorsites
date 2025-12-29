@@ -66,7 +66,29 @@ export class IDXClient {
       filters.push(`PropertyType eq 'Commercial'`)
     }
 
-    if (params.propertyType && params.propertyType !== 'all') {
+    // Property type filter - support multiple types with OR condition
+    if (params.propertyTypes && params.propertyTypes.length > 0) {
+      const typeFilters = params.propertyTypes
+        .filter(t => t && t !== 'all')
+        .map(type => {
+          // Map our frontend types to IDX API PropertySubType values
+          // NOTE: These mappings are estimates based on common TRREB values
+          // Check server logs for warnings about unknown PropertySubType values
+          // and update this mapping as needed
+          const typeMap: Record<string, string> = {
+            'detached': 'Detached',
+            'semi-detached': 'Semi-Detached',
+            'townhouse': 'Att/Row/Twnhouse',
+            'condo': 'Condo Apt',
+          }
+          const mappedType = typeMap[type.toLowerCase()] || type
+          return `PropertySubType eq '${mappedType}'`
+        })
+      if (typeFilters.length > 0) {
+        filters.push(`(${typeFilters.join(' or ')})`)
+      }
+    } else if (params.propertyType && params.propertyType !== 'all') {
+      // Backwards compatibility: single property type
       filters.push(`PropertyType eq '${params.propertyType}'`)
     }
     if (params.status && params.status !== 'all') {

@@ -98,12 +98,39 @@ export function sortProperties(
  */
 export function convertIDXToProperty(listing: IDXListing): Property {
   // Map IDX PropertyType to our property types
-  const propertyTypeMap: Record<string, Property['propertyType']> = {
-    'residential': 'detached',
-    'condo': 'condo',
-    'townhouse': 'townhouse',
+  // PropertySubType provides more specific info when PropertyType is 'Residential'
+  const typeKey = listing.PropertyType?.toLowerCase()
+  const subTypeKey = listing.PropertySubType?.toLowerCase()
+
+  let propertyType: Property['propertyType'] = 'detached' // default
+
+  if (typeKey === 'condo') {
+    propertyType = 'condo'
+  } else if (typeKey === 'townhouse') {
+    propertyType = 'townhouse'
+  } else if (typeKey === 'residential') {
+    // For 'Residential', check PropertySubType for more specificity
+    if (subTypeKey?.includes('condo') || subTypeKey?.includes('apartment') || subTypeKey?.includes('apt')) {
+      propertyType = 'condo'
+    } else if (subTypeKey?.includes('townhouse') || subTypeKey?.includes('town') || subTypeKey?.includes('att/row')) {
+      propertyType = 'townhouse'
+    } else if (subTypeKey?.includes('semi')) {
+      propertyType = 'semi-detached'
+    } else if (subTypeKey?.includes('detached')) {
+      propertyType = 'detached'
+    } else {
+      // Log unknown subtypes to help identify mapping issues
+      if (subTypeKey) {
+        console.warn('[convertIDXToProperty] Unknown PropertySubType:', {
+          PropertyType: listing.PropertyType,
+          PropertySubType: listing.PropertySubType,
+          ListingKey: listing.ListingKey
+        })
+      }
+      // Fallback: assume detached for residential without subtype
+      propertyType = 'detached'
+    }
   }
-  const propertyType = propertyTypeMap[listing.PropertyType?.toLowerCase()] || 'detached'
 
   // Map IDX status to our status
   const statusMap: Record<string, Property['status']> = {

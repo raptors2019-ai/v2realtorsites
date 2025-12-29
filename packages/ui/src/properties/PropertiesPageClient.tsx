@@ -150,8 +150,9 @@ export function PropertiesPageClient({
     if (filters.bathrooms) {
       params.set('bathrooms', String(filters.bathrooms));
     }
-    if (filters.type?.[0]) {
-      params.set('propertyType', filters.type[0]);
+    // Send ALL selected property types (not just the first one)
+    if (filters.type && filters.type.length > 0) {
+      params.set('propertyType', filters.type.join(','));
     }
     if (filters.listingType && filters.listingType.length > 0) {
       params.set('listingType', filters.listingType.join(','));

@@ -15,7 +15,11 @@ export async function GET(request: NextRequest) {
   const maxPrice = searchParams.get('maxPrice') ? parseInt(searchParams.get('maxPrice')!) : undefined
   const bedrooms = searchParams.get('bedrooms') ? parseInt(searchParams.get('bedrooms')!) : undefined
   const bathrooms = searchParams.get('bathrooms') ? parseInt(searchParams.get('bathrooms')!) : undefined
-  const propertyType = searchParams.get('propertyType') || undefined
+
+  // Parse property type - support comma-separated values for multi-select
+  const propertyTypeParam = searchParams.get('propertyType')
+  const propertyTypes = propertyTypeParam ? propertyTypeParam.split(',').filter(Boolean) : undefined
+
   const listingType = searchParams.get('listingType') || undefined // 'sale' or 'lease'
 
   // Options
@@ -45,7 +49,7 @@ export async function GET(request: NextRequest) {
       maxPrice,
       bedrooms,
       bathrooms,
-      propertyType,
+      propertyTypes, // Use array for multi-select support
       listingType: listingType as 'sale' | 'lease' | undefined, // Now filtered at IDX level
       status: 'Active', // Always active listings
     }
@@ -60,7 +64,7 @@ export async function GET(request: NextRequest) {
       maxPrice,
       bedrooms,
       bathrooms,
-      propertyType,
+      propertyTypes,
       listingType,
     })
 

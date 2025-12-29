@@ -7,13 +7,17 @@ export const runtime = 'edge'
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
 
+  // Parse property type - support comma-separated values for multi-select
+  const propertyTypeParam = searchParams.get('propertyType')
+  const propertyTypes = propertyTypeParam ? propertyTypeParam.split(',').filter(Boolean) : undefined
+
   const params: IDXSearchParams = {
     city: searchParams.get('city') || undefined,
     minPrice: searchParams.get('minPrice') ? parseInt(searchParams.get('minPrice')!) : undefined,
     maxPrice: searchParams.get('maxPrice') ? parseInt(searchParams.get('maxPrice')!) : undefined,
     bedrooms: searchParams.get('bedrooms') ? parseInt(searchParams.get('bedrooms')!) : undefined,
     bathrooms: searchParams.get('bathrooms') ? parseInt(searchParams.get('bathrooms')!) : undefined,
-    propertyType: searchParams.get('propertyType') || undefined,
+    propertyTypes, // Use array for multi-select support
     limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 10,
     offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0,
   }
