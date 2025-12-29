@@ -773,45 +773,104 @@ export function ChatbotWidget() {
     // Send to API to create contact
     setLoading(true);
 
-    // Build summary based on survey type
-    let summary = '';
-    if (survey.type === 'dream-home') {
-      // Full property preferences for dream home survey
-      summary = `Create a contact for lead capture:
-- Name: ${contact.fullName}
-- Phone: ${contact.phone}
-- Email: ${contact.email || 'Not provided'}
-- Lead Type: buyer
-- Property Type: ${survey.propertyType}
-- Budget: ${survey.budget}
-- Bedrooms: ${survey.bedrooms}
-- Timeline: ${survey.timeline}
-- Locations: ${survey.locations?.join(", ")}`;
-    } else {
-      // General contact - no property preferences
-      summary = `Create a contact for general inquiry:
-- Name: ${contact.fullName}
-- Phone: ${contact.phone}
-- Email: ${contact.email || 'Not provided'}
-- Lead Type: general inquiry`;
-    }
-
     try {
+      // Parse the contact name into first/last
+      const nameParts = contact.fullName.trim().split(/\s+/);
+      const firstName = nameParts[0] || contact.fullName;
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Build structured contact data based on survey type
+      let contactPrompt = '';
+
+      if (survey.type === 'dream-home') {
+        // Convert budget ranges to numbers
+        const budgetRanges: Record<string, { min: number; max: number; avg: number }> = {
+          "under-500k": { min: 0, max: 500000, avg: 400000 },
+          "500k-750k": { min: 500000, max: 750000, avg: 625000 },
+          "750k-1m": { min: 750000, max: 1000000, avg: 875000 },
+          "1m-1.5m": { min: 1000000, max: 1500000, avg: 1250000 },
+          "1.5m-2m": { min: 1500000, max: 2000000, avg: 1750000 },
+          "over-2m": { min: 2000000, max: 5000000, avg: 2500000 },
+        };
+        const priceRange = budgetRanges[survey.budget || "750k-1m"];
+
+        // Convert timeline to API format
+        const timelineMap: Record<string, string> = {
+          "asap": "immediate",
+          "1-3-months": "1-3-months",
+          "3-6-months": "3-6-months",
+          "just-exploring": "just-exploring"
+        };
+
+        // Full property preferences for dream home survey
+        contactPrompt = `Use the createContact tool to save this buyer lead with their dream home preferences:
+- firstName: "${firstName}"
+- lastName: "${lastName}"
+- email: "${contact.email || ''}"
+- cellPhone: "${contact.phone}"
+- leadType: "buyer"
+- source: "sri-collective"
+- propertyTypes: ["${survey.propertyType || 'any'}"]
+- averagePrice: ${priceRange.avg}
+- averageBeds: ${parseInt(survey.bedrooms || '3')}
+- preferredCity: "${survey.locations?.[0] || ''}"
+- preferredNeighborhoods: ${JSON.stringify(survey.locations || [])}
+- timeline: "${timelineMap[survey.timeline || 'just-exploring']}"`;
+      } else {
+        // General contact - no property preferences
+        contactPrompt = `Use the createContact tool to save this general inquiry lead:
+- firstName: "${firstName}"
+- lastName: "${lastName}"
+- email: "${contact.email || ''}"
+- cellPhone: "${contact.phone}"
+- leadType: "general"
+- source: "sri-collective"`;
+      }
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [
             ...messages.map((m) => ({ role: m.role, content: m.content })),
-            { role: "user", content: summary },
+            { role: "user", content: contactPrompt },
           ],
         }),
       });
 
       if (!response.ok) throw new Error("Failed to send message");
 
-      const data = await response.json();
-      addMessage({ role: "assistant", content: data.message });
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+
+            if (line.startsWith('0:')) {
+              try {
+                const data = JSON.parse(line.slice(2));
+                if (data) fullText += data;
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+
+        if (fullText) {
+          addMessage({ role: "assistant", content: fullText });
+        }
+      }
     } catch (error) {
       console.error("Chat error:", error);
       const thankYouMsg = survey.type === 'dream-home'

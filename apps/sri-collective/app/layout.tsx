@@ -37,6 +37,8 @@ const footerConfig: FooterConfig = {
   quickLinks: [
     { name: 'Properties', href: '/properties' },
     { name: 'Contact', href: '/contact' },
+    { name: 'Privacy Policy', href: '/privacy' },
+    { name: 'Terms of Service', href: '/terms' },
   ],
 }
 
