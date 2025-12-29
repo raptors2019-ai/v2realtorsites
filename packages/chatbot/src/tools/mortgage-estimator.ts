@@ -147,7 +147,7 @@ export const mortgageEstimatorTool: CoreTool = {
         displayType: 'mortgage-card', // Signal to render custom card component
         estimate: {
           maxHomePrice,
-          maxMortgage,
+          mortgageAmount: maxMortgage, // Renamed for consistency with card component
           totalMortgageWithCMHC: cmhcPremium > 0 ? totalMortgage : maxMortgage,
           downPayment,
           downPaymentPercent: Math.round(downPaymentPercent * 10) / 10,
@@ -166,10 +166,7 @@ I recommend speaking with a mortgage broker for accurate pre-approval. Would you
         formattedSummary: `Max Home Price: ${formatCurrency(maxHomePrice)}
 Down Payment: ${formatCurrency(downPayment)} (${Math.round(downPaymentPercent)}%)
 Mortgage Amount: ${formatCurrency(maxMortgage)}${cmhcPremium > 0 ? `\nCMHC Insurance: ${formatCurrency(cmhcPremium)}` : ''}
-Monthly Payment: ${formatCurrency(monthlyPayment)}
-Property Tax: ${formatCurrency(monthlyPropertyTax)}
-Heating: ${formatCurrency(DEFAULT_HEATING_MONTHLY)}
-Total Monthly: ${formatCurrency(monthlyPayment + monthlyPropertyTax + DEFAULT_HEATING_MONTHLY)}`,
+Monthly Payment: ${formatCurrency(monthlyPayment)}`,
         searchSuggestion: {
           maxPrice: maxHomePrice,
           message: `Would you like me to search for properties under ${formatCurrency(maxHomePrice)}?`
