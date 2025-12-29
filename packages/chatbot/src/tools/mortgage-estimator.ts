@@ -160,9 +160,12 @@ export const mortgageEstimatorTool: CoreTool = {
           gdsRatio: Math.round((maxHousingCost / monthlyIncome) * 100),
           tdsRatio: Math.round(((maxHousingCost + monthlyDebts) / monthlyIncome) * 100),
         },
-        message: `I recommend speaking with a mortgage broker for accurate pre-approval.
-
-Would you like me to search for properties under ${formatCurrency(maxHomePrice)}?`,
+        message: `I recommend speaking with a mortgage broker for accurate pre-approval.`,
+        // CTA for property search
+        cta: {
+          text: `View Properties Under ${formatCurrency(maxHomePrice)}`,
+          url: `/properties?maxPrice=${maxHomePrice}`,
+        },
         formattedSummary: `Max Home Price: ${formatCurrency(maxHomePrice)}
 Down Payment: ${formatCurrency(downPayment)} (${Math.round(downPaymentPercent)}%)
 Mortgage Amount: ${formatCurrency(maxMortgage)}${cmhcPremium > 0 ? `\nCMHC Insurance: ${formatCurrency(cmhcPremium)}` : ''}

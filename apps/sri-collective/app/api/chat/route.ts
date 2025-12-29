@@ -40,6 +40,7 @@ export async function POST(req: Request) {
           data.append({
             type: 'mortgageEstimate',
             data: toolResult.result.estimate,
+            cta: toolResult.result.cta,
           })
         }
       }

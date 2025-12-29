@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { useChatbotStore, Message, MortgageEstimate } from "./chatbot-store";
 import { trackChatbotInteraction, trackLeadFormSubmit } from "@repo/analytics";
 import { ChatMortgageCard } from "./ChatMortgageCard";
@@ -86,6 +87,15 @@ function MessageBubble({ message, isLatest }: { message: Message; isLatest?: boo
               <div className="bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm px-4 py-3">
                 <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
               </div>
+            )}
+            {/* CTA Button */}
+            {message.cta && (
+              <Link
+                href={message.cta.url}
+                className="block w-full py-3 px-4 bg-gradient-to-r from-[#0a1628] to-[#1a2d4d] text-white text-center rounded-xl font-semibold text-sm hover:from-[#1a2d4d] hover:to-[#0a1628] transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+                {message.cta.text}
+              </Link>
             )}
           </div>
         )}
@@ -560,6 +570,7 @@ export function ChatbotWidget() {
       const decoder = new TextDecoder();
       let fullText = '';
       let mortgageData: MortgageEstimate | null = null;
+      let ctaData: { text: string; url: string } | null = null;
 
       if (reader) {
         while (true) {
@@ -591,6 +602,7 @@ export function ChatbotWidget() {
                   for (const item of parsed) {
                     if (item.type === 'mortgageEstimate' && item.data) {
                       mortgageData = item.data as MortgageEstimate;
+                      ctaData = item.cta || null;
                     }
                   }
                 }
@@ -609,7 +621,8 @@ export function ChatbotWidget() {
             toolResult: mortgageData ? {
               type: 'mortgageEstimate',
               data: mortgageData
-            } : undefined
+            } : undefined,
+            cta: ctaData || undefined
           });
         }
       }

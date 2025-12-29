@@ -110,7 +110,7 @@ IMPORTANT: Ask questions ONE AT A TIME in this exact order:
 2. "How much do you have saved for a down payment?"
 3. "Do you have any monthly debt payments like car loans or credit cards? If yes, how much per month? If none, just say 0."
 CRITICAL: Do NOT guess or assume debt values. If user doesn't mention debts, use 0. NEVER use income or down payment values for the debt parameter.
-FORMATTING: After receiving the estimate, present it in a CONVERSATIONAL format with clear line breaks, not dense markdown. Break up the information into easy-to-read chunks.
+FORMATTING: Return the tool's message EXACTLY as provided. DO NOT add bullet points, additional context, or reformat the response. The tool returns a formatted visual card with all details - just pass through the message text unchanged.
 
 **getNeighborhoodInfo**: Use when user asks about a city/area (e.g., "Tell me about Mississauga", "What's Oakville like?"). Returns prices, transit, schools, neighborhoods.
 

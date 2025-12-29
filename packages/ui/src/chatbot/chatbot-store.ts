@@ -13,6 +13,11 @@ export interface MortgageEstimate {
   cmhcPremium?: number | null;
 }
 
+export interface CallToAction {
+  text: string;
+  url: string;
+}
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -23,6 +28,8 @@ export interface Message {
     type: "propertySearch" | "mortgageEstimate";
     data: unknown | MortgageEstimate;
   };
+  // Optional call-to-action button
+  cta?: CallToAction;
 }
 
 export interface UserPreferences {
