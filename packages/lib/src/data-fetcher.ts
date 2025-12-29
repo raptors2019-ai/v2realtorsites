@@ -102,14 +102,30 @@ export function convertIDXToProperty(listing: IDXListing): Property {
   const typeKey = listing.PropertyType?.toLowerCase()
   const subTypeKey = listing.PropertySubType?.toLowerCase()
 
+  // Log occasionally to monitor property type detection accuracy
+  if (Math.random() < 0.01) { // Log 1% of listings
+    console.log('[convertIDXToProperty.propertyType]', {
+      ListingKey: listing.ListingKey,
+      PropertyType: listing.PropertyType,
+      PropertySubType: listing.PropertySubType,
+      detectedType: null, // Will be set below
+    })
+  }
+
   let propertyType: Property['propertyType'] = 'detached' // default
 
-  if (typeKey === 'condo') {
-    propertyType = 'condo'
-  } else if (typeKey === 'townhouse') {
-    propertyType = 'townhouse'
-  } else if (typeKey === 'residential') {
-    // For 'Residential', check PropertySubType for more specificity
+  // Check PropertyType first - TRREB uses "Residential Freehold" and "Residential Condo & Other"
+  if (typeKey?.includes('condo')) {
+    // PropertyType contains "condo" - it's a condo or condo townhouse
+    // Check PropertySubType for specificity
+    if (subTypeKey?.includes('townhouse')) {
+      propertyType = 'townhouse'
+    } else {
+      propertyType = 'condo'
+    }
+  } else if (typeKey?.includes('freehold') || typeKey?.includes('residential')) {
+    // PropertyType is "Residential Freehold" or just "Residential"
+    // Use PropertySubType for specificity
     if (subTypeKey?.includes('condo') || subTypeKey?.includes('apartment') || subTypeKey?.includes('apt')) {
       propertyType = 'condo'
     } else if (subTypeKey?.includes('townhouse') || subTypeKey?.includes('town') || subTypeKey?.includes('att/row')) {
