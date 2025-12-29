@@ -570,6 +570,8 @@ export function ChatbotWidget() {
           const lines = chunk.split('\n');
 
           for (const line of lines) {
+            if (!line.trim()) continue; // Skip empty lines
+
             if (line.startsWith('0:')) {
               // Text delta from AI SDK
               try {
@@ -596,6 +598,7 @@ export function ChatbotWidget() {
                 console.error('[chat.parseData]', e);
               }
             }
+            // Ignore other message types (e.g., 'f:', 'd:', etc.) to avoid parsing errors
           }
         }
 
