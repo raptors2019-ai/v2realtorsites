@@ -72,14 +72,12 @@ export class IDXClient {
         .filter(t => t && t !== 'all')
         .map(type => {
           // Map our frontend types to IDX API PropertySubType values
-          // NOTE: These mappings are estimates based on common TRREB values
-          // Check server logs for warnings about unknown PropertySubType values
-          // and update this mapping as needed
+          // Based on actual TRREB/Ampre API values observed in production
           const typeMap: Record<string, string> = {
             'detached': 'Detached',
             'semi-detached': 'Semi-Detached',
             'townhouse': 'Att/Row/Twnhouse',
-            'condo': 'Condo Apt',
+            'condo': 'Condo Apartment', // Fixed: was 'Condo Apt' but API uses full word
           }
           const mappedType = typeMap[type.toLowerCase()] || type
           return `PropertySubType eq '${mappedType}'`
