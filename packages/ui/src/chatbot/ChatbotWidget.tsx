@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useChatbotStore, Message } from "./chatbot-store";
+import { useChatbotStore, Message, MortgageEstimate } from "./chatbot-store";
 import { trackChatbotInteraction, trackLeadFormSubmit } from "@repo/analytics";
+import { ChatMortgageCard } from "./ChatMortgageCard";
 
 // Property type for listings display
 interface PropertyListing {
@@ -60,6 +61,7 @@ function TypingIndicator() {
 
 function MessageBubble({ message, isLatest }: { message: Message; isLatest?: boolean }) {
   const isUser = message.role === "user";
+  const hasMortgageData = message.toolResult?.type === "mortgageEstimate";
 
   return (
     <div
@@ -70,14 +72,30 @@ function MessageBubble({ message, isLatest }: { message: Message; isLatest?: boo
           <span className="text-white text-xs font-semibold tracking-wide">SC</span>
         </div>
       )}
-      <div
-        className={`max-w-[80%] px-4 py-3 ${
+      <div className={`${isUser ? "max-w-[80%]" : "max-w-[90%]"} ${isUser ? "px-4 py-3" : ""} ${
           isUser
             ? "bg-gradient-to-br from-[#0a1628] to-[#0f1d32] text-white rounded-2xl rounded-tr-none shadow-md"
-            : "bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm"
+            : ""
         }`}
       >
-        <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+        {/* Render mortgage card if available */}
+        {hasMortgageData && !isUser && (
+          <div className="space-y-3">
+            <ChatMortgageCard {...(message.toolResult!.data as MortgageEstimate)} />
+            {message.content && (
+              <div className="bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm px-4 py-3">
+                <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Regular message bubble */}
+        {!hasMortgageData && (
+          <div className={isUser ? "" : "bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm px-4 py-3"}>
+            <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -541,6 +559,7 @@ export function ChatbotWidget() {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let fullText = '';
+      let mortgageData: MortgageEstimate | null = null;
 
       if (reader) {
         while (true) {
@@ -561,12 +580,34 @@ export function ChatbotWidget() {
               } catch (e) {
                 // Skip invalid JSON
               }
+            } else if (line.startsWith('2:')) {
+              // Data annotation from AI SDK
+              try {
+                const dataStr = line.slice(2);
+                const parsed = JSON.parse(dataStr);
+                if (parsed && Array.isArray(parsed)) {
+                  for (const item of parsed) {
+                    if (item.type === 'mortgageEstimate' && item.data) {
+                      mortgageData = item.data as MortgageEstimate;
+                    }
+                  }
+                }
+              } catch (e) {
+                console.error('[chat.parseData]', e);
+              }
             }
           }
         }
 
         if (fullText) {
-          addMessage({ role: "assistant", content: fullText });
+          addMessage({
+            role: "assistant",
+            content: fullText,
+            toolResult: mortgageData ? {
+              type: 'mortgageEstimate',
+              data: mortgageData
+            } : undefined
+          });
         }
       }
     } catch (error) {

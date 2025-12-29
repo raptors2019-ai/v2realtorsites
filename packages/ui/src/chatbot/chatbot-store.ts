@@ -1,6 +1,18 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+export interface MortgageEstimate {
+  maxHomePrice: number;
+  downPayment: number;
+  downPaymentPercent: number;
+  mortgageAmount: number;
+  monthlyPayment: number;
+  monthlyPropertyTax: number;
+  monthlyHeating: number;
+  totalMonthlyHousing: number;
+  cmhcPremium?: number | null;
+}
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -8,8 +20,8 @@ export interface Message {
   timestamp: Date;
   // Optional tool result data for rich rendering
   toolResult?: {
-    type: "propertySearch";
-    data: unknown;
+    type: "propertySearch" | "mortgageEstimate";
+    data: unknown | MortgageEstimate;
   };
 }
 

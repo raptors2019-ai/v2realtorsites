@@ -1,4 +1,4 @@
-import { streamText } from 'ai'
+import { streamText, StreamData } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import {
   sriCollectiveSystemPrompt,
@@ -16,6 +16,8 @@ export const runtime = 'edge'
 export async function POST(req: Request) {
   const { messages } = await req.json()
 
+  const data = new StreamData()
+
   const result = streamText({
     model: openai('gpt-4o-mini'),
     system: sriCollectiveSystemPrompt,
@@ -31,7 +33,22 @@ export async function POST(req: Request) {
     },
     maxSteps: 5,
 
+    onStepFinish: async ({ toolResults }) => {
+      // Capture mortgage estimator results for rich rendering
+      for (const toolResult of toolResults || []) {
+        if (toolResult.toolName === 'estimateMortgage' && toolResult.result.success) {
+          data.append({
+            type: 'mortgageEstimate',
+            data: toolResult.result.estimate,
+          })
+        }
+      }
+    },
+
     onFinish: async ({ usage, finishReason }) => {
+      // Close the data stream
+      data.close()
+
       // Log conversation completion
       console.error('[chat.sri-collective.complete]', {
         messageCount: messages.length,
@@ -41,5 +58,5 @@ export async function POST(req: Request) {
     },
   })
 
-  return result.toDataStreamResponse()
+  return result.toDataStreamResponse({ data })
 }
