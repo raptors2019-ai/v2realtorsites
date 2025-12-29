@@ -144,6 +144,7 @@ export const mortgageEstimatorTool: CoreTool = {
 
       const result = {
         success: true,
+        displayType: 'mortgage-card', // Signal to render custom card component
         estimate: {
           maxHomePrice,
           maxMortgage,
@@ -159,21 +160,36 @@ export const mortgageEstimatorTool: CoreTool = {
           gdsRatio: Math.round((maxHousingCost / monthlyIncome) * 100),
           tdsRatio: Math.round(((maxHousingCost + monthlyDebts) / monthlyIncome) * 100),
         },
-        message: `Great! Based on your income of ${formatCurrency(annualIncome)} and down payment of ${formatCurrency(downPayment)}, here's what you could afford:
+        message: `Great! Based on your income of ${formatCurrency(annualIncome)} and down payment of ${formatCurrency(downPayment)}, here's what you can afford:
 
-🏠 Maximum Home Price: ${formatCurrency(maxHomePrice)}
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-💰 Breakdown:
-• Down Payment: ${formatCurrency(downPayment)} (${Math.round(downPaymentPercent)}%)
-• Mortgage Amount: ${formatCurrency(maxMortgage)}${cmhcPremium > 0 ? `\n• CMHC Insurance: ${formatCurrency(cmhcPremium)}` : ''}
+🏠 MAXIMUM HOME PRICE
+${formatCurrency(maxHomePrice)}
 
-📊 Estimated Monthly Costs:
-• Mortgage Payment: ${formatCurrency(monthlyPayment)}
-• Property Tax: ${formatCurrency(monthlyPropertyTax)}
-• Heating: ${formatCurrency(DEFAULT_HEATING_MONTHLY)}
-• Total: ${formatCurrency(monthlyPayment + monthlyPropertyTax + DEFAULT_HEATING_MONTHLY)}/month
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-⚠️ Please note: This is an estimate only, not financial advice. Actual approval depends on your credit history, employment stability, and lender policies. I'd recommend speaking with a mortgage broker for accurate pre-approval.
+💰 FINANCING BREAKDOWN
+
+Down Payment: ${formatCurrency(downPayment)} (${Math.round(downPaymentPercent)}%)
+
+Mortgage Amount: ${formatCurrency(maxMortgage)}${cmhcPremium > 0 ? `\n\nCMHC Insurance: ${formatCurrency(cmhcPremium)}` : ''}
+
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+📊 MONTHLY COSTS
+
+Mortgage Payment: ${formatCurrency(monthlyPayment)}
+Property Tax: ${formatCurrency(monthlyPropertyTax)}
+Heating: ${formatCurrency(DEFAULT_HEATING_MONTHLY)}
+
+➜ TOTAL PER MONTH: ${formatCurrency(monthlyPayment + monthlyPropertyTax + DEFAULT_HEATING_MONTHLY)}
+
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+
+⚠️ IMPORTANT: This is an estimate only, not financial advice. Actual approval depends on your credit history, employment stability, and lender policies.
+
+💡 I recommend speaking with a mortgage broker for accurate pre-approval.
 
 Would you like me to search for properties under ${formatCurrency(maxHomePrice)}?`,
         formattedSummary: `Max Home Price: ${formatCurrency(maxHomePrice)}

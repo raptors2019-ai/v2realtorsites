@@ -487,3 +487,22 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--border-primary);
   transform: translateY(-2px);
 }
+
+/* ===== CUSTOM SCROLLBAR - Navy Blue Override ===== */
+/* Override the default primary blue scrollbar with navy blue */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f3f0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0a1628 0%, #1a2d4d 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #1a2d4d 0%, #0a1628 100%);
+}

@@ -77,7 +77,7 @@ function MessageBubble({ message, isLatest }: { message: Message; isLatest?: boo
             : "bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm"
         }`}
       >
-        <p className="text-sm leading-relaxed">{message.content}</p>
+        <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
       </div>
     </div>
   );
@@ -248,7 +248,7 @@ function SurveyLocation({ onSelect }: { onSelect: (locations: string[]) => void 
         <p className="text-sm font-medium text-stone-800 mb-1">Preferred Locations</p>
         <p className="text-xs text-stone-500">Select all areas you&apos;re interested in</p>
       </div>
-      <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-[#1a2332] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-[#242d3f]">
+      <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-stone-100 [&::-webkit-scrollbar-thumb]:bg-[#0a1628] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-[#1a2d4d]">
         {locations.map((loc, index) => (
           <button
             key={loc}
@@ -838,7 +838,7 @@ export function ChatbotWidget() {
           </div>
 
           {/* Chat Body - Clean white */}
-          <div className="flex-1 p-5 overflow-y-auto bg-[#f8f9fa] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-[#1a2332] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-[#242d3f]">
+          <div className="flex-1 p-5 overflow-y-auto bg-[#f8f9fa] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-stone-100 [&::-webkit-scrollbar-thumb]:bg-[#0a1628] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-[#1a2d4d]">
             {messages.map((message, index) => (
               <MessageBubble
                 key={message.id}
