@@ -108,6 +108,6 @@ export type {
 
 // Types
 export type { HeaderConfig, HeaderProps } from './components/layout/Header'
-export type { FooterConfig, FooterProps } from './components/layout/Footer'
+export type { FooterConfig, FooterProps, MLSDisclaimerConfig } from './components/layout/Footer'
 export type { ButtonProps } from './components/Button'
 export type { ThemeName, ThemeConfig, ButtonVariant } from './types/theme'

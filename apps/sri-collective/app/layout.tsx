@@ -31,7 +31,7 @@ const footerConfig: FooterConfig = {
   logoSecondPartClass: 'text-gradient-primary',
   description: 'Your trusted real estate team serving Toronto, Mississauga, Brampton and surrounding areas.',
   teamMembers: [
-    { name: 'Sri Kathiravelu', phone: '+1 (416) 786-0431' },
+    { name: 'Sri Kathiravelu', phone: '416-305-1111' },
     { name: 'Niru Arulselvan', phone: '+1 (416) 786-0431' },
   ],
   quickLinks: [
@@ -40,6 +40,12 @@ const footerConfig: FooterConfig = {
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Terms of Service', href: '/terms' },
   ],
+  mlsDisclaimer: {
+    oreaText: 'Data provided by the Ontario Regional Technology & Information Systems. The information is deemed reliable, but is not guaranteed. Not intended to solicit buyers or sellers, landlords or tenants currently under contract. The trademarks REALTOR®, REALTORS® and the REALTOR® logo are controlled by The Canadian Real Estate Association (CREA) and identify real estate professionals who are members of CREA. The trademarks MLS®, Multiple Listing Service® and the associated logos are owned by The Canadian Real Estate Association (CREA) and identify the quality of services provided by real estate professionals who are members of CREA.',
+    realtorText: 'All information deemed reliable but not guaranteed. All properties are subject to prior sale, change or withdrawal. Neither listing broker(s) or information provider(s) shall be responsible for any typographical errors, misinformation, misprints and shall be held totally harmless. Listing(s) information is provided for consumer\'s personal, non-commercial use and may not be used for any purpose other than to identify prospective properties consumers may be interested in purchasing. The data relating to real estate for sale on this website comes in part from the Internet Data Exchange (IDX) program.',
+    oreaLogoSrc: '/images/orea-logo.png',
+    realtorLogoSrc: '/images/realtor-logo.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

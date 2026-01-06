@@ -1,5 +1,12 @@
 import Link from 'next/link'
 
+export interface MLSDisclaimerConfig {
+  oreaText: string
+  realtorText: string
+  oreaLogoSrc?: string
+  realtorLogoSrc?: string
+}
+
 export interface FooterConfig {
   siteName: string
   logoFirstPart?: string
@@ -25,6 +32,7 @@ export interface FooterConfig {
     phone?: string
   }>
   tagline?: string
+  mlsDisclaimer?: MLSDisclaimerConfig
 }
 
 export interface FooterProps {
@@ -163,6 +171,43 @@ export function Footer({ config }: FooterProps) {
             </div>
           )}
         </div>
+
+        {/* MLS Disclaimer */}
+        {config.mlsDisclaimer && (
+          <div className="mt-12 pt-8 border-t border-white/10">
+            <h4 className="text-primary font-semibold uppercase tracking-wider text-sm mb-6">
+              MLS® Disclaimer
+            </h4>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* OREA Disclaimer */}
+              <div className="flex gap-4">
+                {config.mlsDisclaimer.oreaLogoSrc && (
+                  <img
+                    src={config.mlsDisclaimer.oreaLogoSrc}
+                    alt="Ontario Regional"
+                    className="w-24 h-auto object-contain flex-shrink-0"
+                  />
+                )}
+                <p className="text-gray-400 text-xs leading-relaxed">
+                  {config.mlsDisclaimer.oreaText}
+                </p>
+              </div>
+              {/* REALTOR Disclaimer */}
+              <div className="flex gap-4">
+                {config.mlsDisclaimer.realtorLogoSrc && (
+                  <img
+                    src={config.mlsDisclaimer.realtorLogoSrc}
+                    alt="REALTOR®"
+                    className="w-16 h-auto object-contain flex-shrink-0"
+                  />
+                )}
+                <p className="text-gray-400 text-xs leading-relaxed">
+                  {config.mlsDisclaimer.realtorText}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Bottom Bar */}
         <div className="border-t border-white/10 mt-12 pt-8" />
