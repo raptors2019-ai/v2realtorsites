@@ -14,6 +14,16 @@ interface ProjectCardProps {
 }
 
 /**
+ * Fallback images for projects without a featured image
+ */
+const fallbackImages = [
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&h=600&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=600&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&h=600&fit=crop&q=80',
+];
+
+/**
  * Status badge colors and text
  */
 const statusConfig = {
@@ -34,6 +44,7 @@ const statusConfig = {
 export function ProjectCard({ project, className, index = 0 }: ProjectCardProps) {
   const status = statusConfig[project.status] || statusConfig['selling']
   const projectUrl = `/builder-projects/${project.slug}`
+  const projectImage = project.featuredImage || fallbackImages[index % fallbackImages.length]
 
   return (
     <motion.div
@@ -52,31 +63,14 @@ export function ProjectCard({ project, className, index = 0 }: ProjectCardProps)
       >
         {/* Image */}
         <div className="relative h-56 md:h-64 bg-gradient-to-br from-cream to-cream-dark overflow-hidden">
-          {project.featuredImage ? (
-            <Image
-              src={project.featuredImage}
-              alt={project.name}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-              <svg
-                className="w-16 h-16 text-primary/40"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-            </div>
-          )}
+          <Image
+            src={projectImage}
+            alt={project.name}
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            unoptimized={!project.featuredImage}
+          />
 
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-secondary/70 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none" />

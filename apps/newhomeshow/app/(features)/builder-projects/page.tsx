@@ -13,8 +13,15 @@ export default async function BuilderProjectsPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-secondary">
       {/* Hero Section */}
-      <section className="py-16 bg-gradient-to-b from-cream to-white dark:from-secondary-light dark:to-secondary">
-        <div className="container mx-auto px-4">
+      <section className="py-16 bg-gradient-to-b from-cream to-white dark:from-secondary-light dark:to-secondary relative overflow-hidden">
+        {/* Subtle luxury background accent */}
+        <div
+          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06] bg-cover bg-center"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80')",
+          }}
+        />
+        <div className="container mx-auto px-4 relative">
           <div className="text-center mb-12">
             <div className="w-12 h-1 bg-primary mx-auto mb-6 rounded-full" />
             <h1 className="text-4xl md:text-5xl font-bold text-secondary dark:text-white mb-4">

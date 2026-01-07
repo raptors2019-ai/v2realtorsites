@@ -16,12 +16,12 @@ export default async function Home() {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative h-[90vh] min-h-[700px] overflow-hidden">
-        {/* Background Image */}
+        {/* Background Image - Luxury modern mansion at twilight */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105 animate-[pulse_20s_ease-in-out_infinite]"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1920&h=1080&fit=crop&q=80')",
+              "url('https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1920&h=1080&fit=crop&q=80')",
           }}
         />
         {/* Gradient Overlay */}
@@ -169,8 +169,15 @@ export default async function Home() {
       </section>
 
       {/* Featured Properties Section */}
-      <section className="py-28 bg-white">
-        <div className="container mx-auto px-4">
+      <section className="py-28 bg-white relative overflow-hidden">
+        {/* Subtle decorative background */}
+        <div
+          className="absolute top-0 right-0 w-1/2 h-full opacity-[0.03] bg-cover bg-center"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&q=80')",
+          }}
+        />
+        <div className="container mx-auto px-4 relative">
           <div className="text-center mb-16">
             <p className="text-primary uppercase tracking-[0.25em] text-sm mb-3 font-medium">
               Explore
@@ -247,11 +254,12 @@ export default async function Home() {
               </div>
 
               <div className="relative">
+                {/* Luxury modern living room interior */}
                 <div
                   className="aspect-[4/3] rounded-xl bg-cover bg-center shadow-xl"
                   style={{
                     backgroundImage:
-                      "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop')",
+                      "url('https://images.unsplash.com/photo-1600210492493-0946911123ea?w=800&h=600&fit=crop&q=80')",
                   }}
                 />
               </div>
@@ -272,7 +280,28 @@ export default async function Home() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
+              <div className="space-y-6 text-center">
+                {/* Team Photo */}
+                <div className="flex justify-center gap-6 mb-6">
+                  <div className="text-center">
+                    <img
+                      src="/images/sri.JPEG"
+                      alt="Sri Kathiravelu"
+                      className="w-28 h-28 rounded-full object-cover object-top border-4 border-primary/20 shadow-lg mx-auto mb-2"
+                    />
+                    <p className="font-medium text-secondary text-sm">Sri Kathiravelu</p>
+                    <p className="text-xs text-primary">Sales Representative</p>
+                  </div>
+                  <div className="text-center">
+                    <img
+                      src="/images/niru.JPEG"
+                      alt="Niru Arulselvan"
+                      className="w-28 h-28 rounded-full object-cover object-top border-4 border-primary/20 shadow-lg mx-auto mb-2"
+                    />
+                    <p className="font-medium text-secondary text-sm">Niru Arulselvan</p>
+                    <p className="text-xs text-primary">Sales Representative</p>
+                  </div>
+                </div>
                 <p className="text-text-secondary leading-relaxed">
                   Sri Collective Group brings together the expertise of Sri Kathiravelu
                   and Niru Arulselvan, two of Ontario&apos;s most trusted real estate professionals.
@@ -285,7 +314,7 @@ export default async function Home() {
                   real estate decisions. Whether you&apos;re a first-time buyer or looking to sell,
                   we&apos;re committed to exceeding your expectations.
                 </p>
-                <div className="flex gap-4 pt-4">
+                <div className="flex justify-center gap-4 pt-4">
                   <Link
                     href="/contact"
                     className="btn-primary px-6 py-3 rounded-lg text-sm font-medium"

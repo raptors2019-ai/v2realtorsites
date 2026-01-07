@@ -6,6 +6,14 @@ import { getProjectBySlug, getSimilarProjects } from '@/lib/projects'
 import { formatPrice } from '@repo/lib'
 import { ProjectCard } from '@repo/ui'
 
+// Fallback images for projects without a featured image
+const fallbackImages = [
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&h=800&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&h=800&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&h=800&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200&h=800&fit=crop&q=80',
+];
+
 interface PageProps {
   params: Promise<{ slug: string }>
 }
@@ -41,6 +49,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   const status = statusConfig[project.status] || statusConfig['selling']
+  // Use a consistent fallback based on project slug hash
+  const slugHash = project.slug.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  const heroImage = project.featuredImage || fallbackImages[slugHash % fallbackImages.length]
 
   return (
     <div className="min-h-screen bg-white dark:bg-secondary">
@@ -57,17 +68,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
       {/* Hero Image */}
       <section className="relative h-[400px] md:h-[500px]">
-        {project.featuredImage ? (
-          <Image
-            src={project.featuredImage}
-            alt={project.name}
-            fill
-            className="object-cover"
-            priority
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20" />
-        )}
+        <Image
+          src={heroImage}
+          alt={project.name}
+          fill
+          className="object-cover"
+          priority
+          unoptimized={!project.featuredImage}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/20 to-transparent" />
 
         {/* Hero Content */}

@@ -31,7 +31,9 @@ export interface FooterConfig {
     title?: string
     instagram?: string
     phone?: string
+    image?: string
   }>
+  teamGroupImage?: string
   contactInfo?: {
     phone?: string
     email?: string
@@ -142,40 +144,63 @@ export function Footer({ config }: FooterProps) {
               <h4 className="text-primary font-semibold uppercase tracking-wider text-sm mb-6">
                 Our Team
               </h4>
+              {/* Team Group Image */}
+              {config.teamGroupImage && (
+                <div className="mb-6">
+                  <img
+                    src={config.teamGroupImage}
+                    alt="Our Team"
+                    className="w-full h-40 object-cover object-top rounded-xl border border-white/10"
+                  />
+                </div>
+              )}
               <div className="space-y-4">
                 {config.teamMembers.map((member) => (
                   <div
                     key={member.name}
                     className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all duration-300 hover:border-primary/40 hover:bg-white/10"
                   >
-                    <p className="font-medium text-white text-sm">
-                      {member.name}
-                    </p>
-                    {member.title && (
-                      <p className="text-xs text-primary/80 mt-0.5">
-                        {member.title}
-                      </p>
-                    )}
-                    {member.instagram && (
-                      <a
-                        href={member.instagram}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary hover:text-primary/80 transition-colors block"
-                      >
-                        {member.instagram.includes('instagram.com')
-                          ? `@${member.instagram.split('/').pop()?.replace('/', '')}`
-                          : member.instagram}
-                      </a>
-                    )}
-                    {member.phone && (
-                      <a
-                        href={`tel:${member.phone}`}
-                        className="text-xs text-gray-400 hover:text-primary transition-colors block mt-1"
-                      >
-                        {member.phone}
-                      </a>
-                    )}
+                    <div className="flex items-center gap-3">
+                      {member.image && (
+                        <img
+                          src={member.image}
+                          alt={member.name}
+                          className="w-12 h-12 rounded-full object-cover object-top border-2 border-primary/30"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-white text-sm">
+                          {member.name}
+                        </p>
+                        {member.title && (
+                          <p className="text-xs text-primary/80 mt-0.5">
+                            {member.title}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className={member.image ? 'mt-3 pl-15' : ''}>
+                      {member.instagram && (
+                        <a
+                          href={member.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:text-primary/80 transition-colors block"
+                        >
+                          {member.instagram.includes('instagram.com')
+                            ? `@${member.instagram.split('/').pop()?.replace('/', '')}`
+                            : member.instagram}
+                        </a>
+                      )}
+                      {member.phone && (
+                        <a
+                          href={`tel:${member.phone}`}
+                          className="text-xs text-gray-400 hover:text-primary transition-colors block mt-1"
+                        >
+                          {member.phone}
+                        </a>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

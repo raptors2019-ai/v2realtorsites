@@ -29,8 +29,15 @@ export default async function PropertiesPage({
   // If no search params, show survey landing
   if (!hasSearchParams) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-cream to-white">
-        <div className="container mx-auto px-4 py-8 md:py-12">
+      <div className="min-h-screen bg-gradient-to-b from-cream to-white relative overflow-hidden">
+        {/* Subtle luxury background accent */}
+        <div
+          className="absolute inset-0 opacity-[0.03] bg-cover bg-center"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1600210492493-0946911123ea?w=1920&q=80')",
+          }}
+        />
+        <div className="container mx-auto px-4 py-8 md:py-12 relative">
           <div className="text-center mb-8">
             <div className="accent-line mx-auto mb-4" />
             <h1 className="text-3xl md:text-4xl font-bold text-secondary mb-3">
@@ -73,8 +80,15 @@ export default async function PropertiesPage({
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section with Refine Button */}
-      <section className="py-16 bg-gradient-to-b from-cream to-white">
-        <div className="container mx-auto px-4">
+      <section className="py-16 bg-gradient-to-b from-cream to-white relative overflow-hidden">
+        {/* Subtle luxury background accent */}
+        <div
+          className="absolute inset-0 opacity-[0.03] bg-cover bg-center"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1920&q=80')",
+          }}
+        />
+        <div className="container mx-auto px-4 relative">
           <div className="text-center mb-12">
             <div className="accent-line mx-auto mb-6" />
             <h1 className="text-4xl md:text-5xl font-bold text-secondary mb-4">

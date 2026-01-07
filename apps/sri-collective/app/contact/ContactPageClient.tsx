@@ -7,6 +7,7 @@ interface Agent {
   title: string
   phone: string
   email: string
+  image?: string
 }
 
 interface ContactPageClientProps {
@@ -31,8 +32,19 @@ export function ContactPageClient({ agents }: ContactPageClientProps) {
             key={agent.name}
             className="luxury-card-premium rounded-xl p-6 hover:shadow-lg transition-shadow duration-300"
           >
-            <h3 className="font-semibold text-secondary text-lg">{agent.name}</h3>
-            <p className="text-primary text-sm mb-4">{agent.title}</p>
+            <div className="flex items-center gap-4 mb-4">
+              {agent.image && (
+                <img
+                  src={agent.image}
+                  alt={agent.name}
+                  className="w-20 h-20 rounded-full object-cover object-top border-3 border-primary/30 shadow-lg"
+                />
+              )}
+              <div>
+                <h3 className="font-semibold text-secondary text-lg">{agent.name}</h3>
+                <p className="text-primary text-sm">{agent.title}</p>
+              </div>
+            </div>
             <div className="space-y-2">
               <a
                 href={`tel:${agent.phone.replace(/\s/g, '')}`}

@@ -6,18 +6,36 @@ import {
   AnimatedHeroItem,
   AnimatedHeroButtons,
 } from "@repo/ui";
+import { getAllProjects } from "@/lib/projects";
 
-export default function Home() {
+// Fallback images for projects without a featured image
+const fallbackImages = [
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&h=600&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=600&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&h=600&fit=crop&q=80',
+];
+
+export default async function Home() {
+  const allProjects = await getAllProjects();
+  // Randomly shuffle and pick 2 projects for featured section
+  const shuffled = [...allProjects].sort(() => Math.random() - 0.5);
+  const featuredProjects = shuffled.slice(0, 2);
+
+  // Helper to get image with fallback
+  const getProjectImage = (project: typeof allProjects[0], index: number) => {
+    return project.featuredImage || fallbackImages[index % fallbackImages.length];
+  };
   return (
     <div className="min-h-screen bg-white dark:bg-secondary">
       {/* Hero Section */}
       <section className="relative h-[90vh] min-h-[700px] overflow-hidden">
-        {/* Background Image */}
+        {/* Background Image - Luxury modern home with pool at dusk */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105 animate-[pulse_20s_ease-in-out_infinite]"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&h=1080&fit=crop')",
+              "url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&h=1080&fit=crop&q=80')",
           }}
         />
         {/* Gradient Overlay */}
@@ -58,37 +76,6 @@ export default function Home() {
               </Link>
             </AnimatedHeroButtons>
           </AnimatedHeroContent>
-
-          {/* Featured Project Info Card */}
-          <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 info-card p-6 rounded-xl max-w-xs">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary-light to-primary rounded-t-xl" />
-            <div className="space-y-4 pt-2">
-              <div className="flex justify-between items-center">
-                <span className="text-text-secondary dark:text-gray-400 text-sm">Status:</span>
-                <span className="text-secondary dark:text-white font-medium">Now Selling</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-text-secondary dark:text-gray-400 text-sm">Project Type:</span>
-                <span className="text-secondary dark:text-white font-medium">
-                  Townhomes & Detached
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-text-secondary dark:text-gray-400 text-sm">Starting Price:</span>
-                <span className="text-primary font-bold text-lg">$999,000</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-text-secondary dark:text-gray-400 text-sm">Closing:</span>
-                <span className="text-secondary dark:text-white font-medium">Q4 2026</span>
-              </div>
-            </div>
-            <Link
-              href="/builder-projects"
-              className="mt-5 block text-center btn-outline-secondary px-4 py-2.5 rounded-lg text-sm"
-            >
-              Learn More
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -186,77 +173,51 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Project Card 1 */}
-            <Link
-              href="/builder-projects"
-              className="luxury-card-premium rounded-xl overflow-hidden group cursor-pointer"
-            >
-              <div className="relative h-72 overflow-hidden">
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                  style={{
-                    backgroundImage:
-                      "url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop')",
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/30 to-transparent" />
-                <div className="absolute bottom-4 left-4">
-                  <span className="badge-sale">
-                    Now Selling
-                  </span>
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-secondary dark:text-white mb-2 group-hover:text-primary transition-colors">
-                  The Pickering Station Collection
-                </h3>
-                <p className="text-text-secondary dark:text-gray-300 text-sm mb-4">
-                  Luxury townhomes and detached homes in Pickering
-                </p>
-                <div className="flex justify-between items-center">
-                  <span className="text-primary font-bold text-lg">
-                    From $999,000
-                  </span>
-                  <span className="text-text-muted dark:text-gray-400 text-sm">Q4 2026</span>
-                </div>
-              </div>
-            </Link>
+            {featuredProjects.map((project, index) => {
+              const statusBadge = project.status === 'selling' ? 'badge-sale' : 'badge-featured';
+              const statusText = project.status === 'selling' ? 'Now Selling' : 'Coming Soon';
+              const closingQuarter = project.closingDate
+                ? `Q${Math.ceil((new Date(project.closingDate).getMonth() + 1) / 3)} ${new Date(project.closingDate).getFullYear()}`
+                : 'TBD';
+              const projectImage = getProjectImage(project, index);
 
-            {/* Project Card 2 */}
-            <Link
-              href="/builder-projects"
-              className="luxury-card-premium rounded-xl overflow-hidden group cursor-pointer"
-            >
-              <div className="relative h-72 overflow-hidden">
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                  style={{
-                    backgroundImage:
-                      "url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop')",
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/30 to-transparent" />
-                <div className="absolute bottom-4 left-4">
-                  <span className="badge-featured">
-                    Coming Soon
-                  </span>
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-secondary dark:text-white mb-2 group-hover:text-primary transition-colors">
-                  Oakville Waterfront Residences
-                </h3>
-                <p className="text-text-secondary dark:text-gray-300 text-sm mb-4">
-                  Premium lakefront condominiums in South Oakville
-                </p>
-                <div className="flex justify-between items-center">
-                  <span className="text-primary font-bold text-lg">
-                    From $1,200,000
-                  </span>
-                  <span className="text-text-muted dark:text-gray-400 text-sm">Q2 2027</span>
-                </div>
-              </div>
-            </Link>
+              return (
+                <Link
+                  key={project.slug}
+                  href={`/builder-projects/${project.slug}`}
+                  className="luxury-card-premium rounded-xl overflow-hidden group cursor-pointer"
+                >
+                  <div className="relative h-72 overflow-hidden">
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                      style={{
+                        backgroundImage: `url('${projectImage}')`,
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/30 to-transparent" />
+                    <div className="absolute bottom-4 left-4">
+                      <span className={statusBadge}>
+                        {statusText}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold text-secondary dark:text-white mb-2 group-hover:text-primary transition-colors">
+                      {project.name}
+                    </h3>
+                    <p className="text-text-secondary dark:text-gray-300 text-sm mb-4">
+                      {project.productTypes?.map(pt => pt.name).join(' & ')} in {project.city}
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-primary font-bold text-lg">
+                        From ${project.startingPrice.toLocaleString()}
+                      </span>
+                      <span className="text-text-muted dark:text-gray-400 text-sm">{closingQuarter}</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
 
           <div className="text-center mt-12">

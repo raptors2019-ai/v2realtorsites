@@ -14,12 +14,14 @@ const agents = [
     title: 'Real Estate Agent',
     phone: '+1 (416) 786-0431',
     email: 'sri@sricollectivegroup.com',
+    image: '/images/sri.JPEG',
   },
   {
     name: 'Niru Arulselvan',
     title: 'Real Estate Agent',
     phone: '+1 (416) 786-0431',
     email: 'niru@sricollectivegroup.com',
+    image: '/images/niru.JPEG',
   },
 ]
 
