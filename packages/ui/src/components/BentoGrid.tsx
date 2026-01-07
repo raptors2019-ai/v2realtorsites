@@ -161,19 +161,18 @@ export function BentoFeatureCard({
     <motion.div
       variants={bentoCardVariants}
       className={cn(
-        "group bg-white border border-gray-200 rounded-xl p-8 text-center",
-        "hover:shadow-lg hover:border-primary/30",
+        "group luxury-card-premium rounded-xl p-8 text-center",
         "transition-all duration-300",
         className
       )}
     >
-      <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+      <div className="w-14 h-14 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center mx-auto mb-6">
         {icon}
       </div>
       <h3 className="text-lg font-semibold text-primary mb-3">
         {title}
       </h3>
-      <p className="text-gray-700 text-sm leading-relaxed">
+      <p className="text-text-secondary dark:text-gray-300 text-sm leading-relaxed">
         {description}
       </p>
     </motion.div>
