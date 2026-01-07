@@ -28,9 +28,15 @@ export interface FooterConfig {
   }>
   teamMembers?: Array<{
     name: string
+    title?: string
     instagram?: string
     phone?: string
   }>
+  contactInfo?: {
+    phone?: string
+    email?: string
+    hours?: string[]
+  }
   tagline?: string
   mlsDisclaimer?: MLSDisclaimerConfig
 }
@@ -145,6 +151,11 @@ export function Footer({ config }: FooterProps) {
                     <p className="font-medium text-white text-sm">
                       {member.name}
                     </p>
+                    {member.title && (
+                      <p className="text-xs text-primary/80 mt-0.5">
+                        {member.title}
+                      </p>
+                    )}
                     {member.instagram && (
                       <a
                         href={member.instagram}
@@ -167,6 +178,61 @@ export function Footer({ config }: FooterProps) {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Contact Info (when no team members) */}
+          {config.contactInfo && !config.teamMembers?.length && (
+            <div>
+              <h4 className="text-primary font-semibold uppercase tracking-wider text-sm mb-6">
+                Contact Us
+              </h4>
+              <div className="space-y-4">
+                {config.contactInfo.phone && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    </div>
+                    <a
+                      href={`tel:${config.contactInfo.phone}`}
+                      className="text-gray-300 hover:text-primary transition-colors text-sm"
+                    >
+                      {config.contactInfo.phone}
+                    </a>
+                  </div>
+                )}
+                {config.contactInfo.email && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <a
+                      href={`mailto:${config.contactInfo.email}`}
+                      className="text-gray-300 hover:text-primary transition-colors text-sm"
+                    >
+                      {config.contactInfo.email}
+                    </a>
+                  </div>
+                )}
+                {config.contactInfo.hours && config.contactInfo.hours.length > 0 && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="text-gray-300 text-sm">
+                      {config.contactInfo.hours.map((hour, idx) => (
+                        <p key={idx}>{hour}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

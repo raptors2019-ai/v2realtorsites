@@ -31,8 +31,8 @@ const footerConfig: FooterConfig = {
   logoSecondPartClass: 'text-gradient-primary',
   description: 'Your trusted real estate team serving Toronto, Mississauga, Brampton and surrounding areas.',
   teamMembers: [
-    { name: 'Sri Kathiravelu', phone: '416-305-1111' },
-    { name: 'Niru Arulselvan', phone: '+1 (416) 786-0431' },
+    { name: 'Sri Kathiravelu', title: 'Sales Representative', phone: '416-305-1111' },
+    { name: 'Niru Arulselvan', title: 'Sales Representative', phone: '+1 (416) 786-0431' },
   ],
   quickLinks: [
     { name: 'Properties', href: '/properties' },

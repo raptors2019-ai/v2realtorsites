@@ -33,10 +33,10 @@ const footerConfig: FooterConfig = {
   logoSecondPart: 'HomeShow',
   logoSecondPartClass: 'text-gradient-primary',
   description: 'Your trusted partner for pre-construction homes in the Greater Toronto Area.',
-  teamMembers: [
-    { name: 'Sri Kathiravelu', phone: '+1 (416) 786-0431' },
-    { name: 'Niru Arulselvan', phone: '+1 (416) 786-0431' },
-  ],
+  contactInfo: {
+    phone: '+1 (416) 786-0431',
+    email: 'info@newhomeshow.ca',
+  },
   quickLinks: [
     { name: 'Builder Projects', href: '/builder-projects' },
     { name: 'Quick Closings', href: '/quick-closings' },

@@ -18,7 +18,7 @@ export function ProjectGrid({
   if (projects.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="mx-auto w-24 h-24 mb-4 rounded-xl border border-primary/20 bg-cream flex items-center justify-center">
+        <div className="mx-auto w-24 h-24 mb-4 rounded-xl border border-primary/20 bg-cream dark:bg-secondary-light flex items-center justify-center">
           <svg
             className="w-12 h-12 text-primary/40"
             fill="none"
@@ -31,10 +31,10 @@ export function ProjectGrid({
             <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
         </div>
-        <h3 className="text-xl font-medium text-secondary mb-2">
+        <h3 className="text-xl font-medium text-secondary dark:text-white mb-2">
           No Projects Found
         </h3>
-        <p className="text-text-secondary">{emptyMessage}</p>
+        <p className="text-text-secondary dark:text-gray-300">{emptyMessage}</p>
       </div>
     )
   }

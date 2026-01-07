@@ -119,13 +119,13 @@ export function RegistrationSurvey({ project, onSuccess }: RegistrationSurveyPro
   if (isComplete) {
     return (
       <div className="text-center py-8">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
-          <svg className="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+          <svg className="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-2xl font-bold text-secondary mb-2">Thank You!</h3>
-        <p className="text-text-secondary mb-6">
+        <h3 className="text-2xl font-bold text-secondary dark:text-white mb-2">Thank You!</h3>
+        <p className="text-text-secondary dark:text-gray-300 mb-6">
           Your registration for {project.name} has been received. A sales representative will contact you shortly.
         </p>
         <button
@@ -143,10 +143,10 @@ export function RegistrationSurvey({ project, onSuccess }: RegistrationSurveyPro
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex justify-between mb-2">
-          <span className="text-sm font-medium text-secondary">Step {step} of {totalSteps}</span>
-          <span className="text-sm text-text-muted">{Math.round((step / totalSteps) * 100)}%</span>
+          <span className="text-sm font-medium text-secondary dark:text-white">Step {step} of {totalSteps}</span>
+          <span className="text-sm text-text-muted dark:text-gray-400">{Math.round((step / totalSteps) * 100)}%</span>
         </div>
-        <div className="h-2 bg-cream rounded-full overflow-hidden">
+        <div className="h-2 bg-cream dark:bg-secondary-light rounded-full overflow-hidden">
           <div
             className="h-full bg-primary transition-all duration-500 ease-out"
             style={{ width: `${(step / totalSteps) * 100}%` }}
@@ -155,28 +155,28 @@ export function RegistrationSurvey({ project, onSuccess }: RegistrationSurveyPro
       </div>
 
       {/* Form Steps */}
-      <div className="bg-white rounded-xl border-2 border-gray-100 p-6">
+      <div className="bg-white dark:bg-secondary-light rounded-xl border-2 border-gray-100 dark:border-gray-700 p-6">
         {/* Step 1: Name */}
         {step === 1 && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-secondary mb-4">What's your name?</h3>
+            <h3 className="text-lg font-semibold text-secondary dark:text-white mb-4">What's your name?</h3>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">First Name *</label>
+              <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1.5">First Name *</label>
               <input
                 type="text"
                 value={formData.firstName}
                 onChange={(e) => updateField('firstName', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:outline-none transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-primary focus:outline-none transition-colors bg-white dark:bg-secondary dark:text-white"
                 placeholder="John"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">Last Name *</label>
+              <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1.5">Last Name *</label>
               <input
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => updateField('lastName', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:outline-none transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-primary focus:outline-none transition-colors bg-white dark:bg-secondary dark:text-white"
                 placeholder="Doe"
               />
             </div>
@@ -186,27 +186,27 @@ export function RegistrationSurvey({ project, onSuccess }: RegistrationSurveyPro
         {/* Step 2: Contact */}
         {step === 2 && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-secondary mb-4">How can we reach you?</h3>
+            <h3 className="text-lg font-semibold text-secondary dark:text-white mb-4">How can we reach you?</h3>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">Email Address *</label>
+              <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1.5">Email Address *</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => updateField('email', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:outline-none transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-primary focus:outline-none transition-colors bg-white dark:bg-secondary dark:text-white"
                 placeholder="john@example.com"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">Phone Number *</label>
+              <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1.5">Phone Number *</label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => updateField('phone', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:outline-none transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-primary focus:outline-none transition-colors bg-white dark:bg-secondary dark:text-white"
                 placeholder="(416) 555-0123"
               />
-              <p className="mt-1 text-xs text-text-muted">We'll use this to reach you about your registration</p>
+              <p className="mt-1 text-xs text-text-muted dark:text-gray-400">We'll use this to reach you about your registration</p>
             </div>
           </div>
         )}
@@ -214,7 +214,7 @@ export function RegistrationSurvey({ project, onSuccess }: RegistrationSurveyPro
         {/* Step 3: Budget */}
         {step === 3 && (
           <div>
-            <h3 className="text-lg font-semibold text-secondary mb-4">What's your budget range?</h3>
+            <h3 className="text-lg font-semibold text-secondary dark:text-white mb-4">What's your budget range?</h3>
             <div className="space-y-2">
               {BUDGET_RANGES.map((range) => (
                 <button
@@ -223,8 +223,8 @@ export function RegistrationSurvey({ project, onSuccess }: RegistrationSurveyPro
                   className={cn(
                     'w-full px-4 py-3 border-2 rounded-lg text-left transition-all duration-200',
                     formData.budgetRange === range.value
-                      ? 'border-primary bg-primary/5 text-primary font-semibold'
-                      : 'border-gray-200 hover:border-primary/50'
+                      ? 'border-primary bg-primary/5 dark:bg-primary/20 text-primary font-semibold'
+                      : 'border-gray-200 dark:border-gray-600 hover:border-primary/50 text-secondary dark:text-gray-300'
                   )}
                 >
                   {range.label}
@@ -237,7 +237,7 @@ export function RegistrationSurvey({ project, onSuccess }: RegistrationSurveyPro
         {/* Step 4: Timeline */}
         {step === 4 && (
           <div>
-            <h3 className="text-lg font-semibold text-secondary mb-4">When are you looking to move?</h3>
+            <h3 className="text-lg font-semibold text-secondary dark:text-white mb-4">When are you looking to move?</h3>
             <div className="space-y-2">
               {TIMELINE_OPTIONS.map((option) => (
                 <button
@@ -246,8 +246,8 @@ export function RegistrationSurvey({ project, onSuccess }: RegistrationSurveyPro
                   className={cn(
                     'w-full px-4 py-3 border-2 rounded-lg text-left transition-all duration-200',
                     formData.timeline === option.value
-                      ? 'border-primary bg-primary/5 text-primary font-semibold'
-                      : 'border-gray-200 hover:border-primary/50'
+                      ? 'border-primary bg-primary/5 dark:bg-primary/20 text-primary font-semibold'
+                      : 'border-gray-200 dark:border-gray-600 hover:border-primary/50 text-secondary dark:text-gray-300'
                   )}
                 >
                   {option.label}
@@ -259,7 +259,7 @@ export function RegistrationSurvey({ project, onSuccess }: RegistrationSurveyPro
 
         {/* Error Message */}
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
             {error}
           </div>
         )}
@@ -270,7 +270,7 @@ export function RegistrationSurvey({ project, onSuccess }: RegistrationSurveyPro
             <button
               onClick={handleBack}
               disabled={isSubmitting}
-              className="flex-1 py-3 border-2 border-gray-200 rounded-lg font-medium text-secondary hover:border-primary/50 transition-colors disabled:opacity-50"
+              className="flex-1 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg font-medium text-secondary dark:text-white hover:border-primary/50 transition-colors disabled:opacity-50"
             >
               Back
             </button>

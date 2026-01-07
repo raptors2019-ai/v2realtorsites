@@ -356,6 +356,10 @@
   color: var(--secondary);
 }
 
+.dark .text-secondary {
+  color: var(--white);
+}
+
 .bg-secondary {
   background-color: var(--secondary);
 }

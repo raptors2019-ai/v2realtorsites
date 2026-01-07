@@ -120,7 +120,7 @@ export function ProjectCard({ project, className, index = 0 }: ProjectCardProps)
           {/* Project Name */}
           <motion.h3
             variants={staggerItemVariants}
-            className="text-xl md:text-2xl font-bold text-secondary mb-2 group-hover:text-primary transition-colors duration-300"
+            className="text-xl md:text-2xl font-bold text-secondary dark:text-white mb-2 group-hover:text-primary transition-colors duration-300"
           >
             {project.name}
           </motion.h3>
@@ -129,7 +129,7 @@ export function ProjectCard({ project, className, index = 0 }: ProjectCardProps)
           {project.intersection && (
             <motion.p
               variants={staggerItemVariants}
-              className="text-text-secondary text-sm mb-3 flex items-center gap-2"
+              className="text-text-secondary dark:text-gray-300 text-sm mb-3 flex items-center gap-2"
             >
               <svg
                 className="w-4 h-4 flex-shrink-0 text-primary"
@@ -159,7 +159,7 @@ export function ProjectCard({ project, className, index = 0 }: ProjectCardProps)
             {project.productTypes.map((type) => (
               <span
                 key={type.name}
-                className="px-2.5 py-1 text-xs font-medium bg-cream text-secondary rounded-full"
+                className="px-2.5 py-1 text-xs font-medium bg-cream dark:bg-secondary-light text-secondary dark:text-gray-300 rounded-full"
               >
                 {type.name}
               </span>
@@ -172,7 +172,7 @@ export function ProjectCard({ project, className, index = 0 }: ProjectCardProps)
             className="flex items-center justify-between pt-4 border-t border-primary/20"
           >
             <div>
-              <p className="text-xs text-text-muted mb-0.5">Starting from</p>
+              <p className="text-xs text-text-muted dark:text-gray-400 mb-0.5">Starting from</p>
               <p className="text-xl font-bold text-gradient-primary">
                 {formatPrice(project.startingPrice)}
               </p>
