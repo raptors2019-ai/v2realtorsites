@@ -30,10 +30,16 @@ export interface CMSBuilderProject extends Omit<BuilderProject, 'propertyTypes' 
   gallery?: string[] | null // Gallery image URLs
   productTypes: ProductType[] // Referenced product types with pricing
   address?: string | null // Full address
-  closingDate?: string | null // Optional closing date
+  closingDate?: string | null // Optional closing date (ISO string)
   description?: string | null // Project description
   features?: string[] | null // Feature list
   images?: string[] // Optional for backwards compatibility
+  // New fields for incentives & deposits
+  builder?: string | null // Builder/developer name
+  incentives?: string[] | null // Current bonus package items
+  depositStructure?: string | null // Deposit payment schedule
+  totalDeposit?: number | null // Total deposit amount
+  isQuickClosing?: boolean // Has quick closing / move-in ready units
 }
 
 /**

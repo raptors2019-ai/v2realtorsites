@@ -92,7 +92,7 @@ export function ProjectCard({ project, className, index = 0 }: ProjectCardProps)
 
           {/* City Badge */}
           <div className="absolute top-3 right-3 md:top-4 md:right-4 z-10">
-            <div className="badge-info text-xs md:text-sm">
+            <div className="px-3 py-1.5 rounded-full text-xs md:text-sm font-medium flex items-center gap-1.5 bg-secondary/80 text-white backdrop-blur-sm">
               <svg className="w-2.5 h-2.5 md:w-3 md:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -159,11 +159,28 @@ export function ProjectCard({ project, className, index = 0 }: ProjectCardProps)
             {project.productTypes.map((type) => (
               <span
                 key={type.name}
-                className="px-2.5 py-1 text-xs font-medium bg-cream dark:bg-secondary-light text-secondary dark:text-gray-300 rounded-full"
+                className="px-3 py-1.5 text-xs font-semibold bg-primary/10 text-primary border border-primary/20 rounded-full dark:bg-primary/20 dark:text-primary-light"
               >
                 {type.name}
               </span>
             ))}
+          </motion.div>
+
+          {/* Closing Date */}
+          <motion.div
+            variants={staggerItemVariants}
+            className="flex items-center gap-2 text-sm text-text-secondary dark:text-gray-300 mb-4"
+          >
+            <svg className="w-4 h-4 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>
+              Closing: <span className="font-medium text-secondary dark:text-white">
+                {project.closingDate
+                  ? new Date(project.closingDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                  : 'TBD'}
+              </span>
+            </span>
           </motion.div>
 
           {/* Price and CTA */}

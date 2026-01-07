@@ -96,12 +96,25 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           <div className="lg:col-span-2 space-y-8">
             {/* Price & Quick Info */}
             <div className="luxury-card-premium rounded-xl p-6 md:p-8">
-              <div className="flex flex-wrap items-baseline justify-between gap-4 mb-6">
-                <div>
-                  <p className="text-sm text-text-muted dark:text-gray-400 mb-1">Starting from</p>
-                  <p className="text-3xl md:text-4xl font-bold text-gradient-primary">
-                    {formatPrice(project.startingPrice)}
-                  </p>
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div className="flex flex-wrap items-center gap-6">
+                  <div>
+                    <p className="text-sm text-text-muted dark:text-gray-400 mb-1">Starting from</p>
+                    <p className="text-3xl md:text-4xl font-bold text-gradient-primary">
+                      {formatPrice(project.startingPrice)}
+                    </p>
+                  </div>
+                  <div className="pl-6 border-l border-primary/20">
+                    <p className="text-sm text-text-muted dark:text-gray-400 mb-1">Est. Closing</p>
+                    <p className="text-lg font-semibold text-secondary dark:text-white flex items-center gap-2">
+                      <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {project.closingDate
+                        ? new Date(project.closingDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                        : 'TBD'}
+                    </p>
+                  </div>
                 </div>
                 <Link
                   href={`/builder-projects/${project.slug}/register`}
