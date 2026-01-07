@@ -20,12 +20,11 @@ const headerConfig: HeaderConfig = {
   navigation: [
     { label: 'Home', href: '/' },
     { label: 'Projects', href: '/builder-projects' },
-    { label: 'Contact', href: '/contact' },
+    { label: 'Quick Closings', href: '/quick-closings' },
+    { label: 'Promotions', href: '/promotions' },
+    { label: 'Assignments', href: '/assignments' },
+    { label: 'Connect', href: '/connect-with-sales' },
   ],
-  ctaButton: {
-    text: 'Get Started',
-    href: '/contact',
-  },
 }
 
 const footerConfig: FooterConfig = {
@@ -39,10 +38,11 @@ const footerConfig: FooterConfig = {
     { name: 'Niru Arulselvan', phone: '+1 (416) 786-0431' },
   ],
   quickLinks: [
-    { name: 'Properties', href: '/properties' },
     { name: 'Builder Projects', href: '/builder-projects' },
-    { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
+    { name: 'Quick Closings', href: '/quick-closings' },
+    { name: 'Promotions', href: '/promotions' },
+    { name: 'Assignments', href: '/assignments' },
+    { name: 'Connect with Sales', href: '/connect-with-sales' },
   ],
 }
 

@@ -1,0 +1,188 @@
+[
+  {
+    "id": "seatonville",
+    "slug": "seatonville",
+    "name": "Seatonville",
+    "developer": "Builder",
+    "status": "selling",
+    "intersection": "Whitevale Rd. & Brock Rd.",
+    "address": "Whitevale Rd. & Brock Rd., Pickering, ON",
+    "city": "Pickering",
+    "startingPrice": 844990,
+    "closingDate": "2026-06-01",
+    "featuredImage": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
+    "gallery": [
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80",
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80",
+      "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=1200&q=80"
+    ],
+    "productTypes": [
+      {
+        "name": "Townhomes",
+        "priceRange": {
+          "min": 844990,
+          "max": 1009990
+        },
+        "sqftRange": {
+          "min": 1800,
+          "max": 2200
+        },
+        "features": [
+          "3-4 Bedrooms",
+          "2.5-3.5 Bathrooms",
+          "2-Car Garage",
+          "Open Concept Living"
+        ]
+      },
+      {
+        "name": "Detached 30'",
+        "priceRange": {
+          "min": 999990,
+          "max": 1154990
+        },
+        "sqftRange": {
+          "min": 2400,
+          "max": 2800
+        },
+        "features": [
+          "4 Bedrooms",
+          "3.5 Bathrooms",
+          "2-Car Garage",
+          "Private Backyard"
+        ]
+      },
+      {
+        "name": "Detached 36'",
+        "priceRange": {
+          "min": 1149990,
+          "max": 1279990
+        },
+        "sqftRange": {
+          "min": 2800,
+          "max": 3200
+        },
+        "features": [
+          "4-5 Bedrooms",
+          "4 Bathrooms",
+          "2-Car Garage",
+          "Large Private Backyard"
+        ]
+      }
+    ],
+    "features": [
+      "Contemporary & Modern Farmhouse designs",
+      "7 min to Hwy 407",
+      "11 min to Pickering GO Station",
+      "30 min to Downtown Toronto",
+      "Close to schools and parks",
+      "Growing community with all amenities"
+    ],
+    "description": "Discover Seatonville, a new master-planned community in Pickering offering townhomes and detached homes with contemporary and modern farmhouse designs. Located at the intersection of Whitevale Rd. and Brock Rd., this community provides easy access to major highways and transit while being surrounded by nature and green spaces."
+  },
+  {
+    "id": "aurora-heights",
+    "slug": "aurora-heights",
+    "name": "Aurora Heights",
+    "developer": "Builder",
+    "status": "coming-soon",
+    "intersection": "Wellington St. & Bayview Ave.",
+    "address": "Wellington St. & Bayview Ave., Aurora, ON",
+    "city": "Aurora",
+    "startingPrice": 1199990,
+    "closingDate": "2027-03-01",
+    "featuredImage": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
+    "gallery": [
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80"
+    ],
+    "productTypes": [
+      {
+        "name": "Detached",
+        "priceRange": {
+          "min": 1199990,
+          "max": 1599990
+        },
+        "sqftRange": {
+          "min": 2800,
+          "max": 3500
+        },
+        "features": [
+          "4-5 Bedrooms",
+          "3.5-4.5 Bathrooms",
+          "Double Car Garage",
+          "Premium Finishes"
+        ]
+      }
+    ],
+    "features": [
+      "Estate-style detached homes",
+      "Premium location in Aurora",
+      "Minutes to GO Transit",
+      "Top-rated schools nearby",
+      "Walking trails and parks"
+    ],
+    "description": "Coming soon to Aurora - a collection of estate-style detached homes in a premium location. Aurora Heights offers spacious layouts and premium finishes in one of York Region's most desirable communities."
+  },
+  {
+    "id": "maple-gardens",
+    "slug": "maple-gardens",
+    "name": "Maple Gardens",
+    "developer": "Builder",
+    "status": "selling",
+    "intersection": "Major Mackenzie Dr. & Keele St.",
+    "address": "Major Mackenzie Dr. & Keele St., Maple, ON",
+    "city": "Maple",
+    "startingPrice": 799990,
+    "closingDate": "2026-09-01",
+    "featuredImage": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
+    "gallery": [
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80",
+      "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=1200&q=80"
+    ],
+    "productTypes": [
+      {
+        "name": "Townhomes",
+        "priceRange": {
+          "min": 799990,
+          "max": 899990
+        },
+        "sqftRange": {
+          "min": 1600,
+          "max": 2000
+        },
+        "features": [
+          "3 Bedrooms",
+          "2.5 Bathrooms",
+          "1-Car Garage",
+          "Modern Design"
+        ]
+      },
+      {
+        "name": "Semi-Detached",
+        "priceRange": {
+          "min": 949990,
+          "max": 1099990
+        },
+        "sqftRange": {
+          "min": 2200,
+          "max": 2600
+        },
+        "features": [
+          "4 Bedrooms",
+          "3 Bathrooms",
+          "2-Car Garage",
+          "Corner Lots Available"
+        ]
+      }
+    ],
+    "features": [
+      "Modern townhomes and semis",
+      "Close to Vaughan Mills",
+      "Easy highway access",
+      "New community amenities",
+      "Family-friendly neighborhood"
+    ],
+    "description": "Maple Gardens brings modern townhomes and semi-detached homes to the heart of Maple. With excellent highway access and proximity to Vaughan Mills, this community is perfect for families and professionals alike."
+  }
+]

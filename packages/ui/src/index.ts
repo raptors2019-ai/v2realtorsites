@@ -14,6 +14,9 @@ export { BentoGrid, BentoCard, BentoFeatureCard, type BentoCardSize } from './co
 // Properties
 export { PropertyCard, PropertyCardCarousel, PropertyGallery, PropertyGrid, PropertyFilters, PropertiesPageClient, PropertySurvey, BackButton, SimilarProperties } from './properties'
 
+// Projects (Builder Projects)
+export { ProjectCard, ProjectGrid, RegistrationSurvey } from './projects'
+
 // Chatbot
 export { ChatbotWidget } from './chatbot'
 

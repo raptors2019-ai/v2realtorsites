@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf .next"
+    "clean": "rm -rf .next",
+    "sanity:deploy": "sanity deploy",
+    "sanity:manage": "sanity manage",
+    "sanity:seed": "npx tsx scripts/seed-sanity.ts"
   },
   "dependencies": {
     "@repo/ui": "*",
@@ -17,6 +20,7 @@
     "@repo/crm": "*",
     "@repo/chatbot": "*",
     "@repo/analytics": "*",
+    "@repo/sanity": "*",
     "@next/third-parties": "^16.0.7",
     "next": "16.0.7",
     "next-themes": "^0.2.1",
@@ -24,7 +28,8 @@
     "react-dom": "^19.2.0",
     "zustand": "^5.0.9",
     "ai": "^4.0.0",
-    "@ai-sdk/openai": "^1.0.0"
+    "@ai-sdk/openai": "^1.0.0",
+    "styled-components": "^6.1.15"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
@@ -34,6 +39,7 @@
     "eslint": "^9.17.0",
     "eslint-config-next": "^16.0.7",
     "postcss": "^8.4.49",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "sanity": "^3.72.0"
   }
 }
