@@ -29,8 +29,19 @@ const CITY_MAP: Record<string, { display: string; filter: string }> = {
   'milton': { display: 'Milton', filter: 'Milton' },
 }
 
+interface SearchParams {
+  listingType?: string
+  propertyClass?: string
+  budgetMin?: string
+  budgetMax?: string
+  propertyType?: string
+  bedrooms?: string
+  bathrooms?: string
+}
+
 interface PageProps {
   params: Promise<{ city: string }>
+  searchParams: Promise<SearchParams>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -44,22 +55,33 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function CityPropertiesPage({ params }: PageProps) {
+export default async function CityPropertiesPage({ params, searchParams }: PageProps) {
   const { city } = await params
+  const urlParams = await searchParams
   const cityInfo = CITY_MAP[city.toLowerCase()]
   const displayName = cityInfo?.display || city.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 
-  // Fetch properties for this city
+  // Fetch properties for this city with optional price filters
+  // Default to 'sale' listing type unless explicitly requesting 'lease'
   const cityFilter = cityInfo?.filter || displayName
+  const listingType = (urlParams.listingType as 'sale' | 'lease') || 'sale'
   const { properties, total, cities } = await getAllPropertiesWithTotal({
     city: cityFilter,
+    listingType: listingType,
+    minPrice: urlParams.budgetMin ? parseInt(urlParams.budgetMin) : undefined,
+    maxPrice: urlParams.budgetMax ? parseInt(urlParams.budgetMax) : undefined,
     limit: 50,
   })
 
   // Build initial filters to show the selected city in the filter dropdown
+  // Include price range from URL params if present
   const initialFilters = {
-    listingType: ['sale' as const],
+    listingType: [listingType] as ('sale' | 'lease')[],
     locations: [cityFilter],
+    priceRange: (urlParams.budgetMin || urlParams.budgetMax) ? {
+      min: urlParams.budgetMin ? parseInt(urlParams.budgetMin) : undefined,
+      max: urlParams.budgetMax ? parseInt(urlParams.budgetMax) : undefined,
+    } : undefined,
   }
 
   return (
