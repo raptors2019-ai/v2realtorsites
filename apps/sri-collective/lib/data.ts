@@ -1,4 +1,4 @@
-import { Property, IDXSearchParams } from "@repo/types";
+import { Property, IDXSearchParams, ListingType } from "@repo/types";
 import { IDXClient } from "@repo/crm";
 import { convertIDXToProperty } from "@repo/lib";
 
@@ -139,105 +139,113 @@ interface UserPreferences {
 
 /**
  * Get similar properties with smart recommendations
- * Uses user preferences to show more relevant properties
- * Prioritizes: user's selected cities > price range > listing type > property features
+ * ALWAYS filters by: city, property class (residential), listing type, property type
+ * Uses user preferences for: price range, bedrooms, bathrooms (if provided)
  */
 export async function getSimilarProperties(
   property: Property,
   limit: number = 3,
   userPreferences?: UserPreferences
 ): Promise<Property[]> {
-  const allProperties = await getAllProperties();
+  // Determine listing type: use user preference if provided, otherwise match current property
+  const listingType = userPreferences?.listingType
+    ? (Array.isArray(userPreferences.listingType)
+        ? userPreferences.listingType[0]
+        : userPreferences.listingType) as 'sale' | 'lease'
+    : (property.listingType as 'sale' | 'lease') || 'sale';
+
+  // Determine property type: use user preference if provided, otherwise match current property
+  const propertyTypes = userPreferences?.propertyTypes && userPreferences.propertyTypes.length > 0
+    ? userPreferences.propertyTypes
+    : [property.propertyType];
+
+  // Build search params with REQUIRED filters
+  const searchParams: IDXSearchParams = {
+    city: property.city,              // REQUIRED: same city as current property
+    propertyClass: 'residential',     // REQUIRED: always residential
+    listingType: listingType,         // REQUIRED: same listing type (sale/lease)
+    propertyTypes: propertyTypes,     // REQUIRED: same property type(s)
+    limit: 50,                        // Get more properties for better selection
+  };
+
+  // Add user's budget preferences if available
+  if (userPreferences?.priceMin) {
+    searchParams.minPrice = userPreferences.priceMin;
+  }
+  if (userPreferences?.priceMax) {
+    searchParams.maxPrice = userPreferences.priceMax;
+  }
+
+  // Add bedrooms filter if user specified (use minimum from array)
+  if (userPreferences?.bedrooms) {
+    const bedroomValues = Array.isArray(userPreferences.bedrooms)
+      ? userPreferences.bedrooms
+      : [userPreferences.bedrooms];
+    if (bedroomValues.length > 0) {
+      searchParams.bedrooms = Math.min(...bedroomValues);
+    }
+  }
+
+  // Add bathrooms filter if user specified (use minimum from array)
+  if (userPreferences?.bathrooms) {
+    const bathroomValues = Array.isArray(userPreferences.bathrooms)
+      ? userPreferences.bathrooms
+      : [userPreferences.bathrooms];
+    if (bathroomValues.length > 0) {
+      searchParams.bathrooms = Math.min(...bathroomValues);
+    }
+  }
+
+  console.log('[similar.fetch]', {
+    city: property.city,
+    propertyClass: 'residential',
+    listingType: listingType,
+    propertyTypes: propertyTypes,
+    priceRange: { min: searchParams.minPrice, max: searchParams.maxPrice },
+    bedrooms: searchParams.bedrooms,
+    bathrooms: searchParams.bathrooms,
+  });
+
+  const allProperties = await getAllProperties(searchParams);
 
   // Ensure limit is between 3-5
   const maxResults = Math.min(Math.max(limit, 3), 5);
 
-  // Score each property based on relevance
+  // Score each property based on relevance (most filters already applied at API level)
   const scored = allProperties
     .filter(p => p.id !== property.id) // Exclude current property
     .map(p => {
       let score = 0;
 
-      // 1. City match (highest priority)
-      if (userPreferences?.cities && userPreferences.cities.length > 0) {
-        // If property is in user's selected cities: +50 points
-        if (userPreferences.cities.includes(p.city)) {
-          score += 50;
-        }
-      } else {
-        // Fallback: same city as current property: +30 points
-        if (p.city === property.city) {
-          score += 30;
-        }
+      // 1. Base score for being in the same city (already filtered)
+      if (p.city === property.city) {
+        score += 30;
       }
 
-      // 2. Price range match
-      if (userPreferences?.priceMin !== undefined && userPreferences?.priceMax !== undefined) {
-        // Within user's budget: +40 points
-        if (p.price >= userPreferences.priceMin && p.price <= userPreferences.priceMax) {
-          score += 40;
-        }
-        // Close to budget (within 10%): +20 points
-        else if (
-          p.price >= userPreferences.priceMin * 0.9 &&
-          p.price <= userPreferences.priceMax * 1.1
-        ) {
-          score += 20;
-        }
-      } else {
-        // Fallback: similar price to current property (±20%): +20 points
-        const priceDiff = Math.abs(p.price - property.price);
-        const priceRange = property.price * 0.2;
-        if (priceDiff <= priceRange) {
-          score += 20;
-        }
+      // 2. Property type exact match: +25 points
+      if (p.propertyType === property.propertyType) {
+        score += 25;
       }
 
-      // 3. Listing type match (sale/lease)
-      if (userPreferences?.listingType) {
-        const listingTypes = Array.isArray(userPreferences.listingType)
-          ? userPreferences.listingType
-          : [userPreferences.listingType];
-        if (listingTypes.includes(p.listingType)) {
-          score += 30;
-        }
-      } else if (p.listingType === property.listingType) {
+      // 3. Price similarity (within 20% of current property): +20 points
+      const priceDiff = Math.abs(p.price - property.price);
+      const priceRange = property.price * 0.2;
+      if (priceDiff <= priceRange) {
+        score += 20;
+      }
+
+      // 4. Bedrooms match: +15 points
+      if (p.bedrooms === property.bedrooms) {
         score += 15;
+      } else if (Math.abs(p.bedrooms - property.bedrooms) === 1) {
+        score += 8;  // Close match (±1 bedroom)
       }
 
-      // 4. Property type match
-      if (userPreferences?.propertyTypes && userPreferences.propertyTypes.length > 0) {
-        if (userPreferences.propertyTypes.includes(p.propertyType)) {
-          score += 25;
-        }
-      } else if (p.propertyType === property.propertyType) {
-        score += 15;
-      }
-
-      // 5. Bedrooms match
-      if (userPreferences?.bedrooms) {
-        const bedrooms = Array.isArray(userPreferences.bedrooms)
-          ? userPreferences.bedrooms
-          : [userPreferences.bedrooms];
-        // If property has bedrooms >= any of the selected values: +15 points
-        if (bedrooms.some(b => p.bedrooms >= b)) {
-          score += 15;
-        }
-      } else if (p.bedrooms === property.bedrooms) {
+      // 5. Bathrooms match: +10 points
+      if (p.bathrooms === property.bathrooms) {
         score += 10;
-      }
-
-      // 6. Bathrooms match
-      if (userPreferences?.bathrooms) {
-        const bathrooms = Array.isArray(userPreferences.bathrooms)
-          ? userPreferences.bathrooms
-          : [userPreferences.bathrooms];
-        // If property has bathrooms >= any of the selected values: +10 points
-        if (bathrooms.some(b => p.bathrooms >= b)) {
-          score += 10;
-        }
-      } else if (p.bathrooms === property.bathrooms) {
-        score += 5;
+      } else if (Math.abs(p.bathrooms - property.bathrooms) <= 1) {
+        score += 5;  // Close match (±1 bathroom)
       }
 
       return { property: p, score };
@@ -246,6 +254,14 @@ export async function getSimilarProperties(
     .sort((a, b) => b.score - a.score) // Sort by score descending
     .slice(0, maxResults)
     .map(({ property }) => property);
+
+  console.log('[similar.results]', {
+    city: property.city,
+    propertyType: property.propertyType,
+    listingType: listingType,
+    fetched: allProperties.length,
+    matched: scored.length,
+  });
 
   return scored;
 }

@@ -95,13 +95,13 @@ export default async function PropertyDetailPage({ params }: PageProps) {
                   {formatPrice(property.price)}
                 </p>
                 <Link
-                  href="/contact"
+                  href={`/contact?type=viewing&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}`}
                   className="btn-primary w-full py-4 rounded-lg text-center font-semibold block mb-4 transition-transform hover:scale-[1.02] max-w-full"
                 >
                   Schedule a Viewing
                 </Link>
                 <Link
-                  href="/contact"
+                  href={`/contact?type=question&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}`}
                   className="btn-outline w-full py-4 rounded-lg text-center font-medium block transition-transform hover:scale-[1.02] max-w-full"
                 >
                   Ask a Question
@@ -170,13 +170,13 @@ export default async function PropertyDetailPage({ params }: PageProps) {
                 </p>
 
                 <Link
-                  href="/contact"
+                  href={`/contact?type=viewing&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}`}
                   className="btn-primary w-full py-4 rounded-lg text-center font-semibold block mb-4 transition-transform hover:scale-[1.02]"
                 >
                   Schedule a Viewing
                 </Link>
                 <Link
-                  href="/contact"
+                  href={`/contact?type=question&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}`}
                   className="btn-outline w-full py-4 rounded-lg text-center font-medium block transition-transform hover:scale-[1.02]"
                 >
                   Ask a Question

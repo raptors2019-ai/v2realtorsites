@@ -32,6 +32,32 @@ export function ContactForm() {
   // Pre-fill form based on URL params
   useEffect(() => {
     const interest = searchParams.get('interest')
+    const type = searchParams.get('type')  // 'viewing' or 'question'
+    const address = searchParams.get('address')
+    const mls = searchParams.get('mls')
+
+    // Handle property-specific inquiries (viewing or question)
+    if (type && address) {
+      let message = ''
+      if (type === 'viewing') {
+        message = `Hi, I'm interested in scheduling a viewing for the property at ${address}`
+        if (mls) message += ` (MLS# ${mls})`
+        message += `. Please let me know your available times.`
+      } else if (type === 'question') {
+        message = `Hi, I had a question about the property at ${address}`
+        if (mls) message += ` (MLS# ${mls})`
+        message += `.\n\nMy question is: `
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        interest: 'buying',  // Property inquiries are typically buyers
+        message,
+      }))
+      return  // Don't process other interest params
+    }
+
+    // Handle general interest params
     if (interest) {
       const messageMap: Record<string, string> = {
         selling: "I'm interested in selling a house. ",
