@@ -12,6 +12,7 @@
   "dependencies": {
     "@repo/types": "*",
     "@repo/crm": "*",
+    "@repo/lib": "*",
     "ai": "^4.0.0",
     "openai": "^4.0.0",
     "@anthropic-ai/sdk": "^0.32.0",

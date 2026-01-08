@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { CoreTool } from 'ai'
+import { tool } from 'ai'
 import { IDXClient } from '@repo/crm'
 import { formatPrice } from '@repo/lib'
 
@@ -45,7 +45,7 @@ function normalizeCity(input: string | undefined): string | undefined {
   return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase()
 }
 
-export const propertySearchTool: CoreTool = {
+export const propertySearchTool = tool({
   description: `Search for properties based on buyer criteria.
 Use this tool when the user describes what they're looking for.
 Returns up to 5 matching listings with photos, price, and details.
@@ -57,8 +57,8 @@ Always use this BEFORE asking for contact information to provide value first.`,
     maxPrice: z.number().optional().describe('Maximum price in CAD'),
     bedrooms: z.number().optional().describe('Minimum number of bedrooms'),
     bathrooms: z.number().optional().describe('Minimum number of bathrooms'),
-    propertyType: z.enum(['Detached', 'Semi-Detached', 'Townhouse', 'Condo']).optional()
-      .describe('Type of property (matches survey options)'),
+    propertyType: z.string().optional()
+      .describe('Type of property. Use exact values: "Detached", "Semi-Detached", "Townhouse", or "Condo". For generic terms like "house", omit this parameter.'),
     listingType: z.enum(['sale', 'lease']).optional()
       .describe('Listing type - defaults to "sale". Only use "lease" if user explicitly asks for rentals.'),
   }),
@@ -69,8 +69,16 @@ Always use this BEFORE asking for contact information to provide value first.`,
     // Default to 'sale' - only use 'lease' if user explicitly asks for rentals
     const effectiveListingType = listingType || 'sale'
 
+    // Normalize property type - ignore generic terms like "house"
+    // Only pass specific types that map to IDX PropertySubType
+    const validPropertyTypes = ['Detached', 'Semi-Detached', 'Townhouse', 'Condo']
+    const normalizedPropertyType = propertyType && validPropertyTypes.includes(propertyType)
+      ? propertyType
+      : undefined
+
     console.error('[chatbot.propertySearch.execute]', {
-      city, normalizedCity, minPrice, maxPrice, bedrooms, bathrooms, propertyType, listingType: effectiveListingType,
+      city, normalizedCity, minPrice, maxPrice, bedrooms, bathrooms,
+      propertyType, normalizedPropertyType, listingType: effectiveListingType,
     })
 
     try {
@@ -81,7 +89,7 @@ Always use this BEFORE asking for contact information to provide value first.`,
         maxPrice,
         bedrooms,
         bathrooms,
-        propertyType,
+        propertyType: normalizedPropertyType,
         listingType: effectiveListingType,
         limit: 5, // Show 3-5 in chat
       })
@@ -147,4 +155,4 @@ Always use this BEFORE asking for contact information to provide value first.`,
       }
     }
   },
-}
+})

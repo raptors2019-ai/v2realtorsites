@@ -1,6 +1,63 @@
 import type { IDXListing, IDXSearchParams, IDXSearchResponse, IDXMedia } from '@repo/types'
 
 /**
+ * Retry configuration for API calls
+ */
+interface RetryConfig {
+  maxRetries: number
+  baseDelayMs: number
+  maxDelayMs: number
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 10000,
+}
+
+/**
+ * Check if an error is retryable (network errors, timeouts, 5xx server errors)
+ */
+function isRetryableError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase()
+    // Network errors
+    if (message.includes('econnreset') ||
+        message.includes('econnrefused') ||
+        message.includes('etimedout') ||
+        message.includes('fetch failed') ||
+        message.includes('network') ||
+        message.includes('socket')) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Check if HTTP status code is retryable (5xx server errors, 429 rate limit)
+ */
+function isRetryableStatus(status: number): boolean {
+  return status >= 500 || status === 429
+}
+
+/**
+ * Sleep for a given number of milliseconds
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+/**
+ * Calculate exponential backoff delay with jitter
+ */
+function calculateBackoff(attempt: number, config: RetryConfig): number {
+  const exponentialDelay = config.baseDelayMs * Math.pow(2, attempt)
+  const jitter = Math.random() * 0.3 * exponentialDelay // Add up to 30% jitter
+  return Math.min(exponentialDelay + jitter, config.maxDelayMs)
+}
+
+/**
  * Property type mapping from frontend values to TRREB/Ampre API PropertySubType values
  * These are the actual values observed in production from the IDX API
  */
@@ -38,6 +95,56 @@ export class IDXClient {
    */
   get isConfigured(): boolean {
     return !!this.apiKey
+  }
+
+  /**
+   * Fetch with automatic retry and exponential backoff
+   * Handles network errors (ECONNRESET, etc.) and 5xx server errors
+   */
+  private async fetchWithRetry(
+    url: string,
+    options: RequestInit,
+    config: RetryConfig = DEFAULT_RETRY_CONFIG
+  ): Promise<Response> {
+    let lastError: Error | null = null
+
+    for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, options)
+
+        // If response is OK or a non-retryable error (4xx), return it
+        if (response.ok || !isRetryableStatus(response.status)) {
+          return response
+        }
+
+        // Retryable HTTP error (5xx, 429)
+        if (attempt < config.maxRetries) {
+          const delay = calculateBackoff(attempt, config)
+          console.log(`[idx.client.retry] HTTP ${response.status}, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${config.maxRetries})`)
+          await sleep(delay)
+          continue
+        }
+
+        // Max retries reached
+        return response
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+
+        // Check if error is retryable
+        if (isRetryableError(error) && attempt < config.maxRetries) {
+          const delay = calculateBackoff(attempt, config)
+          console.log(`[idx.client.retry] ${lastError.message}, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${config.maxRetries})`)
+          await sleep(delay)
+          continue
+        }
+
+        // Non-retryable error or max retries reached
+        throw lastError
+      }
+    }
+
+    // Should not reach here, but throw last error if it does
+    throw lastError || new Error('Unknown fetch error')
   }
 
   /**
@@ -172,7 +279,7 @@ export class IDXClient {
 
       console.log('[idx.client.searchListings] Requesting:', url)
 
-      const response = await fetch(url, {
+      const response = await this.fetchWithRetry(url, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
@@ -261,7 +368,7 @@ export class IDXClient {
 
         console.log('[idx.client.fetchMedia] Requesting media for', batch.length, 'listings')
 
-        const response = await fetch(url, {
+        const response = await this.fetchWithRetry(url, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
@@ -314,9 +421,10 @@ export class IDXClient {
     }
 
     try {
-      const response = await fetch(
+      const response = await this.fetchWithRetry(
         `${this.baseUrl}/Property('${listingKey}')`,
         {
+          method: 'GET',
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
             'Accept': 'application/json',

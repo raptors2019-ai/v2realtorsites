@@ -376,30 +376,93 @@ describe('IDXClient', () => {
     })
 
     it('should handle API error response', async () => {
-      mockFetch.mockResolvedValueOnce({
+      // Use fake timers to speed up retry delays
+      jest.useFakeTimers()
+
+      // Mock all retry attempts with 500 error (retries 3 times + 1 initial = 4 calls)
+      const errorResponse = {
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
         text: () => Promise.resolve('Server error'),
-      })
+      }
+      mockFetch
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValueOnce(errorResponse)
 
       const client = new IDXClient('test-key')
-      const result = await client.searchListings({ city: 'Toronto' })
+      const resultPromise = client.searchListings({ city: 'Toronto' })
+
+      // Fast-forward through all retry delays
+      await jest.runAllTimersAsync()
+      const result = await resultPromise
 
       expect(result.success).toBe(false)
       expect(result.error).toContain('500')
       expect(result.listings).toEqual([])
+
+      jest.useRealTimers()
     })
 
     it('should handle network errors', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network failure'))
+      // Use fake timers to speed up retry delays
+      jest.useFakeTimers()
+
+      // Mock all retry attempts with network error (retries 3 times + 1 initial = 4 calls)
+      const networkError = new Error('fetch failed')
+      mockFetch
+        .mockRejectedValueOnce(networkError)
+        .mockRejectedValueOnce(networkError)
+        .mockRejectedValueOnce(networkError)
+        .mockRejectedValueOnce(networkError)
 
       const client = new IDXClient('test-key')
-      const result = await client.searchListings({ city: 'Toronto' })
+      const resultPromise = client.searchListings({ city: 'Toronto' })
+
+      // Fast-forward through all retry delays
+      await jest.runAllTimersAsync()
+      const result = await resultPromise
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Network failure')
+      expect(result.error).toContain('fetch failed')
       expect(result.listings).toEqual([])
+
+      jest.useRealTimers()
+    })
+
+    it('should succeed after retry on transient error', async () => {
+      // Use fake timers to speed up retry delays
+      jest.useFakeTimers()
+
+      // First attempt fails, second succeeds
+      const errorResponse = {
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: () => Promise.resolve('Server error'),
+      }
+      const successResponse = {
+        ok: true,
+        json: () => Promise.resolve({ value: [{ ListingKey: '123' }], '@odata.count': 1 }),
+      }
+      mockFetch
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValueOnce(successResponse)
+
+      const client = new IDXClient('test-key')
+      const resultPromise = client.searchListings({ city: 'Toronto' })
+
+      // Fast-forward through retry delay
+      await jest.runAllTimersAsync()
+      const result = await resultPromise
+
+      expect(result.success).toBe(true)
+      expect(result.listings).toHaveLength(1)
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+
+      jest.useRealTimers()
     })
   })
 

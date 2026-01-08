@@ -68,6 +68,10 @@ export async function POST(req: Request) {
         usage,
       })
     },
+
+    onError: (error: unknown) => {
+      console.error('[chat.sri-collective.error]', error)
+    },
   })
 
   return result.toDataStreamResponse({ data })
