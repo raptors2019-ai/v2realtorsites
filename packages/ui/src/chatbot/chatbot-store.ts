@@ -34,10 +34,21 @@ export interface PropertySearchResult {
   viewAllUrl: string;
 }
 
-export interface CallToAction {
+// Standard URL-based CTA
+export interface UrlCallToAction {
+  type?: 'url';
   text: string;
   url: string;
 }
+
+// City search prompt CTA - triggers city input UI
+export interface CitySearchCallToAction {
+  type: 'city-search-prompt';
+  text: string;
+  maxPrice: number;
+}
+
+export type CallToAction = UrlCallToAction | CitySearchCallToAction;
 
 export interface Message {
   id: string;

@@ -38,8 +38,12 @@ export function PropertyFilters({
   const allCities = [
     'Toronto', 'Mississauga', 'Brampton', 'Vaughan',
     'Markham', 'Richmond Hill', 'Milton', 'Oakville',
-    'Burlington', 'Hamilton', 'Caledon'
+    'Burlington', 'Hamilton', 'Caledon',
+    'Ajax', 'Pickering', 'Whitby', 'Oshawa'
   ];
+
+  // City search filter state
+  const [citySearchFilter, setCitySearchFilter] = useState('');
 
   // Price range state
   const MIN_PRICE = 0;
@@ -448,17 +452,98 @@ export function PropertyFilters({
           allLabel="All Types"
         />
 
-        {/* Area - Multi-Select */}
-        <div className="col-span-2 sm:col-span-1">
-          <MultiSelectDropdown
-            label="Area"
-            dropdownKey="area"
-            buttonRef={areaRef}
-            selected={selectedCities}
-            options={allCities.map(city => ({ value: city, label: city }))}
-            onToggle={handleCityToggle}
-            allLabel="All Areas"
-          />
+        {/* Area - Multi-Select with Search */}
+        <div className="col-span-2 sm:col-span-1 relative">
+          <label className="block text-[10px] text-stone-500 mb-1.5 uppercase tracking-wide font-medium">
+            Area
+          </label>
+          <button
+            ref={areaRef}
+            type="button"
+            onClick={() => {
+              setOpenDropdown(openDropdown === 'area' ? null : 'area');
+              setCitySearchFilter('');
+            }}
+            className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer flex items-center justify-between text-left"
+          >
+            <span className="truncate">
+              {selectedCities.length === 0 ? 'All Areas' : selectedCities.join(', ')}
+            </span>
+            <svg
+              className={`w-4 h-4 text-stone-400 transition-transform flex-shrink-0 ${openDropdown === 'area' ? "rotate-180" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {openDropdown === 'area' && dropdownPosition && (
+            <>
+              <div
+                className="fixed inset-0 z-[100]"
+                onClick={() => {
+                  setOpenDropdown(null);
+                  setCitySearchFilter('');
+                }}
+              />
+              <div
+                className="fixed bg-white border border-stone-200 rounded-lg shadow-lg z-[101] flex flex-col"
+                style={{
+                  top: `${dropdownPosition.top}px`,
+                  left: `${dropdownPosition.left}px`,
+                  width: `${Math.max(dropdownPosition.width, 200)}px`,
+                  maxHeight: '320px',
+                }}
+              >
+                {/* Search Input */}
+                <div className="p-2 border-b border-stone-100">
+                  <div className="relative">
+                    <svg
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      type="text"
+                      value={citySearchFilter}
+                      onChange={(e) => setCitySearchFilter(e.target.value)}
+                      placeholder="Filter cities..."
+                      className="w-full h-8 pl-8 pr-3 text-sm bg-stone-50 border border-stone-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary"
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </div>
+                {/* City List - Scrollable */}
+                <div className="overflow-y-auto flex-1" style={{ maxHeight: '250px' }}>
+                  {allCities
+                    .filter(city => city.toLowerCase().includes(citySearchFilter.toLowerCase()))
+                    .map((city) => (
+                      <label
+                        key={city}
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-stone-50 cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCities.includes(city)}
+                          onChange={() => handleCityToggle(city)}
+                          className="w-4 h-4 text-primary border-stone-300 rounded focus:ring-2 focus:ring-primary/20"
+                        />
+                        <span className="text-sm text-stone-700">{city}</span>
+                      </label>
+                    ))}
+                  {allCities.filter(city => city.toLowerCase().includes(citySearchFilter.toLowerCase())).length === 0 && (
+                    <p className="px-3 py-4 text-sm text-stone-500 text-center">No cities match "{citySearchFilter}"</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Bedrooms - Multi-Select */}

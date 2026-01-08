@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useChatbotStore, MortgageEstimate, PropertySearchResult } from "./chatbot-store";
+import { useRouter } from "next/navigation";
+import { useChatbotStore, MortgageEstimate, PropertySearchResult, CallToAction } from "./chatbot-store";
 import { trackChatbotInteraction, trackLeadFormSubmit } from "@repo/analytics";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessages } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
 import { ChatQuickActions } from "./ChatQuickActions";
 import { SurveyFlow, SurveyState } from "./survey";
+import type { CityMatch } from "@repo/lib";
 
 // Floating button component
 function FloatingButton({ onClick, isOpen }: { onClick: () => void; isOpen: boolean }) {
@@ -91,6 +93,7 @@ const PROMPTS = [
 ];
 
 export function ChatbotWidget() {
+  const router = useRouter();
   const { isOpen, isPromptVisible, hasInteracted, messages, isLoading, toggleOpen, minimize, dismissPrompt, addMessage, setLoading } = useChatbotStore();
   const [input, setInput] = useState("");
   const [survey, setSurvey] = useState<SurveyState>({ step: "idle" });
@@ -144,7 +147,7 @@ export function ChatbotWidget() {
       let fullText = '';
       let mortgageData: MortgageEstimate | null = null;
       let propertySearchData: PropertySearchResult | null = null;
-      let ctaData: { text: string; url: string } | null = null;
+      let ctaData: CallToAction | null = null;
 
       if (reader) {
         while (true) {
@@ -353,6 +356,21 @@ export function ChatbotWidget() {
     setSurvey({ step: "property-type", type: "dream-home" });
   };
 
+  // City search handlers for post-mortgage calculation flow
+  const handleCitySelect = (city: CityMatch, maxPrice: number) => {
+    trackChatbotInteraction('property_search');
+    addMessage({ role: "user", content: city.name });
+    // Navigate to properties page with city and exact budget
+    router.push(`/properties/${city.slug}?budgetMax=${maxPrice}`);
+  };
+
+  const handleSearchAll = (maxPrice: number) => {
+    trackChatbotInteraction('property_search');
+    addMessage({ role: "user", content: "Search All GTA" });
+    // Navigate to properties page with just the budget
+    router.push(`/properties?budgetMax=${maxPrice}`);
+  };
+
   const showQuickActions = messages.length === 1 && !isLoading && survey.step === "idle";
 
   return (
@@ -362,7 +380,12 @@ export function ChatbotWidget() {
           <ChatHeader onMinimize={minimize} onClose={toggleOpen} />
 
           <div className="flex-1 p-5 overflow-y-auto bg-[#f8f9fa] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-stone-100 [&::-webkit-scrollbar-thumb]:bg-[#0a1628] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-[#1a2d4d]">
-            <ChatMessages messages={messages} isLoading={isLoading} />
+            <ChatMessages
+              messages={messages}
+              isLoading={isLoading}
+              onCitySelect={handleCitySelect}
+              onSearchAll={handleSearchAll}
+            />
 
             <SurveyFlow
               step={survey.step}

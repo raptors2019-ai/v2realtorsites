@@ -12,7 +12,8 @@ interface SurveyState {
 const cities = [
   'Toronto', 'Mississauga', 'Brampton', 'Vaughan',
   'Markham', 'Richmond Hill', 'Milton', 'Oakville',
-  'Burlington', 'Hamilton', 'Caledon'
+  'Burlington', 'Hamilton', 'Caledon',
+  'Ajax', 'Pickering', 'Whitby', 'Oshawa'
 ]
 
 const STORAGE_KEY = 'propertyPreferences'
@@ -28,6 +29,12 @@ export function PropertySurvey() {
     budgetRange: '500k-1m',
     locations: []
   })
+  const [citySearch, setCitySearch] = useState('')
+
+  // Filter cities based on search input
+  const filteredCities = cities.filter(city =>
+    city.toLowerCase().includes(citySearch.toLowerCase())
+  )
 
   // Check for existing preferences on mount
   useEffect(() => {
@@ -230,20 +237,68 @@ export function PropertySurvey() {
         {/* Question 3: Location */}
         <div className="bg-white rounded-xl border-2 border-gray-100 p-5">
           <h3 className="text-base font-semibold text-secondary mb-3">Which areas interest you? (Select one or more)</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-2">
-            {cities.map(city => (
+
+          {/* Search input */}
+          <div className="relative mb-3">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={citySearch}
+              onChange={(e) => setCitySearch(e.target.value)}
+              placeholder="Filter cities..."
+              className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-colors"
+            />
+            {citySearch && (
               <button
-                key={city}
-                onClick={() => toggleLocation(city)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  survey.locations.includes(city)
-                    ? 'bg-primary text-white shadow-md'
-                    : 'bg-white border-2 border-gray-200 text-secondary hover:border-primary'
-                }`}
+                onClick={() => setCitySearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                {city}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
-            ))}
+            )}
+          </div>
+
+          {/* Selected cities count */}
+          {survey.locations.length > 0 && (
+            <p className="text-xs text-primary font-medium mb-2">
+              {survey.locations.length} selected: {survey.locations.join(', ')}
+            </p>
+          )}
+
+          {/* Scrollable cities grid */}
+          <div
+            className="overflow-y-auto pr-2"
+            style={{ maxHeight: '180px' }}
+          >
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+              {filteredCities.map(city => (
+                <button
+                  key={city}
+                  onClick={() => toggleLocation(city)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    survey.locations.includes(city)
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-white border-2 border-gray-200 text-secondary hover:border-primary'
+                  }`}
+                >
+                  {city}
+                </button>
+              ))}
+            </div>
+            {filteredCities.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4">
+                No cities match "{citySearch}"
+              </p>
+            )}
           </div>
         </div>
 
