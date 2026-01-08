@@ -116,22 +116,6 @@ export default function ConnectWithSalesPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm text-text-muted dark:text-gray-400 mb-1">Hours</p>
-                      <p className="text-secondary dark:text-white font-medium">
-                        Mon - Sat: 9AM - 7PM
-                      </p>
-                      <p className="text-secondary dark:text-white font-medium">
-                        Sun: 11AM - 5PM
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </div>
 
