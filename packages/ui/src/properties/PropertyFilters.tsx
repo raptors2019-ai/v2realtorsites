@@ -31,6 +31,9 @@ export function PropertyFilters({
   const [sortBy, setSortBy] = useState<SortOption>(initialSort);
   const propertyTypes: PropertyType[] = ["detached", "semi-detached", "townhouse", "condo"];
 
+  // More Filters panel state
+  const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
+
   // All GTA cities for the dropdown (not just filtered results)
   const allCities = [
     'Toronto', 'Mississauga', 'Brampton', 'Vaughan',
@@ -46,6 +49,34 @@ export function PropertyFilters({
     initialFilters.priceRange?.min ?? MIN_PRICE,
     initialFilters.priceRange?.max ?? MAX_PRICE,
   ]);
+
+  // Advanced filter constants
+  const SQFT_MIN = 0;
+  const SQFT_MAX = 10000;
+  const SQFT_STEP = 100;
+  const LOT_SIZE_MIN = 0;
+  const LOT_SIZE_MAX = 50000;
+  const LOT_SIZE_STEP = 500;
+  const DAYS_ON_MARKET_OPTIONS = [
+    { value: 7, label: 'Last 7 days' },
+    { value: 14, label: 'Last 14 days' },
+    { value: 30, label: 'Last 30 days' },
+    { value: 90, label: 'Last 90 days' },
+  ];
+
+  // Advanced filter state
+  const [keywords, setKeywords] = useState<string>(initialFilters.keywords || '');
+  const [sqftRange, setSqftRange] = useState<[number, number]>([
+    initialFilters.sqftRange?.min ?? SQFT_MIN,
+    initialFilters.sqftRange?.max ?? SQFT_MAX,
+  ]);
+  const [lotSizeRange, setLotSizeRange] = useState<[number, number]>([
+    initialFilters.lotSizeRange?.min ?? LOT_SIZE_MIN,
+    initialFilters.lotSizeRange?.max ?? LOT_SIZE_MAX,
+  ]);
+  const [daysOnMarket, setDaysOnMarket] = useState<number | undefined>(
+    initialFilters.daysOnMarket
+  );
 
   // Helper to ensure array format
   const ensureArray = <T,>(value: T | T[] | undefined): T[] => {
@@ -152,6 +183,12 @@ export function PropertyFilters({
     setSelectedBedrooms([]);
     setSelectedBathrooms([]);
     setSelectedCities([]);
+    // Clear advanced filters
+    setKeywords('');
+    setSqftRange([SQFT_MIN, SQFT_MAX]);
+    setLotSizeRange([LOT_SIZE_MIN, LOT_SIZE_MAX]);
+    setDaysOnMarket(undefined);
+    setIsMoreFiltersOpen(false);
     onSortChange("price-desc");
   };
 
@@ -206,6 +243,57 @@ export function PropertyFilters({
     handleFilterChange("priceRange", priceFilter.min || priceFilter.max ? priceFilter : undefined);
   }, [priceRange, handleFilterChange]);
 
+  // Advanced filter handlers
+  const handleKeywordsChange = useCallback((value: string) => {
+    setKeywords(value);
+    handleFilterChange("keywords", value || undefined);
+  }, [handleFilterChange]);
+
+  const handleSqftRangeChange = useCallback((index: 0 | 1, value: number) => {
+    const newRange: [number, number] = [...sqftRange] as [number, number];
+    newRange[index] = value;
+
+    if (index === 0 && value > sqftRange[1]) newRange[1] = value;
+    if (index === 1 && value < sqftRange[0]) newRange[0] = value;
+
+    setSqftRange(newRange);
+
+    const sqftFilter = {
+      min: newRange[0] > SQFT_MIN ? newRange[0] : undefined,
+      max: newRange[1] < SQFT_MAX ? newRange[1] : undefined,
+    };
+
+    handleFilterChange("sqftRange", sqftFilter.min || sqftFilter.max ? sqftFilter : undefined);
+  }, [sqftRange, handleFilterChange]);
+
+  const handleLotSizeRangeChange = useCallback((index: 0 | 1, value: number) => {
+    const newRange: [number, number] = [...lotSizeRange] as [number, number];
+    newRange[index] = value;
+
+    if (index === 0 && value > lotSizeRange[1]) newRange[1] = value;
+    if (index === 1 && value < lotSizeRange[0]) newRange[0] = value;
+
+    setLotSizeRange(newRange);
+
+    const lotFilter = {
+      min: newRange[0] > LOT_SIZE_MIN ? newRange[0] : undefined,
+      max: newRange[1] < LOT_SIZE_MAX ? newRange[1] : undefined,
+    };
+
+    handleFilterChange("lotSizeRange", lotFilter.min || lotFilter.max ? lotFilter : undefined);
+  }, [lotSizeRange, handleFilterChange]);
+
+  const handleDaysOnMarketChange = useCallback((value: number | undefined) => {
+    setDaysOnMarket(value);
+    handleFilterChange("daysOnMarket", value);
+  }, [handleFilterChange]);
+
+  // Check if advanced filters are active
+  const hasAdvancedFilters = keywords ||
+    sqftRange[0] > SQFT_MIN || sqftRange[1] < SQFT_MAX ||
+    lotSizeRange[0] > LOT_SIZE_MIN || lotSizeRange[1] < LOT_SIZE_MAX ||
+    daysOnMarket !== undefined;
+
   const hasActiveFilters = Object.keys(filters).some((key) => {
     const value = filters[key as keyof PropertyFiltersType];
     return value !== undefined && (Array.isArray(value) ? value.length > 0 : true);
@@ -218,6 +306,15 @@ export function PropertyFilters({
   };
 
   const getPercent = (value: number) => ((value - MIN_PRICE) / (MAX_PRICE - MIN_PRICE)) * 100;
+
+  // Helper functions for advanced filters
+  const formatSqft = (value: number) => {
+    if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+    return String(value);
+  };
+
+  const getSqftPercent = (value: number) => ((value - SQFT_MIN) / (SQFT_MAX - SQFT_MIN)) * 100;
+  const getLotSizePercent = (value: number) => ((value - LOT_SIZE_MIN) / (LOT_SIZE_MAX - LOT_SIZE_MIN)) * 100;
 
   // Helper to format display text for multi-select
   const getDisplayText = <T,>(selected: T[], allLabel: string, formatter?: (item: T) => string): string => {
@@ -495,6 +592,263 @@ export function PropertyFilters({
           <span>$5M+</span>
         </div>
       </div>
+
+      {/* More Filters Toggle */}
+      <div className="mt-4 pt-4 border-t border-stone-100">
+        <button
+          type="button"
+          onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
+          className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+        >
+          <svg
+            className={`w-4 h-4 transition-transform duration-200 ${isMoreFiltersOpen ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+          {isMoreFiltersOpen ? 'Hide Advanced Filters' : 'More Filters'}
+          {hasAdvancedFilters && (
+            <span className="w-2 h-2 bg-primary rounded-full" />
+          )}
+        </button>
+      </div>
+
+      {/* Expandable Advanced Filters Panel */}
+      {isMoreFiltersOpen && (
+        <div className="mt-4 pt-4 border-t border-stone-100 space-y-6">
+          {/* Keywords Search */}
+          <div>
+            <label className="block text-[10px] text-stone-500 mb-1.5 uppercase tracking-wide font-medium">
+              Keywords
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={keywords}
+                onChange={(e) => handleKeywordsChange(e.target.value)}
+                placeholder="e.g., pool, garage, waterfront"
+                className="w-full h-9 px-3 pr-8 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              />
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <p className="mt-1 text-[10px] text-stone-400">
+              Search property descriptions
+            </p>
+          </div>
+
+          {/* Two-column grid for range filters */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Square Footage Range */}
+            <div>
+              <label className="block text-[10px] text-stone-500 mb-2 uppercase tracking-wide font-medium">
+                Square Footage
+              </label>
+              {/* Min/Max Input Fields */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    min={SQFT_MIN}
+                    max={SQFT_MAX}
+                    value={sqftRange[0] || ''}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? SQFT_MIN : parseInt(e.target.value);
+                      if (!isNaN(val)) handleSqftRangeChange(0, Math.min(Math.max(val, SQFT_MIN), SQFT_MAX));
+                    }}
+                    placeholder="Min"
+                    className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                </div>
+                <span className="text-stone-400 text-sm">to</span>
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    min={SQFT_MIN}
+                    max={SQFT_MAX}
+                    value={sqftRange[1] >= SQFT_MAX ? '' : sqftRange[1]}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? SQFT_MAX : parseInt(e.target.value);
+                      if (!isNaN(val)) handleSqftRangeChange(1, Math.min(Math.max(val, SQFT_MIN), SQFT_MAX));
+                    }}
+                    placeholder="Max"
+                    className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                </div>
+                <span className="text-[10px] text-stone-400 whitespace-nowrap">sqft</span>
+              </div>
+              {/* Dual Range Slider */}
+              <div className="relative h-6 flex items-center">
+                <div className="absolute w-full h-2 bg-stone-200 rounded-full" />
+                <div
+                  className="absolute h-2 bg-primary rounded-full"
+                  style={{
+                    left: `${getSqftPercent(sqftRange[0])}%`,
+                    width: `${getSqftPercent(sqftRange[1]) - getSqftPercent(sqftRange[0])}%`,
+                  }}
+                />
+                <input
+                  type="range"
+                  min={SQFT_MIN}
+                  max={SQFT_MAX}
+                  step={SQFT_STEP}
+                  value={sqftRange[0]}
+                  onChange={(e) => handleSqftRangeChange(0, parseInt(e.target.value))}
+                  className="absolute w-full h-2 appearance-none bg-transparent pointer-events-none z-10
+                    [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary
+                    [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform
+                    [&::-webkit-slider-thumb]:hover:scale-110
+                    [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none
+                    [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
+                    [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary
+                    [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
+                />
+                <input
+                  type="range"
+                  min={SQFT_MIN}
+                  max={SQFT_MAX}
+                  step={SQFT_STEP}
+                  value={sqftRange[1]}
+                  onChange={(e) => handleSqftRangeChange(1, parseInt(e.target.value))}
+                  className="absolute w-full h-2 appearance-none bg-transparent pointer-events-none z-20
+                    [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary
+                    [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform
+                    [&::-webkit-slider-thumb]:hover:scale-110
+                    [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none
+                    [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
+                    [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary
+                    [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
+                />
+              </div>
+              <div className="flex justify-between mt-1 text-[10px] text-stone-400">
+                <span>0</span>
+                <span>2.5K</span>
+                <span>5K</span>
+                <span>7.5K</span>
+                <span>10K+</span>
+              </div>
+            </div>
+
+            {/* Lot Size Range */}
+            <div>
+              <label className="block text-[10px] text-stone-500 mb-2 uppercase tracking-wide font-medium">
+                Lot Size
+              </label>
+              {/* Min/Max Input Fields */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    min={LOT_SIZE_MIN}
+                    max={LOT_SIZE_MAX}
+                    value={lotSizeRange[0] || ''}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? LOT_SIZE_MIN : parseInt(e.target.value);
+                      if (!isNaN(val)) handleLotSizeRangeChange(0, Math.min(Math.max(val, LOT_SIZE_MIN), LOT_SIZE_MAX));
+                    }}
+                    placeholder="Min"
+                    className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                </div>
+                <span className="text-stone-400 text-sm">to</span>
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    min={LOT_SIZE_MIN}
+                    max={LOT_SIZE_MAX}
+                    value={lotSizeRange[1] >= LOT_SIZE_MAX ? '' : lotSizeRange[1]}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? LOT_SIZE_MAX : parseInt(e.target.value);
+                      if (!isNaN(val)) handleLotSizeRangeChange(1, Math.min(Math.max(val, LOT_SIZE_MIN), LOT_SIZE_MAX));
+                    }}
+                    placeholder="Max"
+                    className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                </div>
+                <span className="text-[10px] text-stone-400 whitespace-nowrap">sqft</span>
+              </div>
+              {/* Dual Range Slider */}
+              <div className="relative h-6 flex items-center">
+                <div className="absolute w-full h-2 bg-stone-200 rounded-full" />
+                <div
+                  className="absolute h-2 bg-primary rounded-full"
+                  style={{
+                    left: `${getLotSizePercent(lotSizeRange[0])}%`,
+                    width: `${getLotSizePercent(lotSizeRange[1]) - getLotSizePercent(lotSizeRange[0])}%`,
+                  }}
+                />
+                <input
+                  type="range"
+                  min={LOT_SIZE_MIN}
+                  max={LOT_SIZE_MAX}
+                  step={LOT_SIZE_STEP}
+                  value={lotSizeRange[0]}
+                  onChange={(e) => handleLotSizeRangeChange(0, parseInt(e.target.value))}
+                  className="absolute w-full h-2 appearance-none bg-transparent pointer-events-none z-10
+                    [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary
+                    [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform
+                    [&::-webkit-slider-thumb]:hover:scale-110
+                    [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none
+                    [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
+                    [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary
+                    [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
+                />
+                <input
+                  type="range"
+                  min={LOT_SIZE_MIN}
+                  max={LOT_SIZE_MAX}
+                  step={LOT_SIZE_STEP}
+                  value={lotSizeRange[1]}
+                  onChange={(e) => handleLotSizeRangeChange(1, parseInt(e.target.value))}
+                  className="absolute w-full h-2 appearance-none bg-transparent pointer-events-none z-20
+                    [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary
+                    [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform
+                    [&::-webkit-slider-thumb]:hover:scale-110
+                    [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none
+                    [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
+                    [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary
+                    [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
+                />
+              </div>
+              <div className="flex justify-between mt-1 text-[10px] text-stone-400">
+                <span>0</span>
+                <span>12.5K</span>
+                <span>25K</span>
+                <span>37.5K</span>
+                <span>50K+</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Days on Market Dropdown */}
+          <div className="max-w-xs">
+            <label className="block text-[10px] text-stone-500 mb-1.5 uppercase tracking-wide font-medium">
+              Days on Market
+            </label>
+            <select
+              value={daysOnMarket || ''}
+              onChange={(e) => handleDaysOnMarketChange(e.target.value ? parseInt(e.target.value) : undefined)}
+              className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+            >
+              <option value="">Any time</option>
+              {DAYS_ON_MARKET_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
 
       {/* Clear Filters */}
       {hasActiveFilters && (

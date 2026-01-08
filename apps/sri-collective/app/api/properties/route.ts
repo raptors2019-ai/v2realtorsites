@@ -22,6 +22,14 @@ export async function GET(request: NextRequest) {
 
   const listingType = searchParams.get('listingType') || undefined // 'sale' or 'lease'
 
+  // Advanced filters
+  const keywords = searchParams.get('keywords') || undefined
+  const minSqft = searchParams.get('minSqft') ? parseInt(searchParams.get('minSqft')!) : undefined
+  const maxSqft = searchParams.get('maxSqft') ? parseInt(searchParams.get('maxSqft')!) : undefined
+  const minLotSize = searchParams.get('minLotSize') ? parseInt(searchParams.get('minLotSize')!) : undefined
+  const maxLotSize = searchParams.get('maxLotSize') ? parseInt(searchParams.get('maxLotSize')!) : undefined
+  const maxDaysOnMarket = searchParams.get('maxDaysOnMarket') ? parseInt(searchParams.get('maxDaysOnMarket')!) : undefined
+
   // Options
   const includeCities = searchParams.get('includeCities') === 'true'
 
@@ -52,6 +60,13 @@ export async function GET(request: NextRequest) {
       propertyTypes, // Use array for multi-select support
       listingType: listingType as 'sale' | 'lease' | undefined, // Now filtered at IDX level
       status: 'Active', // Always active listings
+      // Advanced filters
+      keywords,
+      minSqft,
+      maxSqft,
+      minLotSize,
+      maxLotSize,
+      maxDaysOnMarket,
     }
 
     // Log the search params for debugging
@@ -66,6 +81,12 @@ export async function GET(request: NextRequest) {
       bathrooms,
       propertyTypes,
       listingType,
+      keywords,
+      minSqft,
+      maxSqft,
+      minLotSize,
+      maxLotSize,
+      maxDaysOnMarket,
     })
 
     const response = await client.searchListings(idxParams)

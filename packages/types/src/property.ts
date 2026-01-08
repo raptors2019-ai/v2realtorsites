@@ -52,6 +52,11 @@ export interface PropertyFilters {
   locations?: string[] // Multiple cities (for regions)
   listingType?: ListingType[] // Multiple listing types ('sale' and/or 'lease')
   propertyClass?: PropertyClass[] // Multiple property classes ('residential' and/or 'commercial')
+  // Advanced filters
+  keywords?: string // Search PublicRemarks field for terms like "pool", "garage"
+  sqftRange?: { min?: number; max?: number } // Living area in sqft
+  lotSizeRange?: { min?: number; max?: number } // Lot size in sqft
+  daysOnMarket?: number // Max days on market (7, 14, 30, 90)
 }
 
 // Sort Options

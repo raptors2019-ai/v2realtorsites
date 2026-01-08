@@ -104,6 +104,13 @@ export interface IDXSearchParams {
   status?: 'Active' | 'Pending' | 'Sold' | 'all'
   limit?: number
   offset?: number
+  // Advanced filters
+  keywords?: string // Search text for contains(PublicRemarks,...)
+  minSqft?: number // LivingArea ge
+  maxSqft?: number // LivingArea le
+  minLotSize?: number // LotSizeArea ge
+  maxLotSize?: number // LotSizeArea le
+  maxDaysOnMarket?: number // DaysOnMarket le
 }
 
 export interface IDXSearchResponse {

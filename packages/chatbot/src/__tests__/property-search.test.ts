@@ -129,6 +129,7 @@ describe('propertySearchTool', () => {
         bedrooms: 4,
         bathrooms: 2,
         propertyType: 'Condo',
+        listingType: 'sale',
         limit: 5,
       })
     })

@@ -89,6 +89,14 @@ export function PropertiesPageClient({
     const bathrooms = toCommaSeparated(currentFilters.bathrooms);
     if (bathrooms) params.set('bathrooms', bathrooms);
 
+    // Advanced filters
+    if (currentFilters.keywords) params.set('keywords', currentFilters.keywords);
+    if (currentFilters.sqftRange?.min) params.set('minSqft', String(currentFilters.sqftRange.min));
+    if (currentFilters.sqftRange?.max) params.set('maxSqft', String(currentFilters.sqftRange.max));
+    if (currentFilters.lotSizeRange?.min) params.set('minLotSize', String(currentFilters.lotSizeRange.min));
+    if (currentFilters.lotSizeRange?.max) params.set('maxLotSize', String(currentFilters.lotSizeRange.max));
+    if (currentFilters.daysOnMarket) params.set('maxDaysOnMarket', String(currentFilters.daysOnMarket));
+
     return `/properties?${params.toString()}`;
   }, []);
 
@@ -158,6 +166,26 @@ export function PropertiesPageClient({
       params.set('listingType', filters.listingType.join(','));
     }
 
+    // Advanced filters
+    if (filters.keywords) {
+      params.set('keywords', filters.keywords);
+    }
+    if (filters.sqftRange?.min) {
+      params.set('minSqft', String(filters.sqftRange.min));
+    }
+    if (filters.sqftRange?.max) {
+      params.set('maxSqft', String(filters.sqftRange.max));
+    }
+    if (filters.lotSizeRange?.min) {
+      params.set('minLotSize', String(filters.lotSizeRange.min));
+    }
+    if (filters.lotSizeRange?.max) {
+      params.set('maxLotSize', String(filters.lotSizeRange.max));
+    }
+    if (filters.daysOnMarket) {
+      params.set('maxDaysOnMarket', String(filters.daysOnMarket));
+    }
+
     return params.toString();
   }, [filters]);
 
@@ -208,7 +236,7 @@ export function PropertiesPageClient({
     }
   }, [buildQueryString, sortBy]);
 
-  // Fetch when filters change (with debounce for price slider)
+  // Fetch when filters change (with debounce for range sliders and keywords)
   useEffect(() => {
     // Skip the initial mount - we already have server-side data
     if (isInitialMount.current) {
@@ -221,11 +249,17 @@ export function PropertiesPageClient({
     const filtersChanged = JSON.stringify(filters) !== JSON.stringify(currentFiltersRef.current);
     if (!filtersChanged) return;
 
-    // Check if only price changed (for debounce)
+    // Check which filters changed for debounce logic
     const oldFilters = currentFiltersRef.current;
     const priceChanged = JSON.stringify(filters.priceRange) !== JSON.stringify(oldFilters.priceRange);
+    const keywordsChanged = filters.keywords !== oldFilters.keywords;
+    const sqftChanged = JSON.stringify(filters.sqftRange) !== JSON.stringify(oldFilters.sqftRange);
+    const lotSizeChanged = JSON.stringify(filters.lotSizeRange) !== JSON.stringify(oldFilters.lotSizeRange);
+
+    // Fields that should be debounced
+    const debouncedFields = ['priceRange', 'keywords', 'sqftRange', 'lotSizeRange'];
     const otherChanged = Object.keys(filters).some(key => {
-      if (key === 'priceRange') return false;
+      if (debouncedFields.includes(key)) return false;
       return JSON.stringify(filters[key as keyof PropertyFiltersType]) !==
              JSON.stringify(oldFilters[key as keyof PropertyFiltersType]);
     });
@@ -235,11 +269,15 @@ export function PropertiesPageClient({
     // Save updated preferences to sessionStorage
     savePreferences(filters);
 
-    // Debounce price changes, immediate for other filters
-    if (priceChanged && !otherChanged) {
+    // Determine debounce timing
+    const needsDebounce = (priceChanged || sqftChanged || lotSizeChanged || keywordsChanged) && !otherChanged;
+
+    if (needsDebounce) {
+      // Longer debounce for keywords typing, shorter for sliders
+      const debounceMs = keywordsChanged ? 800 : 500;
       const timer = setTimeout(() => {
         fetchProperties(0, false);
-      }, 500);
+      }, debounceMs);
       return () => clearTimeout(timer);
     } else {
       fetchProperties(0, false);

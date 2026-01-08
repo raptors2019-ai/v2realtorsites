@@ -109,6 +109,36 @@ export class IDXClient {
       filters.push(`StandardStatus eq 'Active'`) // Default to active
     }
 
+    // Advanced filters
+
+    // Keywords search in PublicRemarks using OData contains function
+    if (params.keywords) {
+      // Escape single quotes in search term for OData
+      const escapedKeywords = params.keywords.replace(/'/g, "''")
+      filters.push(`contains(PublicRemarks,'${escapedKeywords}')`)
+    }
+
+    // Square footage (LivingArea) range
+    if (params.minSqft) {
+      filters.push(`LivingArea ge ${params.minSqft}`)
+    }
+    if (params.maxSqft) {
+      filters.push(`LivingArea le ${params.maxSqft}`)
+    }
+
+    // Lot size (LotSizeArea) range
+    if (params.minLotSize) {
+      filters.push(`LotSizeArea ge ${params.minLotSize}`)
+    }
+    if (params.maxLotSize) {
+      filters.push(`LotSizeArea le ${params.maxLotSize}`)
+    }
+
+    // Days on market filter
+    if (params.maxDaysOnMarket) {
+      filters.push(`DaysOnMarket le ${params.maxDaysOnMarket}`)
+    }
+
     return filters.join(' and ')
   }
 
