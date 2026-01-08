@@ -13,6 +13,27 @@ export interface MortgageEstimate {
   cmhcPremium?: number | null;
 }
 
+export interface PropertyListing {
+  id: string;
+  price: string;
+  priceNumber: number;
+  address: string;
+  city: string;
+  bedrooms: number;
+  bathrooms: number;
+  sqft: number;
+  propertyType: string;
+  image: string | null;
+  description: string;
+  url: string;
+}
+
+export interface PropertySearchResult {
+  listings: PropertyListing[];
+  total: number;
+  viewAllUrl: string;
+}
+
 export interface CallToAction {
   text: string;
   url: string;
@@ -26,7 +47,7 @@ export interface Message {
   // Optional tool result data for rich rendering
   toolResult?: {
     type: "propertySearch" | "mortgageEstimate";
-    data: unknown | MortgageEstimate;
+    data: MortgageEstimate | PropertySearchResult;
   };
   // Optional call-to-action button
   cta?: CallToAction;
@@ -60,6 +81,7 @@ interface ChatbotState {
   isOpen: boolean;
   isPromptVisible: boolean;
   isLoading: boolean;
+  hasInteracted: boolean; // Tracks if user has ever opened/used the chatbot
 
   // Messages (not persisted - privacy)
   messages: Message[];
@@ -76,6 +98,7 @@ interface ChatbotState {
   // Actions
   setOpen: (open: boolean) => void;
   toggleOpen: () => void;
+  minimize: () => void;
   dismissPrompt: () => void;
   addMessage: (message: Omit<Message, "id" | "timestamp">) => void;
   setLoading: (loading: boolean) => void;
@@ -107,6 +130,7 @@ export const useChatbotStore = create<ChatbotState>()(
       isOpen: false,
       isPromptVisible: true,
       isLoading: false,
+      hasInteracted: false,
       messages: [INITIAL_MESSAGE],
       preferences: {},
       viewedProperties: [],
@@ -121,7 +145,11 @@ export const useChatbotStore = create<ChatbotState>()(
         set((state) => ({
           isOpen: !state.isOpen,
           isPromptVisible: false,
+          hasInteracted: true, // Mark as interacted when opened
         })),
+
+      // Minimize - just closes without clearing, keeps hasInteracted true
+      minimize: () => set({ isOpen: false }),
 
       dismissPrompt: () => set({ isPromptVisible: false }),
 
@@ -194,6 +222,7 @@ export const useChatbotStore = create<ChatbotState>()(
         phone: state.phone, // Primary identifier
         email: state.email, // Optional secondary
         isPromptVisible: state.isPromptVisible,
+        hasInteracted: state.hasInteracted, // Remember if user has used chatbot
       }),
 
       // Skip hydration for SSR

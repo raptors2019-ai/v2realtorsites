@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     maxSteps: 5,
 
     onStepFinish: async ({ toolResults }) => {
-      // Capture mortgage estimator results for rich rendering
+      // Capture tool results for rich rendering
       const results = toolResults as any[] || []
       for (const toolResult of results) {
         if (toolResult.toolName === 'estimateMortgage' && toolResult.result?.success) {
@@ -43,6 +43,15 @@ export async function POST(req: Request) {
             type: 'mortgageEstimate',
             data: toolResult.result.estimate,
             cta: toolResult.result.cta,
+          })
+        }
+        // Capture property search results for card rendering
+        if (toolResult.toolName === 'searchProperties' && toolResult.result?.success) {
+          data.append({
+            type: 'propertySearch',
+            listings: toolResult.result.listings,
+            total: toolResult.result.total,
+            viewAllUrl: toolResult.result.viewAllUrl,
           })
         }
       }
