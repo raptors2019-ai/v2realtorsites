@@ -5,7 +5,7 @@ import type { ContactData } from '@repo/crm'
 export const runtime = 'edge'
 
 /**
- * Contact form submission endpoint
+ * Contact form submission endpoint for NewHomeShow
  * Creates a lead in BoldTrail CRM
  */
 export async function POST(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Validate required fields
-    const { firstName, lastName, email, phone, interest, message } = body
+    const { firstName, lastName, email, phone, interest, message, source } = body
 
     if (!firstName || !lastName || !email || !interest || !message) {
       return NextResponse.json(
@@ -34,9 +34,8 @@ export async function POST(request: NextRequest) {
     // Map interest to leadType
     const leadTypeMap: Record<string, 'buyer' | 'seller' | 'investor' | 'general'> = {
       buying: 'buyer',
-      selling: 'seller',
-      renting: 'buyer',
-      valuation: 'seller',
+      investing: 'investor',
+      assignment: 'buyer',
       general: 'general',
     }
 
@@ -44,10 +43,10 @@ export async function POST(request: NextRequest) {
 
     // Build detailed notes for the CRM
     const notesLines = [
-      `=== Lead from Sri Collective Website ===`,
+      `=== Lead from NewHomeShow Website ===`,
       ``,
       `Interest Type: ${interest}`,
-      `Source: Sri Collective - Contact Form`,
+      `Form: ${source || 'Connect with Sales'}`,
       ``,
       `--- Customer Message ---`,
       message,
@@ -66,7 +65,7 @@ export async function POST(request: NextRequest) {
       lastName,
       email,
       phone: phone || undefined,
-      source: 'sri-collective',
+      source: 'newhomeshow',
       leadType,
       customFields: {
         notes: notesLines,
@@ -90,6 +89,7 @@ export async function POST(request: NextRequest) {
       contactId: result.contactId,
       fallback: result.fallback,
       leadType,
+      source: source || 'NewHomeShow',
     })
 
     return NextResponse.json({

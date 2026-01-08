@@ -1,3 +1,4 @@
+import React from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
@@ -5,6 +6,101 @@ import Link from 'next/link'
 import { getProjectBySlug, getSimilarProjects } from '@/lib/projects'
 import { formatPrice } from '@repo/lib'
 import { ProjectCard } from '@repo/ui'
+
+// Helper function to get icon for a feature based on keywords
+function getFeatureIcon(feature: string): React.ReactNode {
+  const lowerFeature = feature.toLowerCase()
+
+  // Bedroom icon
+  if (lowerFeature.includes('bedroom')) {
+    return (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+      </svg>
+    )
+  }
+
+  // Bathroom icon
+  if (lowerFeature.includes('bathroom')) {
+    return (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5h15M6 16.5v3M18 16.5v3M7.5 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+      </svg>
+    )
+  }
+
+  // Garage/Car icon
+  if (lowerFeature.includes('garage') || lowerFeature.includes('car') || lowerFeature.includes('parking')) {
+    return (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+      </svg>
+    )
+  }
+
+  // Backyard/Outdoor icon
+  if (lowerFeature.includes('backyard') || lowerFeature.includes('yard') || lowerFeature.includes('outdoor') || lowerFeature.includes('patio')) {
+    return (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+      </svg>
+    )
+  }
+
+  // Open concept/living icon
+  if (lowerFeature.includes('open concept') || lowerFeature.includes('living')) {
+    return (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+      </svg>
+    )
+  }
+
+  // Kitchen icon
+  if (lowerFeature.includes('kitchen')) {
+    return (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.87c1.355 0 2.697.055 4.024.165C17.155 8.51 18 9.473 18 10.608v2.513m-3-4.87v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.38a48.474 48.474 0 00-6-.37c-2.032 0-4.034.125-6 .37m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.17c0 .62-.504 1.124-1.125 1.124H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12M12.265 3.11a.375.375 0 11-.53 0L12 2.845l.265.265zm-3 0a.375.375 0 11-.53 0L9 2.845l.265.265zm6 0a.375.375 0 11-.53 0L15 2.845l.265.265z" />
+      </svg>
+    )
+  }
+
+  // Default checkmark icon
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+  )
+}
+
+// Helper to generate features from individual fields if features array is empty
+function getProductFeatures(type: {
+  features?: string[] | null
+  bedrooms?: string | null
+  bathrooms?: string | null
+  garages?: string | null
+}): string[] {
+  // If features array exists and has items, use it
+  if (type.features && type.features.length > 0) {
+    return type.features
+  }
+
+  // Otherwise, generate features from individual fields
+  const generatedFeatures: string[] = []
+
+  if (type.bedrooms) {
+    generatedFeatures.push(`${type.bedrooms} Bedrooms`)
+  }
+  if (type.bathrooms) {
+    generatedFeatures.push(`${type.bathrooms} Bathrooms`)
+  }
+  if (type.garages) {
+    generatedFeatures.push(`${type.garages} Garage`)
+  }
+
+  return generatedFeatures
+}
 
 // Fallback images for projects without a featured image
 const fallbackImages = [
@@ -164,18 +260,22 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                         </div>
                       )}
                     </div>
-                    {type.features && type.features.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {type.features.map((feature) => (
-                          <span
-                            key={feature}
-                            className="px-2.5 py-1 text-xs bg-white dark:bg-secondary text-secondary dark:text-gray-300 rounded-full"
-                          >
-                            {feature}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    {(() => {
+                      const features = getProductFeatures(type)
+                      return features.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          {features.map((feature) => (
+                            <span
+                              key={feature}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white dark:bg-secondary text-secondary dark:text-gray-300 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"
+                            >
+                              <span className="text-primary">{getFeatureIcon(feature)}</span>
+                              {feature}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null
+                    })()}
                   </div>
                 ))}
               </div>
@@ -233,7 +333,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 Register for Updates
               </Link>
               <Link
-                href="/connect-with-sales"
+                href={`/connect-with-sales?project=${encodeURIComponent(project.name)}`}
                 className="block w-full py-3.5 border-2 border-primary text-primary rounded-lg text-center font-medium hover:bg-primary/5 transition-colors"
               >
                 Speak with Sales

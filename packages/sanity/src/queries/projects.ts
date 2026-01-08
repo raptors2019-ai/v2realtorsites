@@ -79,7 +79,8 @@ export const projectBySlugQuery = groq`
       },
       bedrooms,
       bathrooms,
-      garages
+      garages,
+      features
     }
   }
 `

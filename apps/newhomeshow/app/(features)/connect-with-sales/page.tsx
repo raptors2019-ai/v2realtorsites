@@ -24,16 +24,20 @@ const initialFormData: FormData = {
 
 const VIP_MESSAGE = "I'm interested in getting VIP access to upcoming pre-construction projects. Please add me to your priority list for early access, platinum pricing, and exclusive incentives."
 
+const getProjectMessage = (projectName: string) =>
+  `I'm interested in learning more about ${projectName}. Please send me information about available units, pricing, and floor plans.`
+
 // Inner component that uses useSearchParams
 function ConnectWithSalesContent() {
   const searchParams = useSearchParams()
   const isVipRequest = searchParams.get('vip') === 'true'
+  const projectName = searchParams.get('project')
 
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
-  // Pre-populate form for VIP access requests
+  // Pre-populate form based on query params
   useEffect(() => {
     if (isVipRequest) {
       setFormData(prev => ({
@@ -41,8 +45,14 @@ function ConnectWithSalesContent() {
         interest: 'buying',
         message: VIP_MESSAGE,
       }))
+    } else if (projectName) {
+      setFormData(prev => ({
+        ...prev,
+        interest: 'buying',
+        message: getProjectMessage(projectName),
+      }))
     }
-  }, [isVipRequest])
+  }, [isVipRequest, projectName])
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -89,8 +99,11 @@ function ConnectWithSalesContent() {
               Connect with Sales
             </h1>
             <p className="text-text-secondary dark:text-gray-300 max-w-2xl mx-auto text-lg">
-              Have questions about our pre-construction projects? Our team is here
-              to help you find the perfect home.
+              {projectName ? (
+                <>Interested in <span className="text-primary font-semibold">{projectName}</span>? Our team is here to help you learn more.</>
+              ) : (
+                <>Have questions about our pre-construction projects? Our team is here to help you find the perfect home.</>
+              )}
             </p>
           </div>
         </div>
