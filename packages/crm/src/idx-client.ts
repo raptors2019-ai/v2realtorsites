@@ -1,6 +1,25 @@
 import type { IDXListing, IDXSearchParams, IDXSearchResponse, IDXMedia } from '@repo/types'
 
 /**
+ * Property type mapping from frontend values to TRREB/Ampre API PropertySubType values
+ * These are the actual values observed in production from the IDX API
+ */
+const PROPERTY_SUBTYPE_MAP: Record<string, string> = {
+  // Lowercase keys for case-insensitive matching
+  'detached': 'Detached',
+  'semi-detached': 'Semi-Detached',
+  'townhouse': 'Att/Row/Twnhouse',
+  'condo': 'Condo Apartment',
+  // Also support capitalized versions from chatbot tool
+  'Detached': 'Detached',
+  'Semi-Detached': 'Semi-Detached',
+  'Townhouse': 'Att/Row/Twnhouse',
+  'Condo': 'Condo Apartment',
+  // Legacy values (backwards compatibility)
+  'Residential': 'Detached', // Default residential to detached
+}
+
+/**
  * IDX API Client for MLS property search via TRREB/Ampre
  * Uses OData API at query.ampre.ca
  */
@@ -68,33 +87,21 @@ export class IDXClient {
     }
 
     // Property type filter - support multiple types with OR condition
+    // Uses PropertySubType field consistently for specific dwelling types
     if (params.propertyTypes && params.propertyTypes.length > 0) {
       const typeFilters = params.propertyTypes
         .filter(t => t && t !== 'all')
         .map(type => {
-          // Map our frontend types to IDX API PropertySubType values
-          // Based on actual TRREB/Ampre API values observed in production
-          const typeMap: Record<string, string> = {
-            'detached': 'Detached',
-            'semi-detached': 'Semi-Detached',
-            'townhouse': 'Att/Row/Twnhouse',
-            'condo': 'Condo Apartment', // Fixed: was 'Condo Apt' but API uses full word
-          }
-          const mappedType = typeMap[type.toLowerCase()] || type
+          const mappedType = PROPERTY_SUBTYPE_MAP[type] || PROPERTY_SUBTYPE_MAP[type.toLowerCase()] || type
           return `PropertySubType eq '${mappedType}'`
         })
       if (typeFilters.length > 0) {
         filters.push(`(${typeFilters.join(' or ')})`)
       }
     } else if (params.propertyType && params.propertyType !== 'all') {
-      // Backwards compatibility: single property type - map to API values
-      const typeMap: Record<string, string> = {
-        'Residential': 'Residential Freehold',
-        'Condo': 'Residential Condo & Other',
-        'Townhouse': 'Residential Freehold', // Townhouses are under Freehold
-      }
-      const mappedType = typeMap[params.propertyType] || params.propertyType
-      filters.push(`PropertyType eq '${mappedType}'`)
+      // Single property type - also use PropertySubType for consistency
+      const mappedType = PROPERTY_SUBTYPE_MAP[params.propertyType] || PROPERTY_SUBTYPE_MAP[params.propertyType.toLowerCase()] || params.propertyType
+      filters.push(`PropertySubType eq '${mappedType}'`)
     }
     if (params.status && params.status !== 'all') {
       filters.push(`StandardStatus eq '${params.status}'`)

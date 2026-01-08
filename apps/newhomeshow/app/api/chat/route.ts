@@ -2,7 +2,8 @@ import { streamText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { newhomeShowSystemPrompt, propertySearchTool } from '@repo/chatbot'
 
-export const runtime = 'edge'
+// Use nodejs runtime for tool execution (Edge has issues with workspace package imports)
+export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   const { messages } = await req.json()

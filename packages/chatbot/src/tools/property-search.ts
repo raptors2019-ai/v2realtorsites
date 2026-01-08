@@ -15,8 +15,8 @@ Always use this BEFORE asking for contact information to provide value first.`,
     maxPrice: z.number().optional().describe('Maximum price in CAD'),
     bedrooms: z.number().optional().describe('Minimum number of bedrooms'),
     bathrooms: z.number().optional().describe('Minimum number of bathrooms'),
-    propertyType: z.enum(['Residential', 'Condo', 'Townhouse']).optional()
-      .describe('Type of property'),
+    propertyType: z.enum(['Detached', 'Semi-Detached', 'Townhouse', 'Condo']).optional()
+      .describe('Type of property (matches survey options)'),
   }),
 
   execute: async ({ city, minPrice, maxPrice, bedrooms, bathrooms, propertyType }) => {
