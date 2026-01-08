@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 interface FormData {
@@ -21,10 +22,26 @@ const initialFormData: FormData = {
   message: '',
 }
 
+const VIP_MESSAGE = "I'm interested in getting VIP access to upcoming pre-construction projects. Please add me to your priority list for early access, platinum pricing, and exclusive incentives."
+
 export default function ConnectWithSalesPage() {
+  const searchParams = useSearchParams()
+  const isVipRequest = searchParams.get('vip') === 'true'
+
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+
+  // Pre-populate form for VIP access requests
+  useEffect(() => {
+    if (isVipRequest) {
+      setFormData(prev => ({
+        ...prev,
+        interest: 'buying',
+        message: VIP_MESSAGE,
+      }))
+    }
+  }, [isVipRequest])
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))

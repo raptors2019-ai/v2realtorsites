@@ -69,7 +69,7 @@ export default async function Home() {
                 View Projects
               </Link>
               <Link
-                href="/connect-with-sales"
+                href="/connect-with-sales?vip=true"
                 className="btn-outline-light px-8 py-3.5 rounded-lg text-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
               >
                 Get VIP Access
@@ -258,7 +258,7 @@ export default async function Home() {
                 </p>
                 <div className="flex gap-4 pt-4">
                   <Link
-                    href="/connect-with-sales"
+                    href="/connect-with-sales?vip=true"
                     className="btn-primary px-6 py-3 rounded-lg text-sm font-medium"
                   >
                     Get VIP Access
@@ -376,7 +376,7 @@ export default async function Home() {
                   </svg>
                 </div>
                 <h3 className="text-secondary dark:text-white font-medium mb-2">Register</h3>
-                <Link href="/connect-with-sales" className="text-primary hover:text-primary-dark transition-colors">
+                <Link href="/connect-with-sales?vip=true" className="text-primary hover:text-primary-dark transition-colors">
                   Get VIP Access
                 </Link>
               </div>
