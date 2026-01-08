@@ -172,7 +172,7 @@ export function BentoFeatureCard({
       <h3 className="text-lg font-semibold text-primary mb-3">
         {title}
       </h3>
-      <p className="text-text-secondary dark:text-gray-300 text-sm leading-relaxed">
+      <p className="text-black dark:text-gray-300 text-sm leading-relaxed">
         {description}
       </p>
     </motion.div>

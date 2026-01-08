@@ -1,16 +1,13 @@
 import {
-  PropertyCard,
   BentoGrid,
   BentoFeatureCard,
   AnimatedHeroContent,
   AnimatedHeroItem,
   AnimatedHeroButtons,
 } from "@repo/ui";
-import { getFeaturedProperties } from "@/lib/data";
 import Link from "next/link";
 
 export default async function Home() {
-  const featuredProperties = await getFeaturedProperties(3);
 
   return (
     <div className="min-h-screen bg-white">
@@ -168,41 +165,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Featured Properties Section */}
-      <section className="py-28 bg-white relative overflow-hidden">
-        {/* Subtle decorative background */}
-        <div
-          className="absolute top-0 right-0 w-1/2 h-full opacity-[0.03] bg-cover bg-center"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&q=80')",
-          }}
-        />
-        <div className="container mx-auto px-4 relative">
-          <div className="text-center mb-16">
-            <p className="text-primary uppercase tracking-[0.25em] text-sm mb-3 font-medium">
-              Explore
-            </p>
-            <h2 className="text-3xl md:text-4xl font-bold text-secondary">
-              Featured Properties
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {featuredProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Link
-              href="/properties"
-              className="btn-outline px-8 py-3.5 rounded-lg text-sm inline-block"
-            >
-              View All Properties
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Sell Your Home Section */}
       <section className="py-28 bg-gradient-to-b from-cream to-white">
