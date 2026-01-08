@@ -1,6 +1,8 @@
 import type { CMSBuilderProject } from '@repo/types'
-import { client, isSanityConfigured, allProjectsQuery, projectBySlugQuery, quickClosingsQuery } from '@repo/sanity'
+import { client, isSanityConfigured, allProjectsQuery, projectBySlugQuery, projectsBySectionQuery } from '@repo/sanity'
 import mockProjects from '../data/mock-projects.json'
+
+export type DisplaySection = 'projects' | 'quick-closings' | 'promotions' | 'assignments'
 
 /**
  * Fetch all builder projects
@@ -58,42 +60,55 @@ export async function getProjectBySlug(slug: string): Promise<CMSBuilderProject 
 }
 
 /**
- * Fetch projects with quick closing dates
- * Falls back to filtering mock data when Sanity is not configured
+ * Fetch projects by display section
+ * Use this to get projects for specific tabs (projects, quick-closings, promotions, assignments)
  */
-export async function getQuickClosings(): Promise<CMSBuilderProject[]> {
+export async function getProjectsBySection(section: DisplaySection): Promise<CMSBuilderProject[]> {
   if (isSanityConfigured()) {
     try {
       const projects = await client.fetch<CMSBuilderProject[]>(
-        quickClosingsQuery,
-        {},
-        { next: { tags: ['projects', 'quick-closings'] } }
+        projectsBySectionQuery,
+        { section },
+        { next: { tags: ['projects', section] } }
       )
 
       if (projects && projects.length > 0) {
-        console.log('[projects.getQuickClosings]', { source: 'sanity', count: projects.length })
+        console.log('[projects.getProjectsBySection]', { source: 'sanity', section, count: projects.length })
         return projects
       }
     } catch (error) {
-      console.error('[projects.getQuickClosings.error]', { error })
+      console.error('[projects.getProjectsBySection.error]', { section, error })
     }
   }
 
-  // Fallback: Filter mock data for projects with closing dates
-  const now = new Date()
-  const sixMonthsFromNow = new Date()
-  sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
+  // Fallback: Filter mock data by displaySections
+  const projects = (mockProjects as (CMSBuilderProject & { displaySections?: string[] })[])
+    .filter(p => p.displaySections?.includes(section))
 
-  const projects = (mockProjects as CMSBuilderProject[])
-    .filter(p => {
-      if (!p.closingDate || p.status !== 'selling') return false
-      const closingDate = new Date(p.closingDate)
-      return closingDate >= now && closingDate <= sixMonthsFromNow
-    })
-    .sort((a, b) => new Date(a.closingDate!).getTime() - new Date(b.closingDate!).getTime())
-
-  console.log('[projects.getQuickClosings]', { source: 'mock', count: projects.length })
+  console.log('[projects.getProjectsBySection]', { source: 'mock', section, count: projects.length })
   return projects
+}
+
+/**
+ * Fetch projects with quick closing dates
+ * Now uses the displaySections field instead of date-based filtering
+ */
+export async function getQuickClosings(): Promise<CMSBuilderProject[]> {
+  return getProjectsBySection('quick-closings')
+}
+
+/**
+ * Fetch projects marked for promotions tab
+ */
+export async function getPromotions(): Promise<CMSBuilderProject[]> {
+  return getProjectsBySection('promotions')
+}
+
+/**
+ * Fetch projects marked for assignments tab
+ */
+export async function getAssignments(): Promise<CMSBuilderProject[]> {
+  return getProjectsBySection('assignments')
 }
 
 /**

@@ -29,7 +29,8 @@
     "zustand": "^5.0.9",
     "ai": "^4.0.0",
     "@ai-sdk/openai": "^1.0.0",
-    "styled-components": "^6.1.15"
+    "styled-components": "^6.1.15",
+    "styled-jsx": "^5.1.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",

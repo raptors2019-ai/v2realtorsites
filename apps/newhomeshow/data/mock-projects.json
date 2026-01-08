@@ -10,6 +10,8 @@
     "city": "Pickering",
     "startingPrice": 844990,
     "closingDate": "2026-06-01",
+    "displaySections": ["projects", "quick-closings", "promotions"],
+    "incentives": ["$15,000 Decor Dollars", "Free Appliance Package", "Capped Development Charges"],
     "featuredImage": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
     "gallery": [
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80",
@@ -91,6 +93,7 @@
     "city": "Aurora",
     "startingPrice": 1199990,
     "closingDate": "2027-03-01",
+    "displaySections": ["projects"],
     "featuredImage": "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80",
     "gallery": [
       "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80",
@@ -137,6 +140,8 @@
     "city": "Maple",
     "startingPrice": 799990,
     "closingDate": "2026-09-01",
+    "displaySections": ["projects", "promotions", "assignments"],
+    "incentives": ["$10,000 Closing Credit", "Extended Deposit Structure", "Free Parking"],
     "featuredImage": "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&q=80",
     "gallery": [
       "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200&q=80",

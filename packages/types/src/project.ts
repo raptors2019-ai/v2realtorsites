@@ -40,6 +40,8 @@ export interface CMSBuilderProject extends Omit<BuilderProject, 'propertyTypes' 
   depositStructure?: string | null // Deposit payment schedule
   totalDeposit?: number | null // Total deposit amount
   isQuickClosing?: boolean // Has quick closing / move-in ready units
+  // Display section control
+  displaySections?: ('projects' | 'quick-closings' | 'promotions' | 'assignments')[] | null
 }
 
 /**

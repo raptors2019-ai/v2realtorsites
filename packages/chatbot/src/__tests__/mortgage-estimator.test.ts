@@ -152,7 +152,7 @@ describe('mortgageEstimatorTool', () => {
       expect(result.success).toBe(true)
       if (result.estimate.cmhcPremium) {
         expect(result.estimate.totalMortgageWithCMHC).toBe(
-          result.estimate.maxMortgage + result.estimate.cmhcPremium
+          result.estimate.mortgageAmount + result.estimate.cmhcPremium
         )
       }
     })
@@ -206,7 +206,7 @@ describe('mortgageEstimatorTool', () => {
   })
 
   describe('output formatting', () => {
-    it('should provide formatted summary in markdown', async () => {
+    it('should provide formatted summary with key details', async () => {
       const result = await mortgageEstimatorTool.execute({
         annualIncome: 120000,
         downPayment: 100000,
@@ -215,10 +215,10 @@ describe('mortgageEstimatorTool', () => {
       })
 
       expect(result.success).toBe(true)
-      expect(result.formattedSummary).toContain('**Affordability Estimate**')
-      expect(result.formattedSummary).toContain('**Max Home Price:**')
-      expect(result.formattedSummary).toContain('**Monthly Costs')
-      expect(result.formattedSummary).toContain('estimate only')
+      expect(result.formattedSummary).toContain('Max Home Price:')
+      expect(result.formattedSummary).toContain('Down Payment:')
+      expect(result.formattedSummary).toContain('Mortgage Amount:')
+      expect(result.formattedSummary).toContain('Monthly Payment:')
     })
 
     it('should provide search suggestion', async () => {
@@ -322,8 +322,9 @@ describe('mortgageEstimatorTool', () => {
       })
 
       expect(result.success).toBe(true)
-      expect(result.message).toContain('$')
+      // formattedSummary and CTA contain currency-formatted values
       expect(result.formattedSummary).toContain('$')
+      expect(result.cta.text).toContain('$')
     })
 
     it('should round max home price to nearest $1000', async () => {

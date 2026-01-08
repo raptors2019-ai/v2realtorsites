@@ -37,11 +37,12 @@ export class IDXClient {
     }
 
     // Support multiple cities with OR condition
+    // Use startswith for city matching since IDX API uses zone codes (e.g., "Toronto C01", "Toronto W02")
     if (params.cities && params.cities.length > 0) {
-      const cityFilters = params.cities.map(city => `City eq '${city}'`).join(' or ')
+      const cityFilters = params.cities.map(city => `startswith(City,'${city}')`).join(' or ')
       filters.push(`(${cityFilters})`)
     } else if (params.city) {
-      filters.push(`City eq '${params.city}'`)
+      filters.push(`startswith(City,'${params.city}')`)
     }
 
     if (params.minPrice) {
@@ -86,8 +87,14 @@ export class IDXClient {
         filters.push(`(${typeFilters.join(' or ')})`)
       }
     } else if (params.propertyType && params.propertyType !== 'all') {
-      // Backwards compatibility: single property type
-      filters.push(`PropertyType eq '${params.propertyType}'`)
+      // Backwards compatibility: single property type - map to API values
+      const typeMap: Record<string, string> = {
+        'Residential': 'Residential Freehold',
+        'Condo': 'Residential Condo & Other',
+        'Townhouse': 'Residential Freehold', // Townhouses are under Freehold
+      }
+      const mappedType = typeMap[params.propertyType] || params.propertyType
+      filters.push(`PropertyType eq '${mappedType}'`)
     }
     if (params.status && params.status !== 'all') {
       filters.push(`StandardStatus eq '${params.status}'`)

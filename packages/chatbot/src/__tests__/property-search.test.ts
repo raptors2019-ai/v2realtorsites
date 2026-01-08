@@ -390,10 +390,12 @@ describe('propertySearchTool', () => {
         bedrooms: 3,
       })
 
-      expect(result.viewAllUrl).toContain('city=Toronto')
-      expect(result.viewAllUrl).toContain('minPrice=500000')
-      expect(result.viewAllUrl).toContain('maxPrice=800000')
+      // URL uses survey-format params: cities, budgetMin, budgetMax
+      expect(result.viewAllUrl).toContain('cities=Toronto')
+      expect(result.viewAllUrl).toContain('budgetMin=500000')
+      expect(result.viewAllUrl).toContain('budgetMax=800000')
       expect(result.viewAllUrl).toContain('bedrooms=3')
+      expect(result.viewAllUrl).toContain('listingType=sale')
     })
 
     it('should handle missing optional params in viewAllUrl', async () => {

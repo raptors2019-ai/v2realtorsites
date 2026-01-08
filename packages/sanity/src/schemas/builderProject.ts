@@ -165,12 +165,24 @@ export const builderProjectSchema = {
       description: 'Total deposit required (e.g., 100000 for $100,000)',
     },
     {
-      name: 'isQuickClosing',
-      title: 'Quick Closing Available',
-      type: 'boolean',
-      group: 'incentives',
-      description: 'Check if this project has quick closing / move-in ready units',
-      initialValue: false,
+      name: 'displaySections',
+      title: 'Display In Sections',
+      type: 'array',
+      group: 'basic',
+      description: 'Choose which website tabs/sections this project should appear in. Select all that apply.',
+      of: [{ type: 'string' }],
+      options: {
+        list: [
+          { title: 'Projects (Main listing page)', value: 'projects' },
+          { title: 'Quick Closings (Move-in ready)', value: 'quick-closings' },
+          { title: 'Promotions (Special offers)', value: 'promotions' },
+          { title: 'Assignments (Contract transfers)', value: 'assignments' },
+        ],
+        layout: 'grid',
+      },
+      initialValue: ['projects'],
+      validation: (Rule: { min: (n: number) => { (): unknown; message: (msg: string) => unknown } }) =>
+        Rule.min(1).message('Select at least one section to display this project'),
     },
   ],
   preview: {

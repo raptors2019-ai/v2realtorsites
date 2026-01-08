@@ -1,28 +1,47 @@
 import { groq } from 'next-sanity'
 
 /**
+ * Common fields to select for project queries
+ */
+const projectFields = `
+  _id,
+  name,
+  "slug": slug.current,
+  status,
+  intersection,
+  city,
+  startingPrice,
+  "featuredImage": featuredImage.asset->url,
+  productTypes[]-> {
+    name,
+    "priceRange": {
+      "min": priceFrom,
+      "max": priceTo
+    }
+  },
+  features,
+  incentives,
+  description,
+  closingDate,
+  displaySections
+`
+
+/**
  * Query all builder projects with essential fields
  */
 export const allProjectsQuery = groq`
   *[_type == "builderProject"] | order(status asc, name asc) {
-    _id,
-    name,
-    "slug": slug.current,
-    status,
-    intersection,
-    city,
-    startingPrice,
-    "featuredImage": featuredImage.asset->url,
-    productTypes[]-> {
-      name,
-      "priceRange": {
-        "min": priceFrom,
-        "max": priceTo
-      }
-    },
-    features,
-    description,
-    closingDate
+    ${projectFields}
+  }
+`
+
+/**
+ * Query projects by display section
+ * Use this to get projects for specific tabs (projects, quick-closings, promotions, assignments)
+ */
+export const projectsBySectionQuery = groq`
+  *[_type == "builderProject" && $section in displaySections] | order(status asc, name asc) {
+    ${projectFields}
   }
 `
 
@@ -40,7 +59,12 @@ export const projectBySlugQuery = groq`
     startingPrice,
     description,
     features,
+    incentives,
     closingDate,
+    displaySections,
+    depositStructure,
+    totalDeposit,
+    builder,
     "featuredImage": featuredImage.asset->url,
     "gallery": gallery[].asset->url,
     productTypes[]-> {
@@ -65,44 +89,6 @@ export const projectBySlugQuery = groq`
  */
 export const projectsByStatusQuery = groq`
   *[_type == "builderProject" && status == $status] | order(name asc) {
-    _id,
-    name,
-    "slug": slug.current,
-    status,
-    intersection,
-    city,
-    startingPrice,
-    "featuredImage": featuredImage.asset->url,
-    productTypes[]-> {
-      name,
-      "priceRange": {
-        "min": priceFrom,
-        "max": priceTo
-      }
-    }
-  }
-`
-
-/**
- * Query projects with quick closing dates (within 6 months)
- */
-export const quickClosingsQuery = groq`
-  *[_type == "builderProject" && status == "selling" && closingDate != null] | order(closingDate asc) {
-    _id,
-    name,
-    "slug": slug.current,
-    status,
-    intersection,
-    city,
-    startingPrice,
-    closingDate,
-    "featuredImage": featuredImage.asset->url,
-    productTypes[]-> {
-      name,
-      "priceRange": {
-        "min": priceFrom,
-        "max": priceTo
-      }
-    }
+    ${projectFields}
   }
 `

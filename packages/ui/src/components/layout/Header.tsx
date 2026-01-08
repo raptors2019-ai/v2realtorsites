@@ -75,7 +75,7 @@ export function Header({ config, enableDarkMode = false }: HeaderProps) {
                     'text-gradient-primary transition-colors duration-300'
                   }
                 >
-                  {' '}{config.logoSecondPart}
+                  {config.logoSecondPart}
                 </span>
               )}
               {!config.logoFirstPart && !config.logoSecondPart && (

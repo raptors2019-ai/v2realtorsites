@@ -9,7 +9,7 @@ export {
   allProjectsQuery,
   projectBySlugQuery,
   projectsByStatusQuery,
-  quickClosingsQuery,
+  projectsBySectionQuery,
 } from './queries/projects'
 
 // Image utilities

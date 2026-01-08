@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { getAllProjects } from '@/lib/projects'
+import { getPromotions } from '@/lib/projects'
 import { formatPrice } from '@repo/lib'
 
 export const metadata: Metadata = {
@@ -9,8 +9,7 @@ export const metadata: Metadata = {
 }
 
 export default async function PromotionsPage() {
-  const projects = await getAllProjects()
-  const activeProjects = projects.filter(p => p.status === 'selling')
+  const activeProjects = await getPromotions()
 
   return (
     <div className="min-h-screen bg-white dark:bg-secondary">
@@ -64,26 +63,33 @@ export default async function PromotionsPage() {
                       </p>
                     </div>
 
-                    {/* Sample Incentives */}
+                    {/* Incentives from Sanity */}
                     <div className="space-y-2 mb-6">
-                      <div className="flex items-center gap-2 text-sm text-text-secondary dark:text-gray-300">
-                        <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Free upgrade package included
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-text-secondary dark:text-gray-300">
-                        <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Extended deposit structure
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-text-secondary dark:text-gray-300">
-                        <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Capped development charges
-                      </div>
+                      {(project.incentives && project.incentives.length > 0) ? (
+                        project.incentives.slice(0, 3).map((incentive, index) => (
+                          <div key={index} className="flex items-center gap-2 text-sm text-text-secondary dark:text-gray-300">
+                            <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            {incentive}
+                          </div>
+                        ))
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2 text-sm text-text-secondary dark:text-gray-300">
+                            <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Special pricing available
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-text-secondary dark:text-gray-300">
+                            <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Contact for details
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     <Link

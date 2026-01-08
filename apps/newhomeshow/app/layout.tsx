@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { Header, Footer, ChatbotWidget, ThemeProvider } from '@repo/ui'
+import { Header, Footer, ThemeProvider } from '@repo/ui'
 import type { HeaderConfig, FooterConfig } from '@repo/ui'
 import { GoogleTagManager } from '@next/third-parties/google'
 import { CookieConsent, PageViewTracker } from '@repo/analytics'
@@ -71,11 +71,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <Header config={headerConfig} enableDarkMode={true} />
-          <main className="pt-16">
+          <main>
             {children}
           </main>
           <Footer config={footerConfig} />
-          <ChatbotWidget />
         </ThemeProvider>
         {process.env.NEXT_PUBLIC_GTM_ID && (
           <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
