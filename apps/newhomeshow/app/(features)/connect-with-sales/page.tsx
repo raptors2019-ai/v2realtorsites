@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -24,7 +24,8 @@ const initialFormData: FormData = {
 
 const VIP_MESSAGE = "I'm interested in getting VIP access to upcoming pre-construction projects. Please add me to your priority list for early access, platinum pricing, and exclusive incentives."
 
-export default function ConnectWithSalesPage() {
+// Inner component that uses useSearchParams
+function ConnectWithSalesContent() {
   const searchParams = useSearchParams()
   const isVipRequest = searchParams.get('vip') === 'true'
 
@@ -320,5 +321,23 @@ export default function ConnectWithSalesPage() {
         </div>
       </section>
     </div>
+  )
+}
+
+// Loading fallback for Suspense
+function ConnectWithSalesLoading() {
+  return (
+    <div className="min-h-screen bg-white dark:bg-secondary flex items-center justify-center">
+      <div className="animate-pulse text-text-secondary">Loading...</div>
+    </div>
+  )
+}
+
+// Default export wrapped in Suspense for useSearchParams
+export default function ConnectWithSalesPage() {
+  return (
+    <Suspense fallback={<ConnectWithSalesLoading />}>
+      <ConnectWithSalesContent />
+    </Suspense>
   )
 }

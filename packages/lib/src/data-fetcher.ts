@@ -115,7 +115,10 @@ export function convertIDXToProperty(listing: IDXListing): Property {
   let propertyType: Property['propertyType'] = 'detached' // default
 
   // Check PropertyType first - TRREB uses "Residential Freehold" and "Residential Condo & Other"
-  if (typeKey?.includes('condo')) {
+  // Also handle direct PropertyType values like "Townhouse", "Condo"
+  if (typeKey === 'townhouse' || typeKey?.includes('town')) {
+    propertyType = 'townhouse'
+  } else if (typeKey?.includes('condo')) {
     // PropertyType contains "condo" - it's a condo or condo townhouse
     // Check PropertySubType for specificity
     if (subTypeKey?.includes('townhouse')) {
