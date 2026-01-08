@@ -308,11 +308,6 @@ export function PropertyFilters({
   const getPercent = (value: number) => ((value - MIN_PRICE) / (MAX_PRICE - MIN_PRICE)) * 100;
 
   // Helper functions for advanced filters
-  const formatSqft = (value: number) => {
-    if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-    return String(value);
-  };
-
   const getSqftPercent = (value: number) => ((value - SQFT_MIN) / (SQFT_MAX - SQFT_MIN)) * 100;
   const getLotSizePercent = (value: number) => ((value - LOT_SIZE_MIN) / (LOT_SIZE_MAX - LOT_SIZE_MIN)) * 100;
 

@@ -92,7 +92,7 @@ export function BentoCard({
         <h3 className="text-lg font-semibold text-secondary dark:text-white mb-2 group-hover:text-primary transition-colors">
           {title}
         </h3>
-        <p className="text-text-secondary dark:text-gray-300 text-sm leading-relaxed">
+        <p className="text-stone-700 dark:text-gray-300 text-sm leading-relaxed">
           {description}
         </p>
       </div>
@@ -159,7 +159,10 @@ export function BentoFeatureCard({
 }: BentoFeatureCardProps) {
   return (
     <motion.div
-      variants={bentoCardVariants}
+      initial={{ opacity: 0, scale: 0.95 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.5 }}
       className={cn(
         "group luxury-card-premium rounded-xl p-8 text-center",
         "transition-all duration-300",
@@ -172,7 +175,7 @@ export function BentoFeatureCard({
       <h3 className="text-lg font-semibold text-primary mb-3">
         {title}
       </h3>
-      <p className="text-black dark:text-gray-300 text-sm leading-relaxed">
+      <p className="dark:text-gray-300 text-sm leading-relaxed" style={{ color: '#000000' }}>
         {description}
       </p>
     </motion.div>
