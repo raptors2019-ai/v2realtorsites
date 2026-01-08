@@ -104,14 +104,6 @@ const builderProject = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'builder',
-      title: 'Builder/Developer',
-      type: 'string',
-      group: 'basic',
-      description: 'e.g., Fieldgate Homes, Mattamy Homes',
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
       name: 'status',
       title: 'Status',
       type: 'string',
@@ -133,6 +125,25 @@ const builderProject = defineType({
       group: 'basic',
       rows: 4,
       description: 'Brief description of the project',
+    }),
+    defineField({
+      name: 'displaySections',
+      title: 'Display In Sections',
+      type: 'array',
+      group: 'basic',
+      description: 'Choose which website tabs/sections this project should appear in.',
+      of: [{ type: 'string' }],
+      options: {
+        list: [
+          { title: 'Projects (Main listing page)', value: 'projects' },
+          { title: 'Quick Closings (Move-in ready)', value: 'quick-closings' },
+          { title: 'Promotions (Special offers)', value: 'promotions' },
+          { title: 'Assignments (Contract transfers)', value: 'assignments' },
+        ],
+        layout: 'grid',
+      },
+      initialValue: ['projects'],
+      validation: (Rule) => Rule.min(1).error('Select at least one section'),
     }),
 
     // Location
@@ -195,6 +206,13 @@ const builderProject = defineType({
       description: 'Link to available product types with pricing',
     }),
     defineField({
+      name: 'closingDate',
+      title: 'Closing Date',
+      type: 'date',
+      group: 'pricing',
+      description: 'Expected closing/occupancy date',
+    }),
+    defineField({
       name: 'occupancy',
       title: 'Occupancy',
       type: 'string',
@@ -208,6 +226,13 @@ const builderProject = defineType({
       group: 'pricing',
       rows: 3,
       description: 'e.g., $10,000 on signing, 5% in 30 days...',
+    }),
+    defineField({
+      name: 'totalDeposit',
+      title: 'Total Deposit Amount',
+      type: 'number',
+      group: 'pricing',
+      description: 'Total deposit required (e.g., 100000 for $100,000)',
     }),
 
     // Media
@@ -278,7 +303,15 @@ const builderProject = defineType({
       description: 'Nearby schools, transit, shopping, etc.',
     }),
 
-    // Promotions
+    // Promotions & Incentives
+    defineField({
+      name: 'incentives',
+      title: 'Current Incentives',
+      type: 'array',
+      group: 'promotions',
+      of: [{ type: 'string' }],
+      description: 'Special offers (e.g., "$15,000 Decor Dollars", "Free Appliance Package")',
+    }),
     defineField({
       name: 'isQuickClosing',
       title: 'Quick Closing Available',
