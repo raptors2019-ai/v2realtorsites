@@ -1,14 +1,10 @@
 "use client";
 
-import { useState } from "react";
-
 interface BedroomsStepProps {
   onSelect: (bedrooms: string) => void;
 }
 
 export function BedroomsStep({ onSelect }: BedroomsStepProps) {
-  const [selected, setSelected] = useState<string | null>(null);
-
   const options = [
     { id: "1", label: "1" },
     { id: "2", label: "2" },
@@ -16,11 +12,6 @@ export function BedroomsStep({ onSelect }: BedroomsStepProps) {
     { id: "4", label: "4" },
     { id: "5+", label: "5+" },
   ];
-
-  const handleSelect = (id: string) => {
-    setSelected(id);
-    setTimeout(() => onSelect(id), 150);
-  };
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -32,12 +23,8 @@ export function BedroomsStep({ onSelect }: BedroomsStepProps) {
         {options.map((option, index) => (
           <button
             key={option.id}
-            onClick={() => handleSelect(option.id)}
-            className={`w-12 h-12 rounded-full border-2 transition-all duration-300 text-sm font-semibold animate-in fade-in duration-300 ${
-              selected === option.id
-                ? 'bg-[#0a1628] border-[#0a1628] text-white scale-105'
-                : 'bg-white border-stone-200 text-stone-700 hover:border-[#c9a962] hover:shadow-md'
-            }`}
+            onClick={() => onSelect(option.id)}
+            className="w-12 h-12 rounded-full border-2 transition-all duration-300 text-sm font-semibold animate-in fade-in duration-300 bg-white border-stone-200 text-stone-700 hover:border-[#c9a962] hover:shadow-md hover:bg-[#0a1628] hover:border-[#0a1628] hover:text-white hover:scale-105"
             style={{ animationDelay: `${index * 50}ms` }}
           >
             {option.label}

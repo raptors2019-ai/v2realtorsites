@@ -1,45 +1,17 @@
 import { z } from 'zod'
 import { tool } from 'ai'
 import { IDXClient } from '@repo/crm'
-import { formatPrice } from '@repo/lib'
+import { formatPrice, matchCity } from '@repo/lib'
 
-// GTA city name normalization map (handles typos and variations)
-const CITY_ALIASES: Record<string, string> = {
-  // Common typos and variations
-  'missisauga': 'Mississauga',
-  'mississauga': 'Mississauga',
-  'sauga': 'Mississauga',
-  'brampton': 'Brampton',
-  'toronto': 'Toronto',
-  'vaughan': 'Vaughan',
-  'vaughn': 'Vaughan',
-  'markham': 'Markham',
-  'richmond hill': 'Richmond Hill',
-  'richmondhill': 'Richmond Hill',
-  'oakville': 'Oakville',
-  'burlington': 'Burlington',
-  'milton': 'Milton',
-  'hamilton': 'Hamilton',
-  'ajax': 'Ajax',
-  'pickering': 'Pickering',
-  'whitby': 'Whitby',
-  'oshawa': 'Oshawa',
-  'newmarket': 'Newmarket',
-  'aurora': 'Aurora',
-  'caledon': 'Caledon',
-  'gta': 'Toronto', // Default GTA to Toronto
-}
-
+/**
+ * Normalize city name using the shared city matcher
+ * Returns proper capitalized city name or title-cased input
+ */
 function normalizeCity(input: string | undefined): string | undefined {
   if (!input) return undefined
-  const lower = input.toLowerCase().trim()
-  // Check direct alias match
-  if (CITY_ALIASES[lower]) return CITY_ALIASES[lower]
-  // Check if input starts with a known city (handles "mississauga area" etc)
-  for (const [alias, normalized] of Object.entries(CITY_ALIASES)) {
-    if (lower.startsWith(alias) || alias.startsWith(lower)) {
-      return normalized
-    }
+  const match = matchCity(input)
+  if (match.confidence !== 'none') {
+    return match.name
   }
   // Return title-cased version if no match
   return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase()

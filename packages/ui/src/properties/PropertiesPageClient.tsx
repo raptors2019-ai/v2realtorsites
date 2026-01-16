@@ -13,7 +13,6 @@ import { trackPropertyListView, type PropertyItem } from "@repo/analytics";
 
 interface PropertiesPageClientProps {
   initialProperties: Property[];
-  initialCities?: string[];
   total: number;
   initialFilters?: Partial<PropertyFiltersType>;
 }
@@ -23,7 +22,6 @@ const STORAGE_KEY = 'propertyPreferences';
 
 export function PropertiesPageClient({
   initialProperties,
-  initialCities = [],
   total: initialTotal,
   initialFilters,
 }: PropertiesPageClientProps) {
@@ -38,9 +36,6 @@ export function PropertiesPageClient({
     initialFilters || { listingType: ['sale'] }
   );
   const [sortBy, setSortBy] = useState<SortOption>("price-desc");
-
-  // Cities for the dropdown (from initial server-side fetch)
-  const [cities] = useState<string[]>(initialCities);
 
   // Track if filters have changed from initial
   const isInitialMount = useRef(true);
@@ -355,7 +350,6 @@ export function PropertiesPageClient({
         onSortChange={handleSortChange}
         initialFilters={filters}
         initialSort={sortBy}
-        cities={cities}
       />
 
       {/* Results Count */}

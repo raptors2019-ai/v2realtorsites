@@ -65,7 +65,7 @@ export default async function CityPropertiesPage({ params, searchParams }: PageP
   // Default to 'sale' listing type unless explicitly requesting 'lease'
   const cityFilter = cityInfo?.filter || displayName
   const listingType = (urlParams.listingType as 'sale' | 'lease') || 'sale'
-  const { properties, total, cities } = await getAllPropertiesWithTotal({
+  const { properties, total } = await getAllPropertiesWithTotal({
     city: cityFilter,
     listingType: listingType,
     minPrice: urlParams.budgetMin ? parseInt(urlParams.budgetMin) : undefined,
@@ -126,7 +126,6 @@ export default async function CityPropertiesPage({ params, searchParams }: PageP
         <div className="container mx-auto px-4">
           <PropertiesPageClient
             initialProperties={properties}
-            initialCities={cities}
             total={total}
             initialFilters={initialFilters}
           />

@@ -1,46 +1,7 @@
 import { z } from 'zod'
 import type { CoreTool } from 'ai'
 import { BoldTrailClient } from '@repo/crm'
-
-// Lead quality scoring based on engagement signals
-function calculateLeadQuality(params: {
-  cellPhone?: string
-  timeline?: string
-  preApproved?: boolean
-  urgencyFactors?: string[]
-  firstTimeBuyer?: boolean
-  mortgageEstimate?: { maxPrice: number }
-}): 'hot' | 'warm' | 'cold' {
-  let score = 0
-
-  // Phone number provided (+3 - high intent)
-  if (params.cellPhone) score += 3
-
-  // Pre-approved (+3 - ready to buy)
-  if (params.preApproved) score += 3
-
-  // Timeline urgency
-  if (params.timeline === 'asap' || params.timeline === 'immediate') score += 3
-  else if (params.timeline === '1-3-months') score += 2
-  else if (params.timeline === '3-6-months') score += 1
-  // just-exploring or 6+ months = 0
-
-  // Urgency factors (relocating, lease ending, etc.)
-  if (params.urgencyFactors && params.urgencyFactors.length > 0) {
-    score += Math.min(params.urgencyFactors.length, 2)
-  }
-
-  // First-time buyer (+1 - motivated but may need more time)
-  if (params.firstTimeBuyer) score += 1
-
-  // Mortgage estimate completed (+1 - engaged)
-  if (params.mortgageEstimate) score += 1
-
-  // Score thresholds
-  if (score >= 5) return 'hot'
-  if (score >= 2) return 'warm'
-  return 'cold'
-}
+import { calculateLeadQuality } from '../utils/lead-scoring'
 
 // Format budget to hashtag-friendly format
 function formatBudgetHashtag(budget: number): string {

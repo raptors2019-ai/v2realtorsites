@@ -5,9 +5,18 @@ jest.mock('@repo/crm', () => ({
   })),
 }))
 
-// Mock @repo/lib for formatPrice
+// Mock @repo/lib for formatPrice and matchCity
 jest.mock('@repo/lib', () => ({
   formatPrice: jest.fn((price: number) => `$${price.toLocaleString()}`),
+  matchCity: jest.fn((input: string) => {
+    // Simple mock that returns the city name with 'exact' confidence for known cities
+    const knownCities = ['toronto', 'mississauga', 'brampton', 'vaughan', 'markham']
+    const normalized = input.toLowerCase()
+    if (knownCities.includes(normalized)) {
+      return { slug: normalized, name: input.charAt(0).toUpperCase() + input.slice(1).toLowerCase(), confidence: 'exact' }
+    }
+    return { slug: '', name: '', confidence: 'none' }
+  }),
 }))
 
 import { propertySearchTool } from '../tools/property-search'

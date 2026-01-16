@@ -120,7 +120,7 @@ export function ChatbotWidget() {
       const interval = setInterval(() => setCurrentPromptIndex((prev) => (prev + 1) % PROMPTS.length), 4000);
       return () => clearInterval(interval);
     }
-    return undefined;
+    return; // Explicit return for other branches (TypeScript consistency)
   }, [isOpen, isPromptVisible, hasInteracted]);
 
   const sendMessage = async (content: string) => {

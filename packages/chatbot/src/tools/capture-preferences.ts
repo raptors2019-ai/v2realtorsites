@@ -1,25 +1,6 @@
 import { z } from 'zod'
 import type { CoreTool } from 'ai'
-
-/**
- * Determines lead quality based on captured preferences
- */
-function determineLeadQuality(prefs: Record<string, unknown>): 'hot' | 'warm' | 'cold' {
-  // Hot: Has timeline (immediate/3-months) or urgency factors
-  if (prefs.timeline === 'immediate' || prefs.timeline === '3-months') {
-    return 'hot'
-  }
-  if (prefs.urgencyFactors && Array.isArray(prefs.urgencyFactors) && prefs.urgencyFactors.length > 0) {
-    return 'hot'
-  }
-  if (prefs.preApproved === true) {
-    return 'warm'
-  }
-  if (prefs.timeline === 'just-browsing') {
-    return 'cold'
-  }
-  return 'warm'
-}
+import { determineLeadQualityFromTimeline } from '../utils/lead-scoring'
 
 export const capturePreferencesTool: CoreTool = {
   description: `Capture buyer or seller preferences during conversation.
@@ -64,7 +45,11 @@ Store preferences for later use when creating contact.`,
   }),
 
   execute: async (preferences) => {
-    const leadQuality = determineLeadQuality(preferences)
+    const leadQuality = determineLeadQualityFromTimeline(
+      preferences.timeline,
+      preferences.urgencyFactors,
+      preferences.preApproved
+    )
 
     // Log for debugging
     console.error('[chatbot.capturePreferences]', {

@@ -21,6 +21,7 @@ module.exports = {
   moduleNameMapper: {
     '^@repo/crm$': '<rootDir>/../crm/src/index.ts',
     '^@repo/types$': '<rootDir>/../types/src/index.ts',
+    '^@repo/lib$': '<rootDir>/../lib/src/index.ts',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {

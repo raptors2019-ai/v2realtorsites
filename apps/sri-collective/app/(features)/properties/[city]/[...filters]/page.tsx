@@ -79,7 +79,7 @@ export default async function FilteredPropertiesPage({ params }: PageProps) {
   // Convert SEO filters to IDX params
   const idxParams = seoFiltersToIDXParams(city, parsedFilters)
 
-  const { properties, total, cities } = await getAllPropertiesWithTotal({
+  const { properties, total } = await getAllPropertiesWithTotal({
     city: idxParams.city as string,
     minPrice: idxParams.minPrice as number | undefined,
     maxPrice: idxParams.maxPrice as number | undefined,
@@ -187,7 +187,6 @@ export default async function FilteredPropertiesPage({ params }: PageProps) {
         <div className="container mx-auto px-4">
           <PropertiesPageClient
             initialProperties={properties}
-            initialCities={cities}
             total={total}
             initialFilters={initialFilters}
           />

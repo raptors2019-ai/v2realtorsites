@@ -7,7 +7,7 @@ import {
   ListingType,
   PropertyClass,
 } from "@repo/types";
-import { cn } from "@repo/lib";
+import { cn, formatPriceCompact, getAllCities } from "@repo/lib";
 import { useState, useCallback, useRef, useEffect } from "react";
 
 interface PropertyFiltersProps {
@@ -15,7 +15,6 @@ interface PropertyFiltersProps {
   onSortChange: (sort: SortOption) => void;
   initialFilters?: PropertyFiltersType;
   initialSort?: SortOption;
-  cities?: string[];
   className?: string;
 }
 
@@ -24,7 +23,6 @@ export function PropertyFilters({
   onSortChange,
   initialFilters = {},
   initialSort = "price-desc",
-  // cities parameter not currently used - cities are hardcoded in component
   className,
 }: PropertyFiltersProps) {
   const [filters, setFilters] = useState<PropertyFiltersType>(initialFilters);
@@ -34,13 +32,8 @@ export function PropertyFilters({
   // More Filters panel state
   const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
 
-  // All GTA cities for the dropdown (not just filtered results)
-  const allCities = [
-    'Toronto', 'Mississauga', 'Brampton', 'Vaughan',
-    'Markham', 'Richmond Hill', 'Milton', 'Oakville',
-    'Burlington', 'Hamilton', 'Caledon',
-    'Ajax', 'Pickering', 'Whitby', 'Oshawa'
-  ];
+  // All GTA cities for the dropdown (from shared city-matcher)
+  const allCities = getAllCities().map(c => c.name);
 
   // City search filter state
   const [citySearchFilter, setCitySearchFilter] = useState('');
@@ -302,12 +295,6 @@ export function PropertyFilters({
     const value = filters[key as keyof PropertyFiltersType];
     return value !== undefined && (Array.isArray(value) ? value.length > 0 : true);
   });
-
-  const formatPrice = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${Math.round(value / 1000)}K`;
-    return `$${value}`;
-  };
 
   const getPercent = (value: number) => ((value - MIN_PRICE) / (MAX_PRICE - MIN_PRICE)) * 100;
 
@@ -606,11 +593,11 @@ export function PropertyFilters({
           </label>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-secondary">
-              {formatPrice(priceRange[0])}
+              {formatPriceCompact(priceRange[0])}
             </span>
             <span className="text-stone-400">—</span>
             <span className="text-sm font-medium text-secondary">
-              {priceRange[1] >= MAX_PRICE ? `${formatPrice(MAX_PRICE)}+` : formatPrice(priceRange[1])}
+              {priceRange[1] >= MAX_PRICE ? `${formatPriceCompact(MAX_PRICE)}+` : formatPriceCompact(priceRange[1])}
             </span>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { getAllCities } from '@repo/lib'
 
 interface SurveyState {
   listingType: 'sale' | 'lease'
@@ -9,12 +10,8 @@ interface SurveyState {
   locations: string[]
 }
 
-const cities = [
-  'Toronto', 'Mississauga', 'Brampton', 'Vaughan',
-  'Markham', 'Richmond Hill', 'Milton', 'Oakville',
-  'Burlington', 'Hamilton', 'Caledon',
-  'Ajax', 'Pickering', 'Whitby', 'Oshawa'
-]
+// Get city names from shared city-matcher
+const cities = getAllCities().map(c => c.name)
 
 const STORAGE_KEY = 'propertyPreferences'
 

@@ -75,7 +75,7 @@ export default async function PropertiesPage({
     locations: params.cities?.split(','),
   }
 
-  const { properties, total, cities } = await getAllPropertiesWithTotal(filters)
+  const { properties, total } = await getAllPropertiesWithTotal(filters)
 
   return (
     <div className="min-h-screen bg-white">
@@ -115,7 +115,6 @@ export default async function PropertiesPage({
         <div className="container mx-auto px-4">
           <PropertiesPageClient
             initialProperties={properties}
-            initialCities={cities}
             total={total}
             initialFilters={initialFilters}
           />

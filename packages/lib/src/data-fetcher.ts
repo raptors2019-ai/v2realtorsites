@@ -1,5 +1,6 @@
 import type { Property, PropertyFilters, SortOption, IDXListing, ListingType, IDXMedia } from '@repo/types'
 import type { BoldTrailListing } from '@repo/crm'
+import { LEASE_PRICE_THRESHOLD } from './utils'
 
 /**
  * Filter properties based on criteria
@@ -160,8 +161,6 @@ export function convertIDXToProperty(listing: IDXListing): Property {
   const status = statusMap[listing.StandardStatus?.toLowerCase()] || 'active'
 
   // Determine listing type based on price threshold
-  // Properties under $10,000 are likely rentals/leases (monthly amount)
-  const LEASE_PRICE_THRESHOLD = 10000
   const listingType: ListingType = listing.ListPrice < LEASE_PRICE_THRESHOLD ? 'lease' : 'sale'
 
   // Extract images from media
@@ -320,7 +319,6 @@ export function convertToProperty(listing: BoldTrailListing): Property {
   const propertyType = propertyTypeMap[listing.propertyType?.toLowerCase()] || 'detached'
 
   // Determine listing type based on price threshold
-  const LEASE_PRICE_THRESHOLD = 10000
   const listingType: ListingType = listing.price < LEASE_PRICE_THRESHOLD ? 'lease' : 'sale'
 
   return {

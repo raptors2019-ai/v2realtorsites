@@ -36,7 +36,7 @@ export function ContactInfoStep({ onSubmit, surveyType }: ContactInfoStepProps) 
     onSubmit({ fullName, phone, email: email || undefined });
   };
 
-  const headerText = surveyType === 'general-contact' ? 'Get in Touch' : 'Get in Touch';
+  const headerText = 'Get in Touch';
   const subText = surveyType === 'general-contact'
     ? 'One of our expert agents will contact you ASAP to assist with your real estate needs.'
     : 'One of our expert agents will contact you ASAP to help you find the perfect property.';

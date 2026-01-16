@@ -1,4 +1,5 @@
 import type { IDXListing, IDXSearchParams, IDXSearchResponse, IDXMedia } from '@repo/types'
+import { LEASE_PRICE_THRESHOLD } from '@repo/lib'
 
 /**
  * Retry configuration for API calls
@@ -154,8 +155,6 @@ export class IDXClient {
     const filters: string[] = []
 
     // Listing type filter (sale vs lease based on price threshold)
-    // Properties under $10,000 are leases (monthly rent), above are sales
-    const LEASE_PRICE_THRESHOLD = 10000
     if (params.listingType === 'sale') {
       filters.push(`ListPrice ge ${LEASE_PRICE_THRESHOLD}`)
     } else if (params.listingType === 'lease') {

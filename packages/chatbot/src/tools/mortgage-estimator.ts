@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { CoreTool } from 'ai'
+import { formatPrice } from '@repo/lib'
 
 const GDS_MAX = 0.39
 const TDS_MAX = 0.44
@@ -23,14 +24,6 @@ function getCMHCRate(downPaymentPercent: number): number {
   if (downPaymentPercent >= 15) return 0.028
   if (downPaymentPercent >= 10) return 0.031
   return 0.04
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-CA', {
-    style: 'currency',
-    currency: 'CAD',
-    maximumFractionDigits: 0,
-  }).format(amount)
 }
 
 export const mortgageEstimatorTool: CoreTool = {
@@ -164,16 +157,16 @@ export const mortgageEstimatorTool: CoreTool = {
         // CTA for property search - triggers city selection flow
         cta: {
           type: 'city-search-prompt' as const,
-          text: `View Properties Under ${formatCurrency(maxHomePrice)}`,
+          text: `View Properties Under ${formatPrice(maxHomePrice)}`,
           maxPrice: maxHomePrice,
         },
-        formattedSummary: `Max Home Price: ${formatCurrency(maxHomePrice)}
-Down Payment: ${formatCurrency(downPayment)} (${Math.round(downPaymentPercent)}%)
-Mortgage Amount: ${formatCurrency(maxMortgage)}${cmhcPremium > 0 ? `\nCMHC Insurance: ${formatCurrency(cmhcPremium)}` : ''}
-Monthly Payment: ${formatCurrency(monthlyPayment)}`,
+        formattedSummary: `Max Home Price: ${formatPrice(maxHomePrice)}
+Down Payment: ${formatPrice(downPayment)} (${Math.round(downPaymentPercent)}%)
+Mortgage Amount: ${formatPrice(maxMortgage)}${cmhcPremium > 0 ? `\nCMHC Insurance: ${formatPrice(cmhcPremium)}` : ''}
+Monthly Payment: ${formatPrice(monthlyPayment)}`,
         searchSuggestion: {
           maxPrice: maxHomePrice,
-          message: `Would you like me to search for properties under ${formatCurrency(maxHomePrice)}?`
+          message: `Would you like me to search for properties under ${formatPrice(maxHomePrice)}?`
         },
         // CRM integration data
         crmData: {

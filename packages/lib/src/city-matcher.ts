@@ -8,7 +8,7 @@ export interface CityMatch {
   confidence: 'exact' | 'alias' | 'partial' | 'none'
 }
 
-// Canonical GTA cities with their slugs
+// Canonical GTA cities with their slugs (internal - use getAllCities() for external access)
 const GTA_CITIES = [
   { slug: 'toronto', name: 'Toronto' },
   { slug: 'mississauga', name: 'Mississauga' },
@@ -28,7 +28,7 @@ const GTA_CITIES = [
   { slug: 'oshawa', name: 'Oshawa' },
 ] as const
 
-// Aliases and common variations that map to canonical cities
+// Aliases and common variations that map to canonical cities (internal)
 const CITY_ALIASES: Record<string, string> = {
   // Toronto aliases
   'to': 'toronto',

@@ -7,3 +7,7 @@ export { firstTimeBuyerFAQTool } from './tools/first-time-buyer-faq'
 export { sellHomeTool } from './tools/sell-home'
 export { sriCollectiveSystemPrompt } from './prompts/sri-collective'
 export { newhomeShowSystemPrompt } from './prompts/newhomeshow'
+
+// Utilities
+export { calculateLeadQuality, determineLeadQualityFromTimeline } from './utils/lead-scoring'
+export type { LeadQuality, LeadScoringParams } from './utils/lead-scoring'
