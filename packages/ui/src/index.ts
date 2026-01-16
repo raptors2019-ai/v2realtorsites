@@ -20,6 +20,15 @@ export { ProjectCard, ProjectGrid, RegistrationSurvey } from './projects'
 // Chatbot
 export { ChatbotWidget } from './chatbot'
 
+// Calculators
+export {
+  MortgageCalculator,
+  CMHCCalculator,
+  LandTransferTaxCalculator,
+  ClosingCostsCalculator,
+  PropertyTaxCalculator,
+} from './calculators'
+
 // Theme System
 export { ThemeProvider } from './components/ThemeProvider'
 export { ThemeToggle } from './components/ThemeToggle'

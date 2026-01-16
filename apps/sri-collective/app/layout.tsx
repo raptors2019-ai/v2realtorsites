@@ -20,6 +20,7 @@ const headerConfig: HeaderConfig = {
   navigation: [
     { label: 'Home', href: '/' },
     { label: 'Properties', href: '/properties' },
+    { label: 'Tools', href: '/tools' },
     { label: 'Contact', href: '/contact' },
   ],
 }
@@ -37,6 +38,7 @@ const footerConfig: FooterConfig = {
   ],
   quickLinks: [
     { name: 'Properties', href: '/properties' },
+    { name: 'Buyer Tools', href: '/tools' },
     { name: 'Contact', href: '/contact' },
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Terms of Service', href: '/terms' },
