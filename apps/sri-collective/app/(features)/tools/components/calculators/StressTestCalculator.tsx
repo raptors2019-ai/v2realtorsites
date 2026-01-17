@@ -12,12 +12,13 @@ import { CalculatorCard, InputField, SelectField, ResultRow, ResultCard, InfoBox
 
 interface StressTestCalculatorProps {
   onClose: () => void
+  defaultRate?: number
 }
 
-export function StressTestCalculator({ onClose }: StressTestCalculatorProps) {
+export function StressTestCalculator({ onClose, defaultRate }: StressTestCalculatorProps) {
   const [homePrice, setHomePrice] = useState('500000')
   const [downPayment, setDownPayment] = useState('50000')
-  const [contractRate, setContractRate] = useState('4.5')
+  const [contractRate, setContractRate] = useState((defaultRate ?? 4.5).toString())
   const [amortization, setAmortization] = useState('25')
 
   const result = useMemo(() => {

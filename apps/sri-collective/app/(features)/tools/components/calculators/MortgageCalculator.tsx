@@ -13,12 +13,13 @@ import { CalculatorCard, InputField, SelectField, ResultRow, ResultCard, InfoBox
 
 interface MortgageCalculatorProps {
   onClose: () => void
+  defaultRate?: number
 }
 
-export function MortgageCalculator({ onClose }: MortgageCalculatorProps) {
+export function MortgageCalculator({ onClose, defaultRate }: MortgageCalculatorProps) {
   const [homePrice, setHomePrice] = useState('500000')
   const [downPayment, setDownPayment] = useState('50000')
-  const [interestRate, setInterestRate] = useState(DEFAULT_INTEREST_RATE.toString())
+  const [interestRate, setInterestRate] = useState((defaultRate ?? DEFAULT_INTEREST_RATE).toString())
   const [amortization, setAmortization] = useState(DEFAULT_AMORTIZATION_YEARS.toString())
 
   const result = useMemo(() => {

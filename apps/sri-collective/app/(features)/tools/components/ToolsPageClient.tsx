@@ -23,10 +23,15 @@ type CalculatorType =
 interface CalculatorConfig {
   id: CalculatorType
   title: string
+  subtitle?: string
   description: string
   icon: React.ReactNode
   gradient: string
   iconBg: string
+}
+
+interface ToolsPageClientProps {
+  defaultRate?: number
 }
 
 const HomeIcon = () => (
@@ -71,6 +76,63 @@ const BuildingIcon = () => (
   </svg>
 )
 
+const MapIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+)
+
+const BookIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+  </svg>
+)
+
+const HomeValueIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+  </svg>
+)
+
+interface ToolLinkConfig {
+  title: string
+  description: string
+  icon: React.ReactNode
+  gradient: string
+  iconBg: string
+  href: string
+  external?: boolean
+}
+
+const toolLinks: ToolLinkConfig[] = [
+  {
+    title: 'Neighborhood Explorer',
+    description: 'Discover GTA cities and neighborhoods. Find transit, schools, and local attractions.',
+    icon: <MapIcon />,
+    gradient: 'from-emerald-500 to-teal-600',
+    iconBg: 'bg-emerald-500/10 text-emerald-600',
+    href: '/tools/neighborhoods',
+  },
+  {
+    title: 'First-Time Buyer Guide',
+    description: 'Everything you need to know about rebates, incentives, and the buying process.',
+    icon: <BookIcon />,
+    gradient: 'from-amber-500 to-orange-600',
+    iconBg: 'bg-amber-500/10 text-amber-600',
+    href: '/tools/first-time-buyer',
+  },
+  {
+    title: 'Home Valuation',
+    description: 'Find out what your home is worth with a free market valuation.',
+    icon: <HomeValueIcon />,
+    gradient: 'from-rose-500 to-pink-600',
+    iconBg: 'bg-rose-500/10 text-rose-600',
+    href: 'https://srikathiravelu.remaxexperts.net/seller/valuation/',
+    external: true,
+  },
+]
+
 const calculators: CalculatorConfig[] = [
   {
     id: 'mortgage',
@@ -99,6 +161,7 @@ const calculators: CalculatorConfig[] = [
   {
     id: 'cmhc',
     title: 'CMHC Insurance',
+    subtitle: 'Do I need mortgage insurance?',
     description: 'Calculate mortgage insurance premium for down payments under 20%.',
     icon: <ShieldIcon />,
     gradient: 'from-amber-500 to-orange-600',
@@ -107,6 +170,7 @@ const calculators: CalculatorConfig[] = [
   {
     id: 'required-income',
     title: 'Required Income',
+    subtitle: 'How much do I need to earn?',
     description: 'Find out how much income you need to qualify for your target home.',
     icon: <ChartIcon />,
     gradient: 'from-rose-500 to-pink-600',
@@ -115,6 +179,7 @@ const calculators: CalculatorConfig[] = [
   {
     id: 'stress-test',
     title: 'Stress Test',
+    subtitle: 'Will I qualify for a mortgage?',
     description: 'See how the mortgage stress test affects your qualification rate.',
     icon: <TrendingIcon />,
     gradient: 'from-cyan-500 to-blue-600',
@@ -152,13 +217,13 @@ const cardVariants = {
   },
 }
 
-export function ToolsPageClient() {
+export function ToolsPageClient({ defaultRate }: ToolsPageClientProps) {
   const [activeCalculator, setActiveCalculator] = useState<CalculatorType>(null)
 
   const renderCalculator = () => {
     switch (activeCalculator) {
       case 'mortgage':
-        return <MortgageCalculator onClose={() => setActiveCalculator(null)} />
+        return <MortgageCalculator onClose={() => setActiveCalculator(null)} defaultRate={defaultRate} />
       case 'ltt':
         return <LandTransferTaxCalculator onClose={() => setActiveCalculator(null)} />
       case 'closing-costs':
@@ -168,7 +233,7 @@ export function ToolsPageClient() {
       case 'required-income':
         return <RequiredIncomeCalculator onClose={() => setActiveCalculator(null)} />
       case 'stress-test':
-        return <StressTestCalculator onClose={() => setActiveCalculator(null)} />
+        return <StressTestCalculator onClose={() => setActiveCalculator(null)} defaultRate={defaultRate} />
       case 'property-tax':
         return <PropertyTaxCalculator onClose={() => setActiveCalculator(null)} />
       default:
@@ -230,10 +295,15 @@ export function ToolsPageClient() {
                 </div>
 
                 {/* Content */}
-                <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-slate-800 transition-colors">
+                <h3 className="text-lg font-semibold text-slate-900 group-hover:text-slate-800 transition-colors">
                   {calc.title}
                 </h3>
-                <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                {calc.subtitle && (
+                  <p className="text-sm text-primary font-medium mt-0.5 mb-2">
+                    {calc.subtitle}
+                  </p>
+                )}
+                <p className={`text-sm text-slate-500 leading-relaxed mb-4 ${!calc.subtitle ? 'mt-2' : ''}`}>
                   {calc.description}
                 </p>
 
@@ -263,6 +333,80 @@ export function ToolsPageClient() {
                 </div>
               </motion.button>
             ))}
+          </div>
+
+          {/* More Tools Section */}
+          <div className="mt-16">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
+                More Resources
+              </h2>
+              <p className="text-slate-600 max-w-xl mx-auto">
+                Explore neighborhoods, learn about first-time buyer programs, or get a home valuation
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
+              {toolLinks.map((tool) => (
+                <motion.a
+                  key={tool.title}
+                  variants={cardVariants}
+                  href={tool.href}
+                  target={tool.external ? '_blank' : undefined}
+                  rel={tool.external ? 'noopener noreferrer' : undefined}
+                  className="group relative bg-white rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 border border-slate-100 hover:border-slate-200 overflow-hidden"
+                >
+                  {/* Gradient Hover Effect */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-300`} />
+
+                  {/* Top Accent Line */}
+                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${tool.gradient} transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300`} />
+
+                  {/* Icon */}
+                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${tool.iconBg} mb-4 transition-transform duration-300 group-hover:scale-110`}>
+                    {tool.icon}
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-lg font-semibold text-slate-900 group-hover:text-slate-800 transition-colors">
+                    {tool.title}
+                    {tool.external && (
+                      <svg className="inline-block w-4 h-4 ml-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    )}
+                  </h3>
+                  <p className="text-sm text-slate-500 leading-relaxed mt-2 mb-4">
+                    {tool.description}
+                  </p>
+
+                  {/* CTA */}
+                  <div className="flex items-center text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                    {tool.external ? 'Visit Page' : 'Explore'}
+                    <svg
+                      className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                      />
+                    </svg>
+                  </div>
+
+                  {/* Arrow Icon (visible by default on mobile) */}
+                  <div className="absolute top-6 right-6 text-slate-300 group-hover:text-primary transition-colors md:opacity-0 md:group-hover:opacity-100">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </motion.a>
+              ))}
+            </div>
           </div>
 
           {/* Help Text */}

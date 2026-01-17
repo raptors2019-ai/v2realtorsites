@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
+import { getMortgageRates, formatRateDate, type MortgageRates } from '@repo/lib'
 import { ToolsPageClient } from './components/ToolsPageClient'
+
+export const revalidate = 21600 // Revalidate every 6 hours
 
 export const metadata: Metadata = {
   title: 'Real Estate Calculators | Sri Collective Group',
@@ -15,7 +18,9 @@ export const metadata: Metadata = {
   ],
 }
 
-export default function ToolsPage() {
+export default async function ToolsPage() {
+  const rates = await getMortgageRates()
+
   return (
     <div className="min-h-screen bg-[#faf9f7]">
       {/* Hero Section */}
@@ -83,10 +88,43 @@ export default function ToolsPage() {
         </div>
       </section>
 
+      {/* Current Rates Banner */}
+      {rates && (
+        <section className="py-6 bg-white border-b border-slate-100">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm">
+              <div className="flex items-center gap-2 text-slate-500">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Bank of Canada posted rates as of {formatRateDate(rates.asOf)}</span>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500">5-Year Fixed:</span>
+                  <span className="font-semibold text-slate-900">{rates.fiveYear.toFixed(2)}%</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500">3-Year Fixed:</span>
+                  <span className="font-semibold text-slate-900">{rates.threeYear.toFixed(2)}%</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500">Prime:</span>
+                  <span className="font-semibold text-slate-900">{rates.primeRate.toFixed(2)}%</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-center text-xs text-slate-400 mt-2">
+              Actual rates vary by lender. Enter your quoted rate in the calculator for accurate results.
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* Calculators Grid */}
       <section className="py-12 md:py-20 -mt-1">
         <div className="container mx-auto px-4">
-          <ToolsPageClient />
+          <ToolsPageClient defaultRate={rates?.fiveYear} />
         </div>
       </section>
 
