@@ -2,12 +2,13 @@
 export { ChatbotWidget } from './ChatbotWidget'
 
 // Chatbot store and types
-export { useChatbotStore, type Message, type UserPreferences, type ViewedProperty, type MortgageEstimate, type PropertyListing, type PropertySearchResult, type CallToAction, type UrlCallToAction, type CitySearchCallToAction } from './chatbot-store'
+export { useChatbotStore, type Message, type UserPreferences, type ViewedProperty, type MortgageEstimate, type PropertyListing, type PropertySearchResult, type CallToAction, type UrlCallToAction, type CitySearchCallToAction, type MortgageInputCallToAction } from './chatbot-store'
 export { useChatbotHydration, getClientSessionId } from './use-chatbot-hydration'
 
 // Tool result cards
 export { ChatPropertyCard, ChatPropertyList } from './ChatPropertyCard'
 export { ChatMortgageCard } from './ChatMortgageCard'
+export { ChatMortgageInputForm } from './ChatMortgageInputForm'
 
 // Extracted components (for customization/extension)
 export { ChatHeader } from './ChatHeader'

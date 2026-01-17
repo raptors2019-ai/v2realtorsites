@@ -1,5 +1,41 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist, createJSONStorage, StateStorage } from "zustand/middleware";
+
+// Check if user has accepted cookie consent
+export function hasCookieConsent(): boolean {
+  if (typeof window === 'undefined') return false;
+  // Check for cookie consent cookie (set by CookieConsent component)
+  return document.cookie.includes('cookie_consent=accepted');
+}
+
+// Create a consent-gated storage that only persists if consent is given
+function createConsentGatedStorage(): StateStorage {
+  return {
+    getItem: (name: string): string | null => {
+      if (!hasCookieConsent()) return null;
+      try {
+        return localStorage.getItem(name);
+      } catch {
+        return null;
+      }
+    },
+    setItem: (name: string, value: string): void => {
+      if (!hasCookieConsent()) return;
+      try {
+        localStorage.setItem(name, value);
+      } catch {
+        // localStorage unavailable or full
+      }
+    },
+    removeItem: (name: string): void => {
+      try {
+        localStorage.removeItem(name);
+      } catch {
+        // localStorage unavailable
+      }
+    },
+  };
+}
 
 export interface MortgageEstimate {
   maxHomePrice: number;
@@ -34,6 +70,14 @@ export interface PropertySearchResult {
   viewAllUrl: string;
 }
 
+export interface NavigationCTA {
+  url: string;
+  title: string;
+  description: string;
+  buttonText: string;
+  external?: boolean;
+}
+
 // Standard URL-based CTA
 export interface UrlCallToAction {
   type?: 'url';
@@ -48,7 +92,12 @@ export interface CitySearchCallToAction {
   maxPrice: number;
 }
 
-export type CallToAction = UrlCallToAction | CitySearchCallToAction;
+// Mortgage input form CTA - triggers affordability calculator form
+export interface MortgageInputCallToAction {
+  type: 'mortgage-input-form';
+}
+
+export type CallToAction = UrlCallToAction | CitySearchCallToAction | MortgageInputCallToAction;
 
 export interface Message {
   id: string;
@@ -57,14 +106,15 @@ export interface Message {
   timestamp: Date;
   // Optional tool result data for rich rendering
   toolResult?: {
-    type: "propertySearch" | "mortgageEstimate";
-    data: MortgageEstimate | PropertySearchResult;
+    type: "propertySearch" | "mortgageEstimate" | "navigation";
+    data: MortgageEstimate | PropertySearchResult | NavigationCTA;
   };
   // Optional call-to-action button
   cta?: CallToAction;
 }
 
 export interface UserPreferences {
+  firstName?: string; // For personalized returning visitor greeting
   leadType?: "buyer" | "seller" | "investor" | "general";
   budget?: { min?: number; max?: number };
   propertyType?: "detached" | "semi-detached" | "townhouse" | "condo";
@@ -222,7 +272,8 @@ export const useChatbotStore = create<ChatbotState>()(
     }),
     {
       name: "sri-chatbot-storage",
-      storage: createJSONStorage(() => localStorage),
+      // Use consent-gated storage - only persists if cookie consent accepted
+      storage: createJSONStorage(() => createConsentGatedStorage()),
 
       // Only persist these fields (not messages for privacy)
       partialize: (state) => ({

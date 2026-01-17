@@ -5,6 +5,7 @@ export { mortgageEstimatorTool } from './tools/mortgage-estimator'
 export { neighborhoodInfoTool } from './tools/neighborhood-info'
 export { firstTimeBuyerFAQTool } from './tools/first-time-buyer-faq'
 export { sellHomeTool } from './tools/sell-home'
+export { navigateToToolTool } from './tools/navigate-to-tool'
 export { sriCollectiveSystemPrompt } from './prompts/sri-collective'
 export { newhomeShowSystemPrompt } from './prompts/newhomeshow'
 

@@ -32,9 +32,9 @@ describe('createContactTool', () => {
       expect(createContactTool.description).toContain('lead scoring')
     })
 
-    it('should mention value-first approach', () => {
-      expect(createContactTool.description).toContain('ONLY after providing value')
-      expect(createContactTool.description).toContain('Never ask for contact info first')
+    it('should mention contact-first for property search', () => {
+      expect(createContactTool.description).toContain('BEFORE showing listings')
+      expect(createContactTool.description).toContain('phone required')
     })
   })
 
@@ -82,10 +82,9 @@ describe('createContactTool', () => {
     })
 
     describe('warm leads (score 2-4)', () => {
-      it('should score as warm with only phone', async () => {
+      it('should score as warm with only phone (no additional signals)', async () => {
         const result = await createContactTool.execute({
           firstName: 'Alice',
-          email: 'alice@example.com',
           cellPhone: '4165551234',
           leadType: 'buyer',
         })
@@ -94,24 +93,24 @@ describe('createContactTool', () => {
         expect(result.leadQuality).toBe('warm')
       })
 
-      it('should score as warm with pre-approved but no phone', async () => {
+      it('should score as warm with phone + 3-6 months timeline', async () => {
         const result = await createContactTool.execute({
           firstName: 'Charlie',
-          email: 'charlie@example.com',
+          cellPhone: '4165551234',
           leadType: 'buyer',
-          preApproved: true,
+          timeline: '3-6-months',
         })
 
         expect(result.success).toBe(true)
         expect(result.leadQuality).toBe('warm')
       })
 
-      it('should score as warm with 1-3 months timeline', async () => {
+      it('should score as warm with phone + first-time buyer', async () => {
         const result = await createContactTool.execute({
           firstName: 'David',
-          email: 'david@example.com',
+          cellPhone: '4165551234',
           leadType: 'buyer',
-          timeline: '1-3-months',
+          firstTimeBuyer: true,
         })
 
         expect(result.success).toBe(true)
@@ -119,40 +118,33 @@ describe('createContactTool', () => {
       })
     })
 
-    describe('cold leads (score < 2)', () => {
-      it('should score as cold with only email', async () => {
+    describe('hot leads with phone', () => {
+      // Note: With phone now required, all leads start with +3 score
+      // Hot requires >= 5, so need additional signals
+
+      it('should score as hot with phone + just-exploring but has pre-approved', async () => {
         const result = await createContactTool.execute({
           firstName: 'Eve',
-          email: 'eve@example.com',
-          leadType: 'buyer',
-        })
-
-        expect(result.success).toBe(true)
-        expect(result.leadQuality).toBe('cold')
-      })
-
-      it('should score as cold with just-exploring timeline', async () => {
-        const result = await createContactTool.execute({
-          firstName: 'Frank',
-          email: 'frank@example.com',
+          cellPhone: '4165551234',
           leadType: 'buyer',
           timeline: 'just-exploring',
+          preApproved: true, // +3, total = 6 with phone
         })
 
         expect(result.success).toBe(true)
-        expect(result.leadQuality).toBe('cold')
+        expect(result.leadQuality).toBe('hot')
       })
 
-      it('should score as cold with first-time buyer flag only', async () => {
+      it('should score as hot with phone + 1-3 months timeline', async () => {
         const result = await createContactTool.execute({
-          firstName: 'Grace',
-          email: 'grace@example.com',
+          firstName: 'Frank',
+          cellPhone: '4165551234',
           leadType: 'buyer',
-          firstTimeBuyer: true,
+          timeline: '1-3-months', // +2, total = 5 with phone
         })
 
         expect(result.success).toBe(true)
-        expect(result.leadQuality).toBe('cold')
+        expect(result.leadQuality).toBe('hot')
       })
     })
   })
@@ -161,7 +153,7 @@ describe('createContactTool', () => {
     it('should always include website source tag', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
       })
 
@@ -172,7 +164,7 @@ describe('createContactTool', () => {
     it('should include specific source tag', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         source: 'sri-collective',
       })
@@ -185,7 +177,6 @@ describe('createContactTool', () => {
     it('should include lead quality tag', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
         cellPhone: '4165551234',
         leadType: 'buyer',
         preApproved: true,
@@ -198,7 +189,7 @@ describe('createContactTool', () => {
     it('should include timeline tag', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         timeline: '1-3-months',
       })
@@ -210,7 +201,7 @@ describe('createContactTool', () => {
     it('should include lead type tag', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'seller',
       })
 
@@ -221,7 +212,7 @@ describe('createContactTool', () => {
     it('should include qualification tags', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         preApproved: true,
         firstTimeBuyer: true,
@@ -235,7 +226,7 @@ describe('createContactTool', () => {
     it('should include property type tags', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         propertyTypes: ['Detached', 'Townhouse'],
       })
@@ -248,7 +239,7 @@ describe('createContactTool', () => {
     it('should include budget tag', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         averagePrice: 900000,
       })
@@ -260,7 +251,7 @@ describe('createContactTool', () => {
     it('should include location tags', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         preferredCity: 'Richmond Hill',
         preferredNeighborhoods: ['Oak Ridges', 'Mill Pond'],
@@ -275,7 +266,7 @@ describe('createContactTool', () => {
     it('should include urgency factor tags', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         urgencyFactors: ['relocating', 'lease ending'],
       })
@@ -288,7 +279,7 @@ describe('createContactTool', () => {
     it('should include mortgage-estimated tag when estimate provided', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         mortgageEstimate: {
           annualIncome: 120000,
@@ -315,7 +306,7 @@ describe('createContactTool', () => {
     it.each(budgetCases)('should format $budget as $expected', async ({ budget, expected }) => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         averagePrice: budget,
       })
@@ -388,10 +379,9 @@ describe('createContactTool', () => {
       expect(result.message).toContain('within the hour')
     })
 
-    it('should mention call for leads with phone', async () => {
+    it('should mention call for warm leads with phone', async () => {
       const result = await createContactTool.execute({
         firstName: 'Jane',
-        email: 'jane@example.com',
         cellPhone: '4165551234',
         leadType: 'buyer',
       })
@@ -400,15 +390,15 @@ describe('createContactTool', () => {
       expect(result.message).toContain('call')
     })
 
-    it('should mention email for leads without phone', async () => {
+    it('should include phone number in thank you message', async () => {
       const result = await createContactTool.execute({
         firstName: 'Bob',
-        email: 'bob@example.com',
+        cellPhone: '4165559999',
         leadType: 'buyer',
       })
 
       expect(result.success).toBe(true)
-      expect(result.message).toContain('bob@example.com')
+      expect(result.message).toContain('4165559999')
     })
   })
 
@@ -416,7 +406,7 @@ describe('createContactTool', () => {
     it('should handle seller lead type', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'seller',
         propertyAddress: '123 Main St',
         reasonForSelling: 'Downsizing',
@@ -433,7 +423,7 @@ describe('createContactTool', () => {
     it('should use mortgage estimate for budget tag', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         mortgageEstimate: {
           annualIncome: 120000,
@@ -449,7 +439,7 @@ describe('createContactTool', () => {
     it('should prefer explicit averagePrice over mortgage estimate', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
         averagePrice: 1200000,
         mortgageEstimate: {
@@ -498,7 +488,7 @@ describe('createContactTool', () => {
     it('should return contactId on success', async () => {
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
       })
 
@@ -518,7 +508,7 @@ describe('createContactTool', () => {
 
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
       })
 
@@ -533,13 +523,149 @@ describe('createContactTool', () => {
 
       const result = await createContactTool.execute({
         firstName: 'Test',
-        email: 'test@example.com',
+        cellPhone: '4165551234',
         leadType: 'buyer',
       })
 
       expect(result.success).toBe(false)
       expect(result.error).toBe('Network error')
       expect(result.message).toBeDefined() // Should still have friendly fallback
+    })
+  })
+
+  describe('new enhanced fields', () => {
+    // Reset mock to success state before each test in this block
+    beforeEach(() => {
+      ;(BoldTrailClient as jest.Mock).mockImplementation(() => ({
+        createContact: jest.fn().mockResolvedValue({
+          success: true,
+          contactId: 'test-contact-123',
+        }),
+      }))
+    })
+
+    describe('viewedListings', () => {
+      it('should include viewed listings count in hashtags', async () => {
+        const result = await createContactTool.execute({
+          firstName: 'Test',
+          cellPhone: '4165551234',
+          leadType: 'buyer',
+          viewedListings: [
+            { listingId: '123', address: '123 Main St', price: 900000 },
+            { listingId: '456', address: '456 Oak Ave', price: 850000 },
+          ],
+        })
+
+        expect(result.success).toBe(true)
+        expect(result.hashtags).toContain('viewed-2-listings')
+      })
+    })
+
+    describe('engagement metrics', () => {
+      it('should tag mortgage calculator usage', async () => {
+        const result = await createContactTool.execute({
+          firstName: 'Test',
+          cellPhone: '4165551234',
+          leadType: 'buyer',
+          engagement: {
+            toolsUsed: ['mortgageEstimator'],
+            propertiesViewed: 0,
+            conversationTopics: ['mortgage'],
+          },
+        })
+
+        expect(result.success).toBe(true)
+        expect(result.hashtags).toContain('engaged-mortgage-calc')
+      })
+
+      it('should tag neighborhood info usage', async () => {
+        const result = await createContactTool.execute({
+          firstName: 'Test',
+          cellPhone: '4165551234',
+          leadType: 'buyer',
+          engagement: {
+            toolsUsed: ['neighborhoodInfo'],
+            propertiesViewed: 0,
+            conversationTopics: ['neighborhoods'],
+          },
+        })
+
+        expect(result.success).toBe(true)
+        expect(result.hashtags).toContain('engaged-neighborhoods')
+      })
+
+      it('should tag FAQ usage', async () => {
+        const result = await createContactTool.execute({
+          firstName: 'Test',
+          cellPhone: '4165551234',
+          leadType: 'buyer',
+          engagement: {
+            toolsUsed: ['firstTimeBuyerFAQ'],
+            propertiesViewed: 0,
+            conversationTopics: ['first-time-buyer'],
+          },
+        })
+
+        expect(result.success).toBe(true)
+        expect(result.hashtags).toContain('engaged-faq')
+      })
+
+      it('should tag multiple property searches', async () => {
+        const result = await createContactTool.execute({
+          firstName: 'Test',
+          cellPhone: '4165551234',
+          leadType: 'buyer',
+          engagement: {
+            toolsUsed: ['propertySearch', 'propertySearch', 'propertySearch'],
+            propertiesViewed: 6,
+            conversationTopics: [],
+          },
+        })
+
+        expect(result.success).toBe(true)
+        expect(result.hashtags).toContain('multiple-searches')
+        expect(result.hashtags).toContain('viewed-5-plus-listings')
+      })
+
+      it('should tag 3+ properties viewed', async () => {
+        const result = await createContactTool.execute({
+          firstName: 'Test',
+          cellPhone: '4165551234',
+          leadType: 'buyer',
+          engagement: {
+            toolsUsed: ['propertySearch'],
+            propertiesViewed: 4,
+            conversationTopics: [],
+          },
+        })
+
+        expect(result.success).toBe(true)
+        expect(result.hashtags).toContain('viewed-3-plus-listings')
+      })
+    })
+
+    describe('conversationSummary', () => {
+      it('should include conversation summary in notes', async () => {
+        const mockCreateContact = jest.fn().mockResolvedValue({
+          success: true,
+          contactId: 'test-123',
+        })
+        ;(BoldTrailClient as jest.Mock).mockImplementation(() => ({
+          createContact: mockCreateContact,
+        }))
+
+        await createContactTool.execute({
+          firstName: 'Test',
+          cellPhone: '4165551234',
+          leadType: 'buyer',
+          conversationSummary: 'Looking for 3BR detached in Mississauga, relocating for work in March',
+        })
+
+        expect(mockCreateContact).toHaveBeenCalled()
+        const callArgs = mockCreateContact.mock.calls[0][0]
+        const notes = JSON.parse(callArgs.customFields.notes)
+        expect(notes.conversationSummary).toBe('Looking for 3BR detached in Mississauga, relocating for work in March')
+      })
     })
   })
 })

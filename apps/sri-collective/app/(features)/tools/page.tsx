@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { getMortgageRates, formatRateDate, type MortgageRates } from '@repo/lib'
 import { ToolsPageClient } from './components/ToolsPageClient'
+import { MoreToolsSlider } from './components/MoreToolsSlider'
 
 export const revalidate = 21600 // Revalidate every 6 hours
 
@@ -127,6 +128,9 @@ export default async function ToolsPage() {
           <ToolsPageClient defaultRate={rates?.fiveYear} />
         </div>
       </section>
+
+      {/* More Tools Slider */}
+      <MoreToolsSlider />
 
       {/* CTA Section */}
       <section className="py-16 bg-white border-t border-slate-100">

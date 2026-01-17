@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useChatbotStore, MortgageEstimate, PropertySearchResult, CallToAction } from "./chatbot-store";
+import { useChatbotStore, MortgageEstimate, PropertySearchResult, CallToAction, hasCookieConsent } from "./chatbot-store";
 import { trackChatbotInteraction, trackLeadFormSubmit } from "@repo/analytics";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessages } from "./ChatMessages";
@@ -10,6 +10,28 @@ import { ChatInput } from "./ChatInput";
 import { ChatQuickActions } from "./ChatQuickActions";
 import { SurveyFlow, SurveyState } from "./survey";
 import type { CityMatch } from "@repo/lib";
+
+// Interface for stored context sent to API
+interface StoredContext {
+  contact?: {
+    name?: string;
+    phone?: string | null;
+    email?: string | null;
+  };
+  preferences?: {
+    budget?: { min?: number; max?: number };
+    propertyType?: string;
+    bedrooms?: number;
+    locations?: string[];
+    timeline?: string;
+  };
+  viewedProperties?: Array<{
+    listingId: string;
+    address: string;
+    price: number;
+  }>;
+  lastVisit?: string;
+}
 
 // Floating button component
 function FloatingButton({ onClick, isOpen }: { onClick: () => void; isOpen: boolean }) {
@@ -94,17 +116,100 @@ const PROMPTS = [
 
 export function ChatbotWidget() {
   const router = useRouter();
-  const { isOpen, isPromptVisible, hasInteracted, messages, isLoading, toggleOpen, minimize, dismissPrompt, addMessage, setLoading } = useChatbotStore();
+  const { isOpen, isPromptVisible, hasInteracted, messages, isLoading, toggleOpen, minimize, dismissPrompt, addMessage, setLoading, preferences, viewedProperties, phone, email, setContactId, updatePreferences } = useChatbotStore();
   const [input, setInput] = useState("");
   const [survey, setSurvey] = useState<SurveyState>({ step: "idle" });
   const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [isMortgageCalculating, setIsMortgageCalculating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Rehydrate from localStorage only if cookie consent is accepted
+  useEffect(() => {
+    if (hasCookieConsent()) {
+      useChatbotStore.persist.rehydrate();
+    }
+    setIsHydrated(true);
+  }, []);
+
+  // Build stored context for returning visitors
+  const storedContext = useMemo((): StoredContext | null => {
+    if (!isHydrated) return null;
+
+    // Only include if we have meaningful data
+    const hasContactInfo = preferences.firstName && phone;
+    const hasPreferences = preferences.propertyType || preferences.budget || preferences.locations?.length;
+
+    if (!hasContactInfo && !hasPreferences && viewedProperties.length === 0) {
+      return null;
+    }
+
+    return {
+      contact: hasContactInfo ? {
+        name: preferences.firstName,
+        phone,
+        email,
+      } : undefined,
+      preferences: hasPreferences ? {
+        budget: preferences.budget,
+        propertyType: preferences.propertyType,
+        bedrooms: preferences.bedrooms,
+        locations: preferences.locations,
+        timeline: preferences.timeline,
+      } : undefined,
+      viewedProperties: viewedProperties.slice(-5).map(p => ({
+        listingId: p.listingId,
+        address: p.address,
+        price: p.price,
+      })),
+      lastVisit: preferences.capturedAt,
+    };
+  }, [isHydrated, preferences, viewedProperties, phone, email]);
+
+  // Check if this is a returning visitor with contact info
+  const isReturningVisitor = Boolean(storedContext?.contact?.name && storedContext?.contact?.phone);
+
+  // Generate personalized welcome message for returning visitors
+  const welcomeMessage = useMemo(() => {
+    if (!isHydrated || !isReturningVisitor || !storedContext?.contact?.name) {
+      return null; // Use default welcome
+    }
+
+    const name = storedContext.contact.name;
+    const propertyType = storedContext.preferences?.propertyType;
+    const location = storedContext.preferences?.locations?.[0];
+
+    if (propertyType && location) {
+      return `Welcome back, ${name}! Last time you were looking at ${propertyType} homes in ${location}. Want to continue your search or explore something new?`;
+    } else if (propertyType) {
+      return `Welcome back, ${name}! Last time you were looking at ${propertyType} homes. Want to continue your search or look at something different?`;
+    } else if (location) {
+      return `Welcome back, ${name}! Last time you were interested in ${location}. Want to continue exploring or search somewhere new?`;
+    }
+
+    return `Welcome back, ${name}! Great to see you again. What can I help you find today?`;
+  }, [isHydrated, isReturningVisitor, storedContext]);
+
+  // Override the first message for returning visitors
+  const displayMessages = useMemo(() => {
+    if (!welcomeMessage || messages.length === 0) {
+      return messages;
+    }
+
+    // Replace the welcome message with personalized one
+    return messages.map((msg, index) => {
+      if (index === 0 && msg.id === 'welcome' && msg.role === 'assistant') {
+        return { ...msg, content: welcomeMessage };
+      }
+      return msg;
+    });
+  }, [messages, welcomeMessage]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading, survey.step]);
+  }, [displayMessages, isLoading, survey.step]);
 
   // Focus input when chat opens and track interaction
   useEffect(() => {
@@ -132,12 +237,23 @@ export function ChatbotWidget() {
     setLoading(true);
 
     try {
+      // Build request body - include storedContext for returning visitors
+      const requestBody: {
+        messages: Array<{ role: string; content: string }>;
+        storedContext?: StoredContext;
+      } = {
+        messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: content.trim() }],
+      };
+
+      // Include stored context for personalization (only on first few messages)
+      if (storedContext && messages.length <= 2) {
+        requestBody.storedContext = storedContext;
+      }
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: content.trim() }],
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) throw new Error("Failed to send message");
@@ -371,7 +487,120 @@ export function ChatbotWidget() {
     router.push(`/properties?budgetMax=${maxPrice}`);
   };
 
-  const showQuickActions = messages.length === 1 && !isLoading && survey.step === "idle";
+  // Mortgage unlock handler - save contact and show city search
+  const handleMortgageUnlock = async (contact: { phone: string; email?: string }, maxPrice: number) => {
+    trackChatbotInteraction('lead');
+    trackLeadFormSubmit('chatbot');
+
+    // Store contact info locally
+    setContactId('pending', contact.phone, contact.email);
+    updatePreferences({ budget: { max: maxPrice } });
+
+    // Send to API to save contact in CRM
+    try {
+      const contactPrompt = `Use the createContact tool to save this lead who unlocked their mortgage estimate:
+- cellPhone: "${contact.phone}"
+- email: "${contact.email || ''}"
+- leadType: "buyer"
+- source: "sri-collective"
+- averagePrice: ${maxPrice}
+- conversationSummary: "Used mortgage calculator, budget up to ${new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(maxPrice)}"`;
+
+      // Fire and forget - don't block the UI
+      fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: contactPrompt }]
+        }),
+      }).catch(console.error);
+
+      // Add assistant message asking about city
+      addMessage({
+        role: "assistant",
+        content: "Thanks! Your full results are now unlocked. Which city would you like to search for properties in?",
+        cta: {
+          type: 'city-search-prompt' as const,
+          text: `View Properties Under ${new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(maxPrice)}`,
+          maxPrice,
+        }
+      });
+    } catch (error) {
+      console.error("Error saving contact:", error);
+      // Still show city search even if CRM save fails
+      addMessage({
+        role: "assistant",
+        content: "Thanks! Which city would you like to search for properties in?",
+        cta: {
+          type: 'city-search-prompt' as const,
+          text: `View Properties Under ${new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(maxPrice)}`,
+          maxPrice,
+        }
+      });
+    }
+  };
+
+  // Mortgage input form handler - call API to calculate and show results
+  const handleMortgageInput = async (data: { annualIncome: number; downPayment: number; monthlyDebts: number }) => {
+    setIsMortgageCalculating(true);
+    trackChatbotInteraction('message');
+
+    // Create the message that triggers the mortgage estimator tool
+    const userMessage = `Calculate my affordability with annual income of $${data.annualIncome.toLocaleString()}, down payment of $${data.downPayment.toLocaleString()}, and monthly debts of $${data.monthlyDebts.toLocaleString()}. Use the estimateMortgage tool.`;
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: userMessage }],
+          storedContext: storedContext,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to calculate");
+
+      const result = await response.json();
+
+      // Parse the result for mortgage estimate data
+      if (result.toolResults?.mortgageEstimate) {
+        addMessage({
+          role: "assistant",
+          content: result.content || "Here's your affordability estimate based on Canadian lending rules.",
+          toolResult: {
+            type: "mortgageEstimate",
+            data: result.toolResults.mortgageEstimate,
+          },
+        });
+      } else {
+        // Fallback if tool result format is different
+        addMessage({
+          role: "assistant",
+          content: result.content || "I calculated your affordability. Based on your inputs, here are the results.",
+        });
+      }
+    } catch (error) {
+      console.error("Error calculating mortgage:", error);
+      addMessage({
+        role: "assistant",
+        content: "Sorry, I had trouble calculating your affordability. Please try again or contact us directly at 416-786-0431.",
+      });
+    } finally {
+      setIsMortgageCalculating(false);
+    }
+  };
+
+  // Show mortgage input form when user clicks mortgage calculator quick action
+  const showMortgageInputForm = () => {
+    trackChatbotInteraction('message');
+    addMessage({
+      role: "assistant",
+      content: "Let me help you calculate what you can afford. Fill in the details below:",
+      cta: { type: 'mortgage-input-form' as const },
+    });
+  };
+
+  const showQuickActions = displayMessages.length === 1 && !isLoading && survey.step === "idle";
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999]">
@@ -381,10 +610,15 @@ export function ChatbotWidget() {
 
           <div className="flex-1 p-5 overflow-y-auto bg-[#f8f9fa] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-stone-100 [&::-webkit-scrollbar-thumb]:bg-[#0a1628] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-[#1a2d4d]">
             <ChatMessages
-              messages={messages}
+              messages={displayMessages}
               isLoading={isLoading}
+              hasContactInfo={Boolean(phone)}
+              isMortgageCalculating={isMortgageCalculating}
               onCitySelect={handleCitySelect}
               onSearchAll={handleSearchAll}
+              onToolSelect={sendMessage}
+              onMortgageUnlock={handleMortgageUnlock}
+              onMortgageInput={handleMortgageInput}
             />
 
             <SurveyFlow
@@ -406,7 +640,7 @@ export function ChatbotWidget() {
           {showQuickActions && (
             <ChatQuickActions
               onDreamHome={startDreamHomeSurvey}
-              onMortgageCalculator={() => sendMessage("I'd like to calculate what I can afford.")}
+              onMortgageCalculator={showMortgageInputForm}
               onExploreNeighborhoods={() => sendMessage("Tell me about neighborhoods in the GTA.")}
               onContactUs={handleContactUs}
             />

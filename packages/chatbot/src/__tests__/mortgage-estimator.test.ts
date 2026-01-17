@@ -322,9 +322,9 @@ describe('mortgageEstimatorTool', () => {
       })
 
       expect(result.success).toBe(true)
-      // formattedSummary and CTA contain currency-formatted values
+      // formattedSummary and searchSuggestion contain currency-formatted values
       expect(result.formattedSummary).toContain('$')
-      expect(result.cta.text).toContain('$')
+      expect(result.searchSuggestion.message).toContain('$')
     })
 
     it('should round max home price to nearest $1000', async () => {

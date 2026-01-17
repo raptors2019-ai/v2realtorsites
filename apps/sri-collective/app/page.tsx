@@ -4,6 +4,7 @@ import {
   AnimatedHeroContent,
   AnimatedHeroItem,
   AnimatedHeroButtons,
+  CalculatorsSlider,
 } from "@repo/ui";
 import Link from "next/link";
 
@@ -165,6 +166,8 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Calculators Slider */}
+      <CalculatorsSlider />
 
       {/* Sell Your Home Section */}
       <section className="py-28 bg-gradient-to-b from-cream to-white">

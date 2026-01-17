@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { Message, MortgageEstimate, PropertySearchResult, CitySearchCallToAction } from "./chatbot-store";
+import { Message, MortgageEstimate, PropertySearchResult, NavigationCTA, CitySearchCallToAction } from "./chatbot-store";
 import { ChatMortgageCard } from "./ChatMortgageCard";
+import { ChatMortgageInputForm } from "./ChatMortgageInputForm";
 import { ChatPropertyList } from "./ChatPropertyCard";
 import { ChatCitySearch } from "./ChatCitySearch";
+import { ChatNavigationCTA } from "./ChatNavigationCTA";
+import { ToolDiscoveryWidgets } from "./ToolDiscoveryWidgets";
 import type { CityMatch } from "@repo/lib";
 
 // Markdown components for styling
@@ -59,19 +62,27 @@ interface MessageBubbleProps {
   message: Message;
   isLatest?: boolean;
   showCitySearch?: boolean;
+  showMortgageInput?: boolean;
+  hasContactInfo?: boolean;
+  isMortgageCalculating?: boolean;
   onCitySelect?: (city: CityMatch, maxPrice: number) => void;
   onSearchAll?: (maxPrice: number) => void;
+  onToolSelect?: (prompt: string) => void;
+  onMortgageUnlock?: (contact: { phone: string; email?: string }, maxPrice: number) => void;
+  onMortgageInput?: (data: { annualIncome: number; downPayment: number; monthlyDebts: number }) => void;
 }
 
-export function MessageBubble({ message, isLatest, showCitySearch, onCitySelect, onSearchAll }: MessageBubbleProps) {
+export function MessageBubble({ message, isLatest, showCitySearch, showMortgageInput, hasContactInfo, isMortgageCalculating, onCitySelect, onSearchAll, onToolSelect, onMortgageUnlock, onMortgageInput }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const hasMortgageData = message.toolResult?.type === "mortgageEstimate";
   const hasPropertyData = message.toolResult?.type === "propertySearch";
-  const hasToolData = hasMortgageData || hasPropertyData;
+  const hasNavigationData = message.toolResult?.type === "navigation";
+  const hasToolData = hasMortgageData || hasPropertyData || hasNavigationData;
 
-  // Check if this message has a city-search-prompt CTA
+  // Check CTA types
   const hasCitySearchCta = message.cta?.type === 'city-search-prompt';
-  const hasUrlCta = message.cta && message.cta.type !== 'city-search-prompt';
+  const hasMortgageInputCta = message.cta?.type === 'mortgage-input-form';
+  const hasUrlCta = message.cta && message.cta.type !== 'city-search-prompt' && message.cta.type !== 'mortgage-input-form';
 
   return (
     <div
@@ -91,7 +102,11 @@ export function MessageBubble({ message, isLatest, showCitySearch, onCitySelect,
         {/* Render mortgage card if available */}
         {hasMortgageData && !isUser && (
           <div className="space-y-3">
-            <ChatMortgageCard {...(message.toolResult!.data as MortgageEstimate)} />
+            <ChatMortgageCard
+              {...(message.toolResult!.data as MortgageEstimate)}
+              isLocked={!hasContactInfo}
+              onUnlock={onMortgageUnlock ? (contact) => onMortgageUnlock(contact, (message.toolResult!.data as MortgageEstimate).maxHomePrice) : undefined}
+            />
             {message.content && (
               <div className="bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm px-4 py-3">
                 <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
@@ -108,11 +123,18 @@ export function MessageBubble({ message, isLatest, showCitySearch, onCitySelect,
             {/* URL CTA Button - fallback for standard CTAs */}
             {hasUrlCta && (
               <Link
-                href={(message.cta as { url: string }).url}
+                href={(message.cta as { url: string; text: string }).url}
                 className="block w-full py-3 px-4 bg-gradient-to-r from-[#0a1628] to-[#1a2d4d] text-white text-center rounded-xl font-semibold text-sm hover:from-[#1a2d4d] hover:to-[#0a1628] transition-all duration-300 shadow-md hover:shadow-lg"
               >
-                {message.cta!.text}
+                {(message.cta as { url: string; text: string }).text}
               </Link>
+            )}
+            {/* Tool Discovery Widgets */}
+            {isLatest && onToolSelect && (
+              <ToolDiscoveryWidgets
+                currentTool="mortgage"
+                onToolSelect={onToolSelect}
+              />
             )}
           </div>
         )}
@@ -131,17 +153,53 @@ export function MessageBubble({ message, isLatest, showCitySearch, onCitySelect,
               listings={(message.toolResult!.data as PropertySearchResult).listings}
               viewAllUrl={(message.toolResult!.data as PropertySearchResult).viewAllUrl}
             />
+            {/* Tool Discovery Widgets */}
+            {isLatest && onToolSelect && (
+              <ToolDiscoveryWidgets
+                currentTool="property-search"
+                onToolSelect={onToolSelect}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Render navigation CTA if available */}
+        {hasNavigationData && !isUser && (
+          <div className="space-y-3">
+            {/* Optional intro message */}
+            {message.content && (
+              <div className="bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm px-4 py-3">
+                <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
+              </div>
+            )}
+            {/* Navigation CTA card */}
+            <ChatNavigationCTA {...(message.toolResult!.data as NavigationCTA)} />
           </div>
         )}
 
         {/* Regular message bubble */}
-        {!hasToolData && (
+        {!hasToolData && !hasMortgageInputCta && (
           <div className={isUser ? "" : "bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm px-4 py-3"}>
             {isUser ? (
               <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
             ) : (
               <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
             )}
+          </div>
+        )}
+
+        {/* Mortgage Input Form - shown when message has mortgage-input-form CTA */}
+        {hasMortgageInputCta && showMortgageInput && !isUser && (
+          <div className="space-y-3">
+            {message.content && (
+              <div className="bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm px-4 py-3">
+                <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
+              </div>
+            )}
+            <ChatMortgageInputForm
+              onSubmit={onMortgageInput || (() => {})}
+              isLoading={isMortgageCalculating}
+            />
           </div>
         )}
       </div>
@@ -153,16 +211,30 @@ export function MessageBubble({ message, isLatest, showCitySearch, onCitySelect,
 interface ChatMessagesProps {
   messages: Message[];
   isLoading?: boolean;
+  hasContactInfo?: boolean;
+  isMortgageCalculating?: boolean;
   onCitySelect?: (city: CityMatch, maxPrice: number) => void;
   onSearchAll?: (maxPrice: number) => void;
+  onToolSelect?: (prompt: string) => void;
+  onMortgageUnlock?: (contact: { phone: string; email?: string }, maxPrice: number) => void;
+  onMortgageInput?: (data: { annualIncome: number; downPayment: number; monthlyDebts: number }) => void;
 }
 
-export function ChatMessages({ messages, isLoading, onCitySelect, onSearchAll }: ChatMessagesProps) {
-  // Find the latest message with a city-search-prompt CTA (manual approach for ES5 compatibility)
+export function ChatMessages({ messages, isLoading, hasContactInfo, isMortgageCalculating, onCitySelect, onSearchAll, onToolSelect, onMortgageUnlock, onMortgageInput }: ChatMessagesProps) {
+  // Find the latest message with a city-search-prompt CTA
   let latestCitySearchIndex = -1;
   for (let i = messages.length - 1; i >= 0; i--) {
     if (messages[i].cta?.type === 'city-search-prompt') {
       latestCitySearchIndex = i;
+      break;
+    }
+  }
+
+  // Find the latest message with a mortgage-input-form CTA
+  let latestMortgageInputIndex = -1;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].cta?.type === 'mortgage-input-form') {
+      latestMortgageInputIndex = i;
       break;
     }
   }
@@ -175,8 +247,14 @@ export function ChatMessages({ messages, isLoading, onCitySelect, onSearchAll }:
           message={message}
           isLatest={index === messages.length - 1}
           showCitySearch={index === latestCitySearchIndex}
+          showMortgageInput={index === latestMortgageInputIndex}
+          hasContactInfo={hasContactInfo}
+          isMortgageCalculating={isMortgageCalculating}
           onCitySelect={onCitySelect}
           onSearchAll={onSearchAll}
+          onToolSelect={onToolSelect}
+          onMortgageUnlock={onMortgageUnlock}
+          onMortgageInput={onMortgageInput}
         />
       ))}
       {isLoading && <TypingIndicator />}

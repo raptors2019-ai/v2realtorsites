@@ -11,6 +11,12 @@ export { CopyButton } from './components/CopyButton'
 // BentoGrid
 export { BentoGrid, BentoCard, BentoFeatureCard, type BentoCardSize } from './components/BentoGrid'
 
+// ToolsSlider
+export { ToolsSlider } from './components/ToolsSlider'
+
+// CalculatorsSlider
+export { CalculatorsSlider } from './components/CalculatorsSlider'
+
 // Properties
 export { PropertyCard, PropertyCardCarousel, PropertyGallery, PropertyGrid, PropertyFilters, PropertiesPageClient, PropertySurvey, BackButton, SimilarProperties } from './properties'
 
