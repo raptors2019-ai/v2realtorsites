@@ -1,69 +1,118 @@
 import type { Metadata } from 'next'
-import { ToolsPageClient } from './ToolsPageClient'
+import { ToolsPageClient } from './components/ToolsPageClient'
 
 export const metadata: Metadata = {
-  title: 'Home Buyer Tools & Calculators | Sri Collective Group',
-  description: 'Free mortgage calculator, CMHC insurance calculator, land transfer tax calculator, closing costs estimator, and property tax calculator for Ontario home buyers.',
+  title: 'Real Estate Calculators | Sri Collective Group',
+  description:
+    'Free real estate calculators for home buyers in the GTA. Calculate mortgage payments, land transfer tax, closing costs, CMHC insurance, and more.',
   keywords: [
     'mortgage calculator',
+    'land transfer tax calculator',
+    'closing costs calculator',
     'CMHC calculator',
-    'land transfer tax calculator Ontario',
-    'Toronto land transfer tax',
-    'closing costs Ontario',
-    'property tax calculator',
-    'first time home buyer',
-    'home buying tools',
+    'Toronto real estate',
+    'GTA home buyers',
   ],
-  openGraph: {
-    title: 'Home Buyer Tools & Calculators | Sri Collective Group',
-    description: 'Calculate your mortgage payments, CMHC insurance, land transfer taxes, closing costs, and property taxes. Free tools for Ontario home buyers.',
-    type: 'website',
-  },
 }
 
 export default function ToolsPage() {
   return (
-    <main className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#faf9f7]">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary to-primary/80 text-white py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl">
-            <h1 className="text-3xl md:text-5xl font-bold mb-4">
-              Home Buyer Tools
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#1a2d4d] to-[#0a1628]">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-3xl" />
+          <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-accent/10 to-transparent blur-3xl" />
+          <div className="absolute top-1/4 left-1/3 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-white/5 to-transparent blur-2xl" />
+          {/* Grid pattern overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                               linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+              backgroundSize: '60px 60px'
+            }}
+          />
+        </div>
+
+        <div className="relative container mx-auto px-4 py-20 md:py-28">
+          <div className="max-w-3xl mx-auto text-center">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 mb-6">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-sm font-medium text-white/90">Free Calculators</span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+              Real Estate{' '}
+              <span className="text-gradient-primary bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
+                Calculators
+              </span>
             </h1>
-            <p className="text-lg md:text-xl text-white/90">
-              Plan your home purchase with our free calculators. Estimate your mortgage payments,
-              understand CMHC insurance, calculate land transfer taxes, and know exactly what
-              you&apos;ll need on closing day.
+
+            <p className="text-lg md:text-xl text-white/70 leading-relaxed max-w-2xl mx-auto">
+              Plan your home purchase with confidence. Our suite of calculators helps you
+              estimate costs, understand taxes, and make informed decisions.
             </p>
+
+            {/* Quick Stats */}
+            <div className="flex flex-wrap justify-center gap-8 mt-12">
+              {[
+                { value: '7', label: 'Calculators' },
+                { value: '16+', label: 'GTA Cities' },
+                { value: '100%', label: 'Free to Use' },
+              ].map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <div className="text-3xl font-bold text-white">{stat.value}</div>
+                  <div className="text-sm text-white/50 mt-1">{stat.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+        {/* Bottom Wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 60" fill="none" className="w-full h-auto">
+            <path
+              d="M0 60V30C240 10 480 0 720 0C960 0 1200 10 1440 30V60H0Z"
+              fill="#faf9f7"
+            />
+          </svg>
         </div>
       </section>
 
-      {/* Calculators */}
-      <ToolsPageClient />
+      {/* Calculators Grid */}
+      <section className="py-12 md:py-20 -mt-1">
+        <div className="container mx-auto px-4">
+          <ToolsPageClient />
+        </div>
+      </section>
 
       {/* CTA Section */}
-      <section className="bg-white py-16">
+      <section className="py-16 bg-white border-t border-slate-100">
         <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-              Ready to Start Your Home Search?
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
+              Ready to Find Your Dream Home?
             </h2>
-            <p className="text-gray-600 mb-8">
-              Now that you know your numbers, let us help you find the perfect home.
-              Our team is here to guide you through every step of the buying process.
+            <p className="text-slate-600 mb-8">
+              Our team of experts is here to guide you through every step of the home buying process.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/properties"
-                className="inline-flex items-center justify-center px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                className="btn-primary inline-flex items-center justify-center gap-2 rounded-xl"
               >
                 Browse Properties
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
               </a>
               <a
                 href="/contact"
-                className="inline-flex items-center justify-center px-6 py-3 border-2 border-primary text-primary font-semibold rounded-lg hover:bg-primary/5 transition-colors"
+                className="btn-outline-primary inline-flex items-center justify-center gap-2 rounded-xl"
               >
                 Contact Us
               </a>
@@ -72,56 +121,20 @@ export default function ToolsPage() {
         </div>
       </section>
 
-      {/* External Resources */}
-      <section className="bg-gray-100 py-12">
+      {/* Disclaimer */}
+      <section className="py-8 bg-slate-50 border-t border-slate-200">
         <div className="container mx-auto px-4">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-            Additional Resources
-          </h3>
-          <div className="grid gap-4 md:grid-cols-3 max-w-4xl mx-auto">
-            <a
-              href="https://www.housesigma.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center"
-            >
-              <p className="font-medium text-gray-900">HouseSigma</p>
-              <p className="text-sm text-gray-500">View sold prices &amp; history</p>
-            </a>
-            <a
-              href="https://www.ratehub.ca/best-mortgage-rates"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center"
-            >
-              <p className="font-medium text-gray-900">RateHub</p>
-              <p className="text-sm text-gray-500">Compare mortgage rates</p>
-            </a>
-            <a
-              href="https://www.cmhc-schl.gc.ca"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center"
-            >
-              <p className="font-medium text-gray-900">CMHC</p>
-              <p className="text-sm text-gray-500">Official insurance info</p>
-            </a>
+          <div className="max-w-3xl mx-auto">
+            <p className="text-sm text-slate-500 leading-relaxed text-center">
+              <strong className="text-slate-600">Disclaimer:</strong> These calculators provide estimates for
+              informational purposes only and do not constitute financial advice.
+              Actual costs may vary based on your specific situation, lender
+              requirements, and market conditions. Please consult with a mortgage
+              professional for accurate pre-approval and financial planning.
+            </p>
           </div>
         </div>
       </section>
-
-      {/* Disclaimer */}
-      <section className="bg-white py-8 border-t">
-        <div className="container mx-auto px-4">
-          <p className="text-xs text-gray-500 text-center max-w-3xl mx-auto">
-            <strong>Disclaimer:</strong> These calculators provide estimates for informational purposes only
-            and should not be relied upon for financial decisions. Actual costs may vary based on your
-            specific situation. Mortgage rates, tax rates, and fees are subject to change. We recommend
-            consulting with a mortgage professional, real estate lawyer, and accountant before making
-            any home purchase decisions.
-          </p>
-        </div>
-      </section>
-    </main>
+    </div>
   )
 }

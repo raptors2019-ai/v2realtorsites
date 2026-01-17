@@ -17,6 +17,7 @@
     "@repo/crm": "*",
     "@repo/chatbot": "*",
     "@repo/analytics": "*",
+    "@repo/calculators": "*",
     "@next/third-parties": "^16.0.7",
     "next": "16.0.7",
     "styled-jsx": "^5.1.6",

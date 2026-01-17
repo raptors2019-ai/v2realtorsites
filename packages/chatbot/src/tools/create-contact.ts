@@ -15,16 +15,16 @@ function formatBudgetHashtag(budget: number): string {
 
 export const createContactTool: CoreTool = {
   description: `[PURPOSE] Create a contact in BoldTrail CRM with full lead scoring and preference tagging.
-[WHEN TO USE] ONLY after providing value (showing listings, mortgage estimate, neighborhood info). Never ask for contact info first.
-[IMPORTANT] Ask for email first, then cell phone. Include ALL captured data from conversation: mortgage estimates, neighborhood interests, urgency factors.
+[WHEN TO USE] For property search: BEFORE showing listings (phone required). For value tools: AFTER showing value.
+[IMPORTANT] Phone is REQUIRED for property search. Include ALL captured data: mortgage estimates, viewed listings, conversation context.
 [OUTPUT] Returns success status, contactId, and thank you message. CRM automatically scores and tags the lead.`,
 
   parameters: z.object({
     firstName: z.string().describe("Contact's first name"),
     lastName: z.string().optional().describe("Contact's last name"),
-    email: z.string().email().describe("Contact's email address (required)"),
-    cellPhone: z.string().optional()
-      .describe("Contact's cell phone number (valuable - ask after showing value)"),
+    email: z.string().email().optional().describe("Contact's email address (optional but valuable)"),
+    cellPhone: z.string()
+      .describe("Contact's cell phone number (REQUIRED for property search)"),
     leadType: z.enum(['buyer', 'seller', 'investor', 'general'])
       .describe("Type of lead"),
 
@@ -61,20 +61,36 @@ export const createContactTool: CoreTool = {
       maxPrice: z.number(),
     }).optional().describe("Results from mortgage affordability estimator"),
 
+    // Properties they engaged with during conversation
+    viewedListings: z.array(z.object({
+      listingId: z.string(),
+      address: z.string(),
+      price: z.number(),
+    })).optional().describe("Properties the user viewed or discussed in conversation"),
+
+    // Conversation engagement metrics
+    engagement: z.object({
+      toolsUsed: z.array(z.string()).describe("Tools used: propertySearch, mortgageEstimator, neighborhoodInfo, firstTimeBuyerFAQ"),
+      propertiesViewed: z.number().describe("Number of properties viewed in conversation"),
+      conversationTopics: z.array(z.string()).describe("Topics discussed: neighborhoods, first-time-buyer, mortgage, selling"),
+    }).optional().describe("Engagement metrics from the conversation"),
+
+    // Conversation summary for agent context
+    conversationSummary: z.string().optional()
+      .describe("1-2 sentence summary of what the user is looking for and key context for the agent"),
+
     // Source tracking - ALWAYS include these
     source: z.enum(['newhomeshow', 'sri-collective']).optional()
       .describe("Which website the lead came from"),
   }),
 
   execute: async (params) => {
-    // Validate phone format if provided
-    if (params.cellPhone) {
-      const cleaned = params.cellPhone.replace(/\D/g, '')
-      if (cleaned.length !== 10 && cleaned.length !== 11) {
-        return {
-          success: false,
-          error: "Invalid phone format. Please provide a 10-digit phone number.",
-        }
+    // Phone is required - validate format
+    const cleaned = params.cellPhone.replace(/\D/g, '')
+    if (cleaned.length !== 10 && cleaned.length !== 11) {
+      return {
+        success: false,
+        error: "Invalid phone format. Please provide a 10-digit phone number.",
       }
     }
 
@@ -150,11 +166,43 @@ export const createContactTool: CoreTool = {
         hashtags.push(...params.urgencyFactors.map((f: string) => f.toLowerCase().replace(/\s+/g, '-')))
       }
 
+      // 10. ENGAGEMENT TAGS (from conversation metrics)
+      if (params.engagement) {
+        // Tag based on tools used
+        if (params.engagement.toolsUsed.includes('mortgageEstimator')) {
+          hashtags.push('engaged-mortgage-calc')
+        }
+        if (params.engagement.toolsUsed.includes('neighborhoodInfo')) {
+          hashtags.push('engaged-neighborhoods')
+        }
+        if (params.engagement.toolsUsed.includes('firstTimeBuyerFAQ')) {
+          hashtags.push('engaged-faq')
+        }
+        // Tag based on search behavior
+        const searchCount = params.engagement.toolsUsed.filter((t: string) => t === 'propertySearch').length
+        if (searchCount >= 2) {
+          hashtags.push('multiple-searches')
+        }
+        // Tag based on properties viewed
+        if (params.engagement.propertiesViewed >= 5) {
+          hashtags.push('viewed-5-plus-listings')
+        } else if (params.engagement.propertiesViewed >= 3) {
+          hashtags.push('viewed-3-plus-listings')
+        }
+      }
+
+      // 11. VIEWED LISTINGS TAG
+      if (params.viewedListings && params.viewedListings.length > 0) {
+        hashtags.push(`viewed-${params.viewedListings.length}-listings`)
+      }
+
       // Build notes with structured data for agent reference
       const notes = JSON.stringify({
         capturedAt: new Date().toISOString(),
         source: params.source || 'website',
         leadQuality,
+        // Agent-friendly conversation summary (top-level for visibility)
+        conversationSummary: params.conversationSummary,
         preferences: {
           timeline: params.timeline,
           urgencyFactors: params.urgencyFactors,
@@ -169,6 +217,14 @@ export const createContactTool: CoreTool = {
           downPayment: params.mortgageEstimate.downPayment,
           monthlyDebts: params.mortgageEstimate.monthlyDebts,
           estimatedMaxPrice: params.mortgageEstimate.maxPrice,
+        } : undefined,
+        // Properties the user showed interest in
+        viewedListings: params.viewedListings?.map((l: { listingId: string; address: string; price: number }) => l.address),
+        // Conversation engagement metrics
+        engagement: params.engagement ? {
+          toolsUsed: params.engagement.toolsUsed,
+          propertiesViewed: params.engagement.propertiesViewed,
+          topics: params.engagement.conversationTopics,
         } : undefined,
       })
 
