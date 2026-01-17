@@ -10,6 +10,10 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Sri Collective Group - Real Estate Experts in GTA',
   description: 'Your trusted real estate team serving Toronto, Mississauga, Brampton and surrounding areas',
+  icons: {
+    icon: '/icon',
+    apple: '/apple-icon',
+  },
 }
 
 const headerConfig: HeaderConfig = {

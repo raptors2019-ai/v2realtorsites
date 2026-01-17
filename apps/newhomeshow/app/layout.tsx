@@ -10,6 +10,10 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'NewHomeShow - Pre-Construction Homes in GTA',
   description: 'Exclusive pre-construction projects from top builders in Toronto and GTA',
+  icons: {
+    icon: '/icon',
+    apple: '/apple-icon',
+  },
 }
 
 const headerConfig: HeaderConfig = {
