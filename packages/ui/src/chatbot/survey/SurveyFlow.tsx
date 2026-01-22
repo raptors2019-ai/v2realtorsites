@@ -7,6 +7,8 @@ import { TimelineStep } from "./steps/TimelineStep";
 import { LocationStep } from "./steps/LocationStep";
 import { ListingsDisplayStep } from "./steps/ListingsDisplayStep";
 import { ContactInfoStep } from "./steps/ContactInfoStep";
+import { SoftAskStep } from "./steps/SoftAskStep";
+import { HardGateStep } from "./steps/HardGateStep";
 
 // Property listing type for the listings display
 interface PropertyListing {
@@ -30,6 +32,8 @@ export type SurveyStepType =
   | "location"
   | "show-listings"
   | "contact-info"
+  | "soft-ask"
+  | "hard-gate"
   | "complete";
 
 export type SurveyType = "dream-home" | "general-contact";
@@ -60,6 +64,10 @@ interface SurveyFlowProps {
   onLocation: (locations: string[]) => void;
   onShowListingsContinue: () => void;
   onContactSubmit: (contact: { fullName: string; phone: string; email?: string }) => void;
+  // Lead gate handlers
+  onSoftAskSubmit?: (contact: { fullName: string; phone: string; email?: string }) => void;
+  onSoftAskSkip?: () => void;
+  onHardGateSubmit?: (contact: { fullName: string; phone: string; email?: string }) => void;
 }
 
 export function SurveyFlow({
@@ -73,6 +81,9 @@ export function SurveyFlow({
   onLocation,
   onShowListingsContinue,
   onContactSubmit,
+  onSoftAskSubmit,
+  onSoftAskSkip,
+  onHardGateSubmit,
 }: SurveyFlowProps) {
   // Don't render anything if step is idle or complete
   if (step === "idle" || step === "complete") {
@@ -106,6 +117,17 @@ export function SurveyFlow({
         <ContactInfoStep
           onSubmit={onContactSubmit}
           surveyType={surveyType}
+        />
+      )}
+      {step === "soft-ask" && onSoftAskSubmit && onSoftAskSkip && (
+        <SoftAskStep
+          onSubmit={onSoftAskSubmit}
+          onSkip={onSoftAskSkip}
+        />
+      )}
+      {step === "hard-gate" && onHardGateSubmit && (
+        <HardGateStep
+          onSubmit={onHardGateSubmit}
         />
       )}
     </div>

@@ -156,6 +156,11 @@ interface ChatbotState {
   phone: string | null; // Primary identifier - more valuable than email
   email: string | null; // Optional secondary identifier
 
+  // Lead gate state
+  toolUsageCount: number; // 0, 1, 2, 3...
+  hasSoftAsked: boolean; // True after soft ask shown
+  hasProvidedContact: boolean; // True once contact captured via gate
+
   // Actions
   setOpen: (open: boolean) => void;
   toggleOpen: () => void;
@@ -174,6 +179,12 @@ interface ChatbotState {
   setSessionId: (id: string) => void;
   setContactId: (id: string, phone: string, email?: string) => void;
   clearSession: () => void;
+
+  // Lead gate actions
+  incrementToolUsage: () => void;
+  markSoftAsked: () => void;
+  skipSoftAsk: () => void;
+  completeContactCapture: (name: string, phone: string, email?: string) => void;
 }
 
 const INITIAL_MESSAGE: Message = {
@@ -198,6 +209,11 @@ export const useChatbotStore = create<ChatbotState>()(
       contactId: null,
       phone: null, // Primary identifier
       email: null, // Optional secondary
+
+      // Lead gate initial state
+      toolUsageCount: 0,
+      hasSoftAsked: false,
+      hasProvidedContact: false,
 
       // UI actions
       setOpen: (open) => set({ isOpen: open }),
@@ -268,7 +284,32 @@ export const useChatbotStore = create<ChatbotState>()(
           preferences: {},
           viewedProperties: [],
           messages: [INITIAL_MESSAGE],
+          toolUsageCount: 0,
+          hasSoftAsked: false,
+          hasProvidedContact: false,
         }),
+
+      // Lead gate actions
+      incrementToolUsage: () =>
+        set((state) => ({
+          toolUsageCount: state.toolUsageCount + 1,
+        })),
+
+      markSoftAsked: () => set({ hasSoftAsked: true }),
+
+      skipSoftAsk: () => set({ hasSoftAsked: true }),
+
+      completeContactCapture: (name, phone, email) =>
+        set((state) => ({
+          hasProvidedContact: true,
+          phone,
+          email: email || state.email,
+          preferences: {
+            ...state.preferences,
+            firstName: name.split(' ')[0] || name,
+            capturedAt: new Date().toISOString(),
+          },
+        })),
     }),
     {
       name: "sri-chatbot-storage",
@@ -285,6 +326,10 @@ export const useChatbotStore = create<ChatbotState>()(
         email: state.email, // Optional secondary
         isPromptVisible: state.isPromptVisible,
         hasInteracted: state.hasInteracted, // Remember if user has used chatbot
+        // Lead gate state - persist to maintain gate progress across sessions
+        toolUsageCount: state.toolUsageCount,
+        hasSoftAsked: state.hasSoftAsked,
+        hasProvidedContact: state.hasProvidedContact,
       }),
 
       // Skip hydration for SSR

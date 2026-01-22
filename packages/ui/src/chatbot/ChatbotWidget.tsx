@@ -68,7 +68,17 @@ function PromptBubble({ prompts, currentIndex, onDismiss }: { prompts: string[];
 
 export function ChatbotWidget() {
   const router = useRouter();
-  const { isOpen, isPromptVisible, hasInteracted, messages, isLoading, toggleOpen, minimize, dismissPrompt, addMessage, setLoading, preferences, viewedProperties, phone, email, setContactId, updatePreferences } = useChatbotStore();
+  const {
+    isOpen, isPromptVisible, hasInteracted, messages, isLoading,
+    toggleOpen, minimize, dismissPrompt, addMessage, setLoading,
+    preferences, viewedProperties, phone, email, setContactId, updatePreferences,
+    // Lead gate state and actions
+    toolUsageCount, hasSoftAsked, hasProvidedContact,
+    incrementToolUsage, markSoftAsked, skipSoftAsk, completeContactCapture
+  } = useChatbotStore();
+
+  // Compute if hard gate is active
+  const isHardGateActive = toolUsageCount >= 2 && !hasProvidedContact;
   const [input, setInput] = useState("");
   const [survey, setSurvey] = useState<SurveyState>({ step: "idle" });
   const [isHydrated, setIsHydrated] = useState(false);
@@ -105,6 +115,41 @@ export function ChatbotWidget() {
     prompts: PROMPTS,
     enabled: !isOpen && isPromptVisible && !hasInteracted,
   });
+
+  // Track previous message count to detect new messages with tool results
+  const prevMessageCountRef = useRef(messages.length);
+
+  // Detect when a new tool result is added and trigger gates
+  useEffect(() => {
+    if (messages.length > prevMessageCountRef.current) {
+      // Check the last message for a tool result
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage?.toolResult && !hasProvidedContact) {
+        // A tool was used - increment counter
+        incrementToolUsage();
+
+        // Determine which gate to show (after incrementing)
+        const newToolCount = toolUsageCount + 1;
+
+        if (newToolCount === 1 && !hasSoftAsked) {
+          // First tool use - show soft ask after a short delay
+          setTimeout(() => {
+            if (survey.step === "idle") {
+              setSurvey({ step: "soft-ask", type: "general-contact" });
+            }
+          }, 1500);
+        } else if (newToolCount >= 2 && !hasProvidedContact) {
+          // Second+ tool use - show hard gate after a short delay
+          setTimeout(() => {
+            if (survey.step === "idle" || survey.step === "soft-ask") {
+              setSurvey({ step: "hard-gate", type: "general-contact" });
+            }
+          }, 1500);
+        }
+      }
+    }
+    prevMessageCountRef.current = messages.length;
+  }, [messages, hasProvidedContact, hasSoftAsked, toolUsageCount, incrementToolUsage, survey.step]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -164,11 +209,22 @@ export function ChatbotWidget() {
           const chunk = decoder.decode(value);
           for (const line of chunk.split('\n')) {
             if (!line.trim()) continue;
-            if (line.startsWith('0:')) {
-              try { fullText += JSON.parse(line.slice(2)); } catch {}
-            } else if (line.startsWith('2:')) {
+            // AI SDK stream prefixes:
+            // 0: text content
+            // 2: data array (custom data from StreamData)
+            // d: done signal
+            // e: error
+            // f: finish reason
+            // Skip any prefixes we don't handle
+            // AI SDK v4 stream prefixes: 0=text, 2=data, d=done, e=error, f=finish
+            const prefix = line.substring(0, 2);
+            const content = line.substring(2);
+
+            if (prefix === '0:') {
+              try { fullText += JSON.parse(content); } catch { /* ignore parse errors */ }
+            } else if (prefix === '2:') {
               try {
-                const parsed = JSON.parse(line.slice(2));
+                const parsed = JSON.parse(content);
                 if (parsed && Array.isArray(parsed)) {
                   for (const item of parsed) {
                     if (item.type === 'mortgageEstimate' && item.data) {
@@ -182,10 +238,16 @@ export function ChatbotWidget() {
                         viewAllUrl: item.viewAllUrl,
                       };
                     }
+                    // Handle accumulated CRM data (for potential client-side storage)
+                    if (item.type === 'conversationCrmData' && item.data) {
+                      // Could store this for sending back with next request
+                      console.log('[chatbot] Received CRM data:', item.data);
+                    }
                   }
                 }
-              } catch {}
+              } catch { /* ignore parse errors */ }
             }
+            // Silently ignore other prefixes (d:, e:, f:) - they're control messages
           }
         }
 
@@ -330,7 +392,13 @@ export function ChatbotWidget() {
           const { done, value } = await reader.read();
           if (done) break;
           for (const line of decoder.decode(value).split('\n')) {
-            if (line.startsWith('0:')) try { fullText += JSON.parse(line.slice(2)); } catch {}
+            if (!line.trim()) continue;
+            // AI SDK v4 stream prefixes: 0=text, 2=data, d=done, e=error, f=finish
+            const prefix = line.substring(0, 2);
+            if (prefix === '0:') {
+              try { fullText += JSON.parse(line.substring(2)); } catch { /* ignore */ }
+            }
+            // Silently ignore other prefixes (2:, d:, e:, f:)
           }
         }
         if (fullText) addMessage({ role: "assistant", content: fullText });
@@ -450,24 +518,49 @@ export function ChatbotWidget() {
 
       if (!response.ok) throw new Error("Failed to calculate");
 
-      const result = await response.json();
+      // Parse the streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let mortgageData: MortgageEstimate | null = null;
+      let ctaData: CallToAction | null = null;
 
-      // Parse the result for mortgage estimate data
-      if (result.toolResults?.mortgageEstimate) {
-        addMessage({
-          role: "assistant",
-          content: result.content || "Here's your affordability estimate based on Canadian lending rules.",
-          toolResult: {
-            type: "mortgageEstimate",
-            data: result.toolResults.mortgageEstimate,
-          },
-        });
-      } else {
-        // Fallback if tool result format is different
-        addMessage({
-          role: "assistant",
-          content: result.content || "I calculated your affordability. Based on your inputs, here are the results.",
-        });
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          for (const line of decoder.decode(value).split('\n')) {
+            if (!line.trim()) continue;
+            // AI SDK v4 stream prefixes: 0=text, 2=data, d=done, e=error, f=finish
+            const prefix = line.substring(0, 2);
+            const content = line.substring(2);
+            if (prefix === '0:') {
+              try { fullText += JSON.parse(content); } catch { /* ignore */ }
+            } else if (prefix === '2:') {
+              try {
+                const parsed = JSON.parse(content);
+                if (parsed && Array.isArray(parsed)) {
+                  for (const item of parsed) {
+                    if (item.type === 'mortgageEstimate' && item.data) {
+                      mortgageData = item.data;
+                      ctaData = item.cta || null;
+                    }
+                  }
+                }
+              } catch { /* ignore */ }
+            }
+            // Silently ignore other prefixes (d:, e:, f:)
+          }
+        }
+
+        if (fullText) {
+          addMessage({
+            role: "assistant",
+            content: fullText,
+            toolResult: mortgageData ? { type: "mortgageEstimate", data: mortgageData } : undefined,
+            cta: ctaData || undefined,
+          });
+        }
       }
     } catch (error) {
       console.error("Error calculating mortgage:", error);
@@ -490,7 +583,92 @@ export function ChatbotWidget() {
     });
   };
 
-  const showQuickActions = displayMessages.length === 1 && !isLoading && survey.step === "idle";
+  // Lead gate handlers
+  const handleSoftAskSubmit = async (contact: { fullName: string; phone: string; email?: string }) => {
+    trackChatbotInteraction('lead');
+    trackLeadFormSubmit('chatbot');
+
+    // Mark as provided and save contact
+    completeContactCapture(contact.fullName, contact.phone, contact.email);
+    markSoftAsked();
+    setSurvey({ step: "idle" });
+
+    // Save to CRM
+    const nameParts = contact.fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || contact.fullName;
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    const contactPrompt = `Use the createContact tool to save this lead who saved their results:
+- firstName: "${firstName}"
+- lastName: "${lastName}"
+- email: "${contact.email || ''}"
+- cellPhone: "${contact.phone}"
+- leadType: "buyer"
+- source: "sri-collective"
+- conversationSummary: "Saved chatbot results after using ${toolUsageCount} tool(s)"`;
+
+    // Fire and forget - don't block UI
+    fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: contactPrompt }]
+      }),
+    }).catch(console.error);
+
+    addMessage({
+      role: "assistant",
+      content: `Thanks ${firstName}! Your results are saved. Feel free to explore more tools and we'll be in touch soon.`,
+    });
+  };
+
+  const handleSoftAskSkip = () => {
+    skipSoftAsk();
+    setSurvey({ step: "idle" });
+    addMessage({
+      role: "assistant",
+      content: "No problem! Feel free to continue exploring. Let me know if you have any questions.",
+    });
+  };
+
+  const handleHardGateSubmit = async (contact: { fullName: string; phone: string; email?: string }) => {
+    trackChatbotInteraction('lead');
+    trackLeadFormSubmit('chatbot');
+
+    // Mark as provided and save contact
+    completeContactCapture(contact.fullName, contact.phone, contact.email);
+    setSurvey({ step: "idle" });
+
+    // Save to CRM
+    const nameParts = contact.fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || contact.fullName;
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    const contactPrompt = `Use the createContact tool to save this lead who unlocked all tools:
+- firstName: "${firstName}"
+- lastName: "${lastName}"
+- email: "${contact.email || ''}"
+- cellPhone: "${contact.phone}"
+- leadType: "buyer"
+- source: "sri-collective"
+- conversationSummary: "Unlocked all chatbot tools after using ${toolUsageCount} tool(s)"`;
+
+    // Fire and forget - don't block UI
+    fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: contactPrompt }]
+      }),
+    }).catch(console.error);
+
+    addMessage({
+      role: "assistant",
+      content: `Welcome ${firstName}! All tools are now unlocked. What would you like to explore next? I can help with property searches, neighborhood info, mortgage calculations, and more.`,
+    });
+  };
+
+  const showQuickActions = displayMessages.length === 1 && !isLoading && survey.step === "idle" && !isHardGateActive;
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999]">
@@ -502,8 +680,9 @@ export function ChatbotWidget() {
             <ChatMessages
               messages={displayMessages}
               isLoading={isLoading}
-              hasContactInfo={Boolean(phone)}
+              hasContactInfo={Boolean(phone) || hasProvidedContact}
               isMortgageCalculating={isMortgageCalculating}
+              isGated={isHardGateActive}
               onCitySelect={handleCitySelect}
               onSearchAll={handleSearchAll}
               onToolSelect={sendMessage}
@@ -522,6 +701,9 @@ export function ChatbotWidget() {
               onLocation={handleSurveyLocation}
               onShowListingsContinue={handleShowListingsContinue}
               onContactSubmit={handleContactSubmit}
+              onSoftAskSubmit={handleSoftAskSubmit}
+              onSoftAskSkip={handleSoftAskSkip}
+              onHardGateSubmit={handleHardGateSubmit}
             />
 
             <div ref={messagesEndRef} />
@@ -541,7 +723,8 @@ export function ChatbotWidget() {
             value={input}
             onChange={setInput}
             onSubmit={handleSubmit}
-            disabled={isLoading || survey.step !== "idle"}
+            disabled={isLoading || survey.step !== "idle" || isHardGateActive}
+            placeholder={isHardGateActive ? "Complete form above to continue..." : "Type your message..."}
           />
         </div>
       )}

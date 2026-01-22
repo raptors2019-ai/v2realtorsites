@@ -65,6 +65,7 @@ interface MessageBubbleProps {
   showMortgageInput?: boolean;
   hasContactInfo?: boolean;
   isMortgageCalculating?: boolean;
+  isGated?: boolean; // Hide tool discovery widgets when gated
   onCitySelect?: (city: CityMatch, maxPrice: number) => void;
   onSearchAll?: (maxPrice: number) => void;
   onToolSelect?: (prompt: string) => void;
@@ -72,7 +73,7 @@ interface MessageBubbleProps {
   onMortgageInput?: (data: { annualIncome: number; downPayment: number; monthlyDebts: number }) => void;
 }
 
-export function MessageBubble({ message, isLatest, showCitySearch, showMortgageInput, hasContactInfo, isMortgageCalculating, onCitySelect, onSearchAll, onToolSelect, onMortgageUnlock, onMortgageInput }: MessageBubbleProps) {
+export function MessageBubble({ message, isLatest, showCitySearch, showMortgageInput, hasContactInfo, isMortgageCalculating, isGated, onCitySelect, onSearchAll, onToolSelect, onMortgageUnlock, onMortgageInput }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const hasMortgageData = message.toolResult?.type === "mortgageEstimate";
   const hasPropertyData = message.toolResult?.type === "propertySearch";
@@ -129,8 +130,8 @@ export function MessageBubble({ message, isLatest, showCitySearch, showMortgageI
                 {(message.cta as { url: string; text: string }).text}
               </Link>
             )}
-            {/* Tool Discovery Widgets */}
-            {isLatest && onToolSelect && (
+            {/* Tool Discovery Widgets - hidden when gated */}
+            {isLatest && onToolSelect && !isGated && (
               <ToolDiscoveryWidgets
                 currentTool="mortgage"
                 onToolSelect={onToolSelect}
@@ -153,8 +154,8 @@ export function MessageBubble({ message, isLatest, showCitySearch, showMortgageI
               listings={(message.toolResult!.data as PropertySearchResult).listings}
               viewAllUrl={(message.toolResult!.data as PropertySearchResult).viewAllUrl}
             />
-            {/* Tool Discovery Widgets */}
-            {isLatest && onToolSelect && (
+            {/* Tool Discovery Widgets - hidden when gated */}
+            {isLatest && onToolSelect && !isGated && (
               <ToolDiscoveryWidgets
                 currentTool="property-search"
                 onToolSelect={onToolSelect}
@@ -213,6 +214,7 @@ interface ChatMessagesProps {
   isLoading?: boolean;
   hasContactInfo?: boolean;
   isMortgageCalculating?: boolean;
+  isGated?: boolean; // Hide tool discovery widgets when gated
   onCitySelect?: (city: CityMatch, maxPrice: number) => void;
   onSearchAll?: (maxPrice: number) => void;
   onToolSelect?: (prompt: string) => void;
@@ -220,7 +222,7 @@ interface ChatMessagesProps {
   onMortgageInput?: (data: { annualIncome: number; downPayment: number; monthlyDebts: number }) => void;
 }
 
-export function ChatMessages({ messages, isLoading, hasContactInfo, isMortgageCalculating, onCitySelect, onSearchAll, onToolSelect, onMortgageUnlock, onMortgageInput }: ChatMessagesProps) {
+export function ChatMessages({ messages, isLoading, hasContactInfo, isMortgageCalculating, isGated, onCitySelect, onSearchAll, onToolSelect, onMortgageUnlock, onMortgageInput }: ChatMessagesProps) {
   // Find the latest message with a city-search-prompt CTA
   let latestCitySearchIndex = -1;
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -250,6 +252,7 @@ export function ChatMessages({ messages, isLoading, hasContactInfo, isMortgageCa
           showMortgageInput={index === latestMortgageInputIndex}
           hasContactInfo={hasContactInfo}
           isMortgageCalculating={isMortgageCalculating}
+          isGated={isGated}
           onCitySelect={onCitySelect}
           onSearchAll={onSearchAll}
           onToolSelect={onToolSelect}

@@ -10,3 +10,7 @@ export { TimelineStep } from "./steps/TimelineStep";
 export { LocationStep } from "./steps/LocationStep";
 export { ListingsDisplayStep } from "./steps/ListingsDisplayStep";
 export { ContactInfoStep } from "./steps/ContactInfoStep";
+
+// Lead gate steps
+export { SoftAskStep } from "./steps/SoftAskStep";
+export { HardGateStep } from "./steps/HardGateStep";
