@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { useCarousel } from '../hooks/useCarousel'
 
 interface Calculator {
   id: string
@@ -90,40 +90,21 @@ const pages = [
   calculators.slice(4),
 ]
 
-const AUTO_ADVANCE_INTERVAL = 6000 // 6 seconds per page
-
 interface CalculatorsSliderProps {
   className?: string
 }
 
 export function CalculatorsSlider({ className = '' }: CalculatorsSliderProps) {
-  const [currentPage, setCurrentPage] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
-
-  const goToPage = useCallback((page: number) => {
-    setCurrentPage(page)
-  }, [])
-
-  const nextPage = useCallback(() => {
-    setCurrentPage((prev) => (prev + 1) % pages.length)
-  }, [])
-
-  // Auto-advance timer
-  useEffect(() => {
-    if (isPaused) return
-
-    const timer = setInterval(() => {
-      nextPage()
-    }, AUTO_ADVANCE_INTERVAL)
-
-    return () => clearInterval(timer)
-  }, [isPaused, nextPage])
+  const { currentPage, goToPage, pause, resume } = useCarousel({
+    totalPages: pages.length,
+    autoAdvanceInterval: 6000,
+  })
 
   return (
     <section
       className={`py-16 md:py-20 bg-white ${className}`}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      onMouseEnter={pause}
+      onMouseLeave={resume}
     >
       <div className="container mx-auto px-4">
         {/* Section Header */}

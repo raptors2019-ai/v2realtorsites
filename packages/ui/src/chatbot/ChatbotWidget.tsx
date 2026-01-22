@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useChatbotStore, MortgageEstimate, PropertySearchResult, CallToAction, hasCookieConsent } from "./chatbot-store";
 import { trackChatbotInteraction, trackLeadFormSubmit } from "@repo/analytics";
@@ -9,29 +9,9 @@ import { ChatMessages } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
 import { ChatQuickActions } from "./ChatQuickActions";
 import { SurveyFlow, SurveyState } from "./survey";
+import { BUDGET_LABELS, BUDGET_RANGES, PROPERTY_TYPE_LABELS, TIMELINE_LABELS, TIMELINE_API_MAP, PROMPTS } from "./constants";
+import { useStoredContext, useWelcomeMessage, usePromptRotation, type StoredContext } from "./hooks";
 import type { CityMatch } from "@repo/lib";
-
-// Interface for stored context sent to API
-interface StoredContext {
-  contact?: {
-    name?: string;
-    phone?: string | null;
-    email?: string | null;
-  };
-  preferences?: {
-    budget?: { min?: number; max?: number };
-    propertyType?: string;
-    bedrooms?: number;
-    locations?: string[];
-    timeline?: string;
-  };
-  viewedProperties?: Array<{
-    listingId: string;
-    address: string;
-    price: number;
-  }>;
-  lastVisit?: string;
-}
 
 // Floating button component
 function FloatingButton({ onClick, isOpen }: { onClick: () => void; isOpen: boolean }) {
@@ -85,41 +65,12 @@ function PromptBubble({ prompts, currentIndex, onDismiss }: { prompts: string[];
   );
 }
 
-// Budget and timeline mappings
-const BUDGET_LABELS: Record<string, string> = {
-  "under-500k": "Under $500K", "500k-750k": "$500K – $750K", "750k-1m": "$750K – $1M",
-  "1m-1.5m": "$1M – $1.5M", "1.5m-2m": "$1.5M – $2M", "over-2m": "$2M+"
-};
-
-const BUDGET_RANGES: Record<string, { min: number; max: number; avg: number }> = {
-  "under-500k": { min: 0, max: 500000, avg: 400000 },
-  "500k-750k": { min: 500000, max: 750000, avg: 625000 },
-  "750k-1m": { min: 750000, max: 1000000, avg: 875000 },
-  "1m-1.5m": { min: 1000000, max: 1500000, avg: 1250000 },
-  "1.5m-2m": { min: 1500000, max: 2000000, avg: 1750000 },
-  "over-2m": { min: 2000000, max: 5000000, avg: 2500000 },
-};
-
-const PROPERTY_TYPE_LABELS: Record<string, string> = {
-  "detached": "Detached House", "semi-detached": "Semi-Detached House",
-  "townhouse": "Townhouse", "condo": "Condo"
-};
-
-const TIMELINE_LABELS: Record<string, string> = {
-  "asap": "ASAP", "1-3-months": "1-3 months", "3-6-months": "3-6 months", "just-exploring": "Just exploring"
-};
-
-const PROMPTS = [
-  "How can we help you?", "Tell us about your dream home", "Ready to start your home search?",
-  "Need help with selling?", "First-time buyer? We can help!"
-];
 
 export function ChatbotWidget() {
   const router = useRouter();
   const { isOpen, isPromptVisible, hasInteracted, messages, isLoading, toggleOpen, minimize, dismissPrompt, addMessage, setLoading, preferences, viewedProperties, phone, email, setContactId, updatePreferences } = useChatbotStore();
   const [input, setInput] = useState("");
   const [survey, setSurvey] = useState<SurveyState>({ step: "idle" });
-  const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isMortgageCalculating, setIsMortgageCalculating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -134,77 +85,26 @@ export function ChatbotWidget() {
   }, []);
 
   // Build stored context for returning visitors
-  const storedContext = useMemo((): StoredContext | null => {
-    if (!isHydrated) return null;
-
-    // Only include if we have meaningful data
-    const hasContactInfo = preferences.firstName && phone;
-    const hasPreferences = preferences.propertyType || preferences.budget || preferences.locations?.length;
-
-    if (!hasContactInfo && !hasPreferences && viewedProperties.length === 0) {
-      return null;
-    }
-
-    return {
-      contact: hasContactInfo ? {
-        name: preferences.firstName,
-        phone,
-        email,
-      } : undefined,
-      preferences: hasPreferences ? {
-        budget: preferences.budget,
-        propertyType: preferences.propertyType,
-        bedrooms: preferences.bedrooms,
-        locations: preferences.locations,
-        timeline: preferences.timeline,
-      } : undefined,
-      viewedProperties: viewedProperties.slice(-5).map(p => ({
-        listingId: p.listingId,
-        address: p.address,
-        price: p.price,
-      })),
-      lastVisit: preferences.capturedAt,
-    };
-  }, [isHydrated, preferences, viewedProperties, phone, email]);
-
-  // Check if this is a returning visitor with contact info
-  const isReturningVisitor = Boolean(storedContext?.contact?.name && storedContext?.contact?.phone);
+  const storedContext = useStoredContext({
+    isHydrated,
+    preferences,
+    viewedProperties,
+    phone,
+    email,
+  });
 
   // Generate personalized welcome message for returning visitors
-  const welcomeMessage = useMemo(() => {
-    if (!isHydrated || !isReturningVisitor || !storedContext?.contact?.name) {
-      return null; // Use default welcome
-    }
+  const { displayMessages } = useWelcomeMessage({
+    isHydrated,
+    storedContext,
+    messages,
+  });
 
-    const name = storedContext.contact.name;
-    const propertyType = storedContext.preferences?.propertyType;
-    const location = storedContext.preferences?.locations?.[0];
-
-    if (propertyType && location) {
-      return `Welcome back, ${name}! Last time you were looking at ${propertyType} homes in ${location}. Want to continue your search or explore something new?`;
-    } else if (propertyType) {
-      return `Welcome back, ${name}! Last time you were looking at ${propertyType} homes. Want to continue your search or look at something different?`;
-    } else if (location) {
-      return `Welcome back, ${name}! Last time you were interested in ${location}. Want to continue exploring or search somewhere new?`;
-    }
-
-    return `Welcome back, ${name}! Great to see you again. What can I help you find today?`;
-  }, [isHydrated, isReturningVisitor, storedContext]);
-
-  // Override the first message for returning visitors
-  const displayMessages = useMemo(() => {
-    if (!welcomeMessage || messages.length === 0) {
-      return messages;
-    }
-
-    // Replace the welcome message with personalized one
-    return messages.map((msg, index) => {
-      if (index === 0 && msg.id === 'welcome' && msg.role === 'assistant') {
-        return { ...msg, content: welcomeMessage };
-      }
-      return msg;
-    });
-  }, [messages, welcomeMessage]);
+  // Rotate prompts when chat is closed
+  const { currentIndex: currentPromptIndex } = usePromptRotation({
+    prompts: PROMPTS,
+    enabled: !isOpen && isPromptVisible && !hasInteracted,
+  });
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -218,15 +118,6 @@ export function ChatbotWidget() {
       trackChatbotInteraction('start');
     }
   }, [isOpen]);
-
-  // Cycle through prompts every 4 seconds when chat is closed (only if not interacted)
-  useEffect(() => {
-    if (!isOpen && isPromptVisible && !hasInteracted) {
-      const interval = setInterval(() => setCurrentPromptIndex((prev) => (prev + 1) % PROMPTS.length), 4000);
-      return () => clearInterval(interval);
-    }
-    return; // Explicit return for other branches (TypeScript consistency)
-  }, [isOpen, isPromptVisible, hasInteracted]);
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
@@ -399,7 +290,6 @@ export function ChatbotWidget() {
       let contactPrompt = '';
       if (survey.type === 'dream-home') {
         const priceRange = BUDGET_RANGES[survey.budget || "750k-1m"];
-        const timelineMap: Record<string, string> = { "asap": "immediate", "1-3-months": "1-3-months", "3-6-months": "3-6-months", "just-exploring": "just-exploring" };
         contactPrompt = `Use the createContact tool to save this buyer lead with their dream home preferences:
 - firstName: "${firstName}"
 - lastName: "${lastName}"
@@ -412,7 +302,7 @@ export function ChatbotWidget() {
 - averageBeds: ${parseInt(survey.bedrooms || '3')}
 - preferredCity: "${survey.locations?.[0] || ''}"
 - preferredNeighborhoods: ${JSON.stringify(survey.locations || [])}
-- timeline: "${timelineMap[survey.timeline || 'just-exploring']}"`;
+- timeline: "${TIMELINE_API_MAP[survey.timeline || 'just-exploring']}"`;
       } else {
         contactPrompt = `Use the createContact tool to save this general inquiry lead:
 - firstName: "${firstName}"

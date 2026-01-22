@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { useCarousel } from '@repo/ui/hooks'
 
 interface Tool {
   id: string
@@ -68,36 +68,17 @@ const pages = [
   tools.slice(2),
 ]
 
-const AUTO_ADVANCE_INTERVAL = 5000 // 5 seconds per page
-
 export function MoreToolsSlider() {
-  const [currentPage, setCurrentPage] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
-
-  const goToPage = useCallback((page: number) => {
-    setCurrentPage(page)
-  }, [])
-
-  const nextPage = useCallback(() => {
-    setCurrentPage((prev) => (prev + 1) % pages.length)
-  }, [])
-
-  // Auto-advance timer
-  useEffect(() => {
-    if (isPaused) return
-
-    const timer = setInterval(() => {
-      nextPage()
-    }, AUTO_ADVANCE_INTERVAL)
-
-    return () => clearInterval(timer)
-  }, [isPaused, nextPage])
+  const { currentPage, goToPage, pause, resume } = useCarousel({
+    totalPages: pages.length,
+    autoAdvanceInterval: 5000,
+  })
 
   return (
     <section
       className="py-12 bg-[#faf9f7]"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      onMouseEnter={pause}
+      onMouseLeave={resume}
     >
       <div className="container mx-auto px-4">
         {/* Section Header */}

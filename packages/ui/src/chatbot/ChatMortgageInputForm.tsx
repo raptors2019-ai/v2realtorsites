@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { parseNumber, formatCurrency } from '@repo/lib'
 import { cn } from '../lib/utils'
 
 interface ChatMortgageInputFormProps {
@@ -15,25 +16,9 @@ export function ChatMortgageInputForm({ className, onSubmit, isLoading }: ChatMo
   const [monthlyDebts, setMonthlyDebts] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const parseNumber = (value: string): number => {
-    // Remove currency symbols, commas, and 'k' suffix
-    const cleaned = value.replace(/[$,]/g, '').trim().toLowerCase()
-    if (cleaned.endsWith('k')) {
-      return parseFloat(cleaned.slice(0, -1)) * 1000
-    }
-    return parseFloat(cleaned) || 0
-  }
-
   const formatForDisplay = (value: string): string => {
     const num = parseNumber(value)
-    if (num > 0) {
-      return new Intl.NumberFormat('en-CA', {
-        style: 'currency',
-        currency: 'CAD',
-        maximumFractionDigits: 0,
-      }).format(num)
-    }
-    return value
+    return num > 0 ? formatCurrency(num) : value
   }
 
   const handleSubmit = (e: React.FormEvent) => {

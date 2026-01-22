@@ -42,6 +42,7 @@ export { themes } from './styles'
 
 // Hooks
 export { useScrollPosition } from './hooks/useScrollPosition'
+export { useCarousel, type UseCarouselOptions, type UseCarouselReturn } from './hooks/useCarousel'
 
 // Utils
 export { cn, formatPrice } from './lib/utils'

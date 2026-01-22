@@ -49,3 +49,30 @@ export function formatDate(date: Date | string): string {
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
+
+/**
+ * Parse a currency string into a number
+ * Handles: $100,000 | 100k | 1.5M | plain numbers
+ */
+export function parseNumber(value: string): number {
+  const cleaned = value.replace(/[$,]/g, '').trim().toLowerCase()
+  if (cleaned.endsWith('m')) {
+    return parseFloat(cleaned.slice(0, -1)) * 1000000
+  }
+  if (cleaned.endsWith('k')) {
+    return parseFloat(cleaned.slice(0, -1)) * 1000
+  }
+  return parseFloat(cleaned) || 0
+}
+
+/**
+ * Format a number as CAD currency string (e.g., "$1,500,000")
+ */
+export function formatCurrency(value: number, options?: { decimals?: number }): string {
+  return new Intl.NumberFormat('en-CA', {
+    style: 'currency',
+    currency: 'CAD',
+    minimumFractionDigits: options?.decimals ?? 0,
+    maximumFractionDigits: options?.decimals ?? 0,
+  }).format(value)
+}

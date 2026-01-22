@@ -30,5 +30,3 @@ export {
   ContactInfoStep,
 } from './survey'
 
-// Tool renderers
-export { ToolResultRenderer, type ToolResult, type ToolResultType } from './tool-renderers'
