@@ -38,22 +38,68 @@ export interface MortgageRates {
   primeRate: number
   asOf: string
   source: 'bank-of-canada'
+  nextUpdateExpected: string
 }
 
-// In-memory cache with TTL
+// In-memory cache - invalidates after next Wednesday
 let cachedRates: MortgageRates | null = null
-let cacheTimestamp = 0
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000 // 6 hours (rates update weekly)
+let cacheLastWednesday: string | null = null
+
+/**
+ * Get the most recent Wednesday (BoC update day) at or before a given date
+ */
+function getLastWednesday(date: Date = new Date()): Date {
+  const d = new Date(date)
+  d.setHours(12, 0, 0, 0) // Normalize to noon to avoid timezone issues
+  const dayOfWeek = d.getDay()
+  // Wednesday is 3, so calculate days to subtract
+  const daysToSubtract = dayOfWeek >= 3 ? dayOfWeek - 3 : dayOfWeek + 4
+  d.setDate(d.getDate() - daysToSubtract)
+  return d
+}
+
+/**
+ * Get the next Wednesday after a given date
+ */
+function getNextWednesday(date: Date = new Date()): Date {
+  const d = new Date(date)
+  d.setHours(12, 0, 0, 0)
+  const dayOfWeek = d.getDay()
+  // Calculate days until next Wednesday
+  const daysToAdd = dayOfWeek <= 3 ? 3 - dayOfWeek : 10 - dayOfWeek
+  // If it's Wednesday, get next Wednesday
+  if (daysToAdd === 0) {
+    d.setDate(d.getDate() + 7)
+  } else {
+    d.setDate(d.getDate() + daysToAdd)
+  }
+  return d
+}
+
+/**
+ * Format date as YYYY-MM-DD
+ */
+function formatDateISO(date: Date): string {
+  return date.toISOString().split('T')[0]
+}
+
+/**
+ * Check if the cache should be invalidated (a new Wednesday has passed)
+ */
+function shouldRefreshCache(): boolean {
+  if (!cachedRates || !cacheLastWednesday) return true
+
+  const currentLastWednesday = formatDateISO(getLastWednesday())
+  return currentLastWednesday !== cacheLastWednesday
+}
 
 /**
  * Fetches the latest mortgage rates from Bank of Canada Valet API
- * Caches results for 6 hours since BoC updates weekly
+ * Caches results until the next Wednesday (BoC weekly update day)
  */
 export async function getMortgageRates(): Promise<MortgageRates | null> {
-  const now = Date.now()
-
-  // Return cached rates if still valid
-  if (cachedRates && now - cacheTimestamp < CACHE_TTL_MS) {
+  // Return cached rates if we haven't passed a new Wednesday
+  if (!shouldRefreshCache() && cachedRates) {
     return cachedRates
   }
 
@@ -76,6 +122,7 @@ export async function getMortgageRates(): Promise<MortgageRates | null> {
     }
 
     const latest = data.observations[0]
+    const nextWednesday = getNextWednesday()
 
     const rates: MortgageRates = {
       fiveYear: parseFloat((latest[BOC_SERIES.CONVENTIONAL_5_YEAR] as { v: string })?.v) || 6.09,
@@ -84,11 +131,12 @@ export async function getMortgageRates(): Promise<MortgageRates | null> {
       primeRate: parseFloat((latest[BOC_SERIES.PRIME_RATE] as { v: string })?.v) || 5.45,
       asOf: latest.d,
       source: 'bank-of-canada',
+      nextUpdateExpected: formatDateISO(nextWednesday),
     }
 
-    // Update cache
+    // Update cache with the Wednesday we fetched on
     cachedRates = rates
-    cacheTimestamp = now
+    cacheLastWednesday = formatDateISO(getLastWednesday())
 
     console.log('[lib.boc.getMortgageRates] Fetched rates:', rates)
     return rates

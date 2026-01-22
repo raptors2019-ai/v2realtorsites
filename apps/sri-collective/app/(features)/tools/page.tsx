@@ -117,6 +117,11 @@ export default async function ToolsPage() {
             </div>
             <p className="text-center text-xs text-slate-400 mt-2">
               Actual rates vary by lender. Enter your quoted rate in the calculator for accurate results.
+              {rates.nextUpdateExpected && (
+                <span className="ml-2">
+                  · Next update expected: {formatRateDate(rates.nextUpdateExpected)}
+                </span>
+              )}
             </p>
           </div>
         </section>
