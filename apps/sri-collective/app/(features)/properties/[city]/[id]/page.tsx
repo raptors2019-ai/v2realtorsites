@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPropertyById, getSimilarProperties, formatPrice } from '@/lib/data'
-import { PropertyGallery, CopyButton, PropertyJsonLd, BackButton, SimilarProperties } from '@repo/ui'
+import { PropertyGallery, CopyButton, PropertyJsonLd, BackButton, SimilarProperties, ShareButtons } from '@repo/ui'
 import { PropertyDetailTracker } from '@repo/analytics'
 
 interface PageProps {
@@ -20,16 +20,46 @@ function createCitySlug(city: string): string {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params
+  const { city, id } = await params
   const property = await getPropertyById(id)
 
   if (!property) {
     return { title: 'Property Not Found | Sri Collective Group' }
   }
 
+  const title = `${property.title} | Sri Collective Group`
+  const description = property.description?.slice(0, 160) || `${property.bedrooms} bed, ${property.bathrooms} bath ${property.propertyType} in ${property.city} for ${formatPrice(property.price)}`
+  const canonicalUrl = `https://sricollective.ca/properties/${city}/${id}`
+  const ogImage = property.images?.[0] || '/images/og-default.jpg'
+
   return {
-    title: `${property.title} | Sri Collective Group`,
-    description: property.description?.slice(0, 160) || `${property.bedrooms} bed, ${property.bathrooms} bath ${property.propertyType} in ${property.city}`,
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      type: 'website',
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: 'Sri Collective Group',
+      locale: 'en_CA',
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: property.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
   }
 }
 
@@ -113,7 +143,7 @@ export default async function PropertyDetailPage({ params }: PageProps) {
                 <h1 className="text-2xl md:text-3xl font-bold text-secondary mb-2 break-words">
                   {property.title}
                 </h1>
-                <div className="flex items-start gap-2 mb-5 md:mb-6 flex-wrap">
+                <div className="flex items-start gap-2 mb-4 flex-wrap">
                   <svg className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -122,6 +152,16 @@ export default async function PropertyDetailPage({ params }: PageProps) {
                     {property.address}, {property.city}, {property.province} {property.postalCode}
                   </p>
                   <CopyButton text={`${property.address}, ${property.city}, ${property.province} ${property.postalCode}`} />
+                </div>
+
+                {/* Social Share Buttons */}
+                <div className="mb-5 md:mb-6">
+                  <ShareButtons
+                    url={`https://sricollective.ca/properties/${citySlug}/${property.id}`}
+                    title={property.title}
+                    contentId={property.id}
+                    description={property.description}
+                  />
                 </div>
 
                 {/* Stats Grid */}

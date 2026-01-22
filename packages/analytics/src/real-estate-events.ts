@@ -1,6 +1,6 @@
 'use client'
 
-import type { PropertyItem, PropertyListInfo, FormType, ChatbotAction, PropertySearchFilters } from './types'
+import type { PropertyItem, PropertyListInfo, FormType, ChatbotAction, PropertySearchFilters, SocialPlatform, ShareContentType, FormName } from './types'
 
 declare global {
   interface Window {
@@ -175,5 +175,52 @@ export const trackCtaClick = (ctaName: string, location: string) => {
 export const trackFilterChange = (filters: PropertySearchFilters) => {
   safeTrack('filter_properties', {
     ...filters,
+  })
+}
+
+/**
+ * Track social share actions
+ * Fires GA4 'share' event with platform and content details
+ */
+export const trackSocialShare = (
+  platform: SocialPlatform,
+  contentType: ShareContentType,
+  contentId: string,
+  contentTitle?: string
+) => {
+  safeTrack('share', {
+    method: platform,
+    content_type: contentType,
+    item_id: contentId,
+    content_title: contentTitle,
+  })
+}
+
+/**
+ * Track form start events (when user begins filling a form)
+ * Call on first field focus to capture form engagement
+ */
+export const trackFormStart = (formName: FormName, formId?: string) => {
+  safeTrack('form_start', {
+    form_name: formName,
+    form_id: formId,
+  })
+}
+
+/**
+ * Track form submission events (success or failure)
+ * Call after form submission attempt completes
+ */
+export const trackFormSubmit = (
+  formName: FormName,
+  success: boolean,
+  formId?: string,
+  errorMessage?: string
+) => {
+  safeTrack('form_submit', {
+    form_name: formName,
+    form_id: formId,
+    success,
+    error_message: success ? undefined : errorMessage,
   })
 }

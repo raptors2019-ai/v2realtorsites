@@ -64,3 +64,18 @@ export interface PropertySearchFilters {
   propertyType?: string
   listingType?: 'sale' | 'lease'
 }
+
+/**
+ * Social platform types for share tracking
+ */
+export type SocialPlatform = 'instagram' | 'facebook' | 'twitter' | 'whatsapp' | 'email' | 'copy_link'
+
+/**
+ * Content types that can be shared
+ */
+export type ShareContentType = 'property' | 'listing_page' | 'article' | 'homepage'
+
+/**
+ * Form names for form tracking
+ */
+export type FormName = 'contact' | 'chatbot_survey' | 'property_inquiry' | 'newsletter'

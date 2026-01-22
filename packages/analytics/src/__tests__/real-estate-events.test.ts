@@ -9,6 +9,9 @@ import {
   trackEmailClick,
   trackCtaClick,
   trackFilterChange,
+  trackSocialShare,
+  trackFormStart,
+  trackFormSubmit,
 } from '../real-estate-events'
 import type { PropertyItem, PropertyListInfo } from '../types'
 
@@ -338,6 +341,111 @@ describe('real-estate-events', () => {
         bedrooms: 2,
         min_price: 300000,
         max_price: 500000,
+      })
+    })
+  })
+
+  describe('trackSocialShare', () => {
+    it('should track share event with all parameters', () => {
+      trackSocialShare('instagram', 'property', 'prop-123', '123 Main St, Toronto')
+
+      expect(window.gtag).toHaveBeenCalledWith('event', 'share', {
+        method: 'instagram',
+        content_type: 'property',
+        item_id: 'prop-123',
+        content_title: '123 Main St, Toronto',
+      })
+    })
+
+    it('should track share event without optional title', () => {
+      trackSocialShare('facebook', 'listing_page', 'toronto-condos')
+
+      expect(window.gtag).toHaveBeenCalledWith('event', 'share', {
+        method: 'facebook',
+        content_type: 'listing_page',
+        item_id: 'toronto-condos',
+        content_title: undefined,
+      })
+    })
+
+    it('should track different social platforms', () => {
+      const platforms = ['instagram', 'facebook', 'twitter', 'whatsapp', 'email', 'copy_link'] as const
+
+      platforms.forEach((platform) => {
+        jest.clearAllMocks()
+        trackSocialShare(platform, 'property', 'prop-123')
+
+        expect(window.gtag).toHaveBeenCalledWith('event', 'share', expect.objectContaining({
+          method: platform,
+        }))
+      })
+    })
+  })
+
+  describe('trackFormStart', () => {
+    it('should track form_start event with form name', () => {
+      trackFormStart('contact')
+
+      expect(window.gtag).toHaveBeenCalledWith('event', 'form_start', {
+        form_name: 'contact',
+        form_id: undefined,
+      })
+    })
+
+    it('should track form_start event with form id', () => {
+      trackFormStart('property_inquiry', 'inquiry-form-123')
+
+      expect(window.gtag).toHaveBeenCalledWith('event', 'form_start', {
+        form_name: 'property_inquiry',
+        form_id: 'inquiry-form-123',
+      })
+    })
+
+    it('should track different form names', () => {
+      const formNames = ['contact', 'chatbot_survey', 'property_inquiry', 'newsletter'] as const
+
+      formNames.forEach((formName) => {
+        jest.clearAllMocks()
+        trackFormStart(formName)
+
+        expect(window.gtag).toHaveBeenCalledWith('event', 'form_start', expect.objectContaining({
+          form_name: formName,
+        }))
+      })
+    })
+  })
+
+  describe('trackFormSubmit', () => {
+    it('should track successful form submission', () => {
+      trackFormSubmit('contact', true)
+
+      expect(window.gtag).toHaveBeenCalledWith('event', 'form_submit', {
+        form_name: 'contact',
+        form_id: undefined,
+        success: true,
+        error_message: undefined,
+      })
+    })
+
+    it('should track failed form submission with error message', () => {
+      trackFormSubmit('contact', false, 'contact-form-1', 'Network error')
+
+      expect(window.gtag).toHaveBeenCalledWith('event', 'form_submit', {
+        form_name: 'contact',
+        form_id: 'contact-form-1',
+        success: false,
+        error_message: 'Network error',
+      })
+    })
+
+    it('should track failed form submission without error message', () => {
+      trackFormSubmit('newsletter', false)
+
+      expect(window.gtag).toHaveBeenCalledWith('event', 'form_submit', {
+        form_name: 'newsletter',
+        form_id: undefined,
+        success: false,
+        error_message: undefined,
       })
     })
   })

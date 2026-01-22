@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { trackLeadFormSubmit } from '@repo/analytics'
+import { trackLeadFormSubmit, trackFormStart, trackFormSubmit } from '@repo/analytics'
 
 type FormStatus = 'idle' | 'submitting' | 'success' | 'error'
 
@@ -28,6 +28,15 @@ export function ContactForm() {
   const searchParams = useSearchParams()
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [status, setStatus] = useState<FormStatus>('idle')
+  const [formStarted, setFormStarted] = useState(false)
+
+  // Track form start when user focuses on the first field
+  const handleFormStart = () => {
+    if (!formStarted) {
+      setFormStarted(true)
+      trackFormStart('contact')
+    }
+  }
 
   // Pre-fill form based on URL params
   useEffect(() => {
@@ -109,15 +118,19 @@ export function ContactForm() {
       })
 
       // Track successful form submission
+      trackFormSubmit('contact', true)
       trackLeadFormSubmit('contact')
 
       setStatus('success')
       setFormData(initialFormData)
+      setFormStarted(false) // Reset for potential future submissions
 
       // Reset status after 5 seconds
       setTimeout(() => setStatus('idle'), 5000)
     } catch (error) {
       console.error('[contact.form.error]', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      trackFormSubmit('contact', false, undefined, errorMessage)
       setStatus('error')
 
       // Reset error status after 5 seconds
@@ -177,6 +190,7 @@ export function ContactForm() {
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
+            onFocus={handleFormStart}
             required
             className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200"
             placeholder="John"
