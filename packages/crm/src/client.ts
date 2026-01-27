@@ -1,4 +1,32 @@
-import { ContactData, ContactResponse, ListingFilters, ListingsResponse, BoldTrailListing } from './types';
+import { ContactData, ContactResponse, ContactUpdateData, ListingFilters, ListingsResponse, BoldTrailListing } from './types';
+
+/**
+ * Helper to remove null, undefined, empty strings, and empty arrays from an object
+ * Only includes fields with actual values
+ */
+function cleanPayload(obj: Record<string, unknown>): Record<string, unknown> {
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === null || value === undefined) continue;
+    if (value === '') continue;
+    if (Array.isArray(value) && value.length === 0) continue;
+    if (typeof value === 'number' && value === 0) continue; // Skip zero values for optional fields
+    cleaned[key] = value;
+  }
+  return cleaned;
+}
+
+/**
+ * Format budget to hashtag-friendly format
+ */
+function formatBudgetHashtag(budget: number): string {
+  if (budget < 500000) return 'budget-under-500k';
+  if (budget < 750000) return 'budget-500k-750k';
+  if (budget < 1000000) return 'budget-750k-1m';
+  if (budget < 1500000) return 'budget-1m-1.5m';
+  if (budget < 2000000) return 'budget-1.5m-2m';
+  return 'budget-2m-plus';
+}
 
 export class BoldTrailClient {
   private apiKey: string;
@@ -103,6 +131,177 @@ export class BoldTrailClient {
       success: true,
       fallback: true,
     };
+  }
+
+  /**
+   * Update/enrich an existing contact with additional data
+   * Only sends non-empty fields to avoid overwriting with nulls
+   */
+  async updateContact(contactId: string, data: ContactUpdateData): Promise<ContactResponse> {
+    if (!this.apiKey) {
+      console.warn('[crm.boldtrail.updateContact.noApiKey] BoldTrail API key not configured');
+      return { success: false, error: 'API key not configured' };
+    }
+
+    if (!contactId) {
+      return { success: false, error: 'Contact ID required for update' };
+    }
+
+    try {
+      // Build hashtags from the data
+      const hashtags: string[] = data.hashtags || [];
+
+      // Add budget hashtag if we have price data
+      const priceValue = data.averagePrice || data.mortgageEstimate?.maxHomePrice;
+      if (priceValue && priceValue > 0) {
+        hashtags.push(formatBudgetHashtag(priceValue));
+      }
+
+      // Add first-time buyer tag
+      if (data.firstTimeBuyer) {
+        hashtags.push('first-time-buyer');
+      }
+
+      // Add pre-approved tag
+      if (data.preApproved) {
+        hashtags.push('pre-approved');
+      }
+
+      // Add timeline tag
+      if (data.timeline) {
+        hashtags.push(`timeline-${data.timeline}`);
+      }
+
+      // Add location tags
+      if (data.primaryCity) {
+        hashtags.push(data.primaryCity.toLowerCase().replace(/\s+/g, '-'));
+      }
+      if (data.preferredNeighborhoods?.length) {
+        hashtags.push(...data.preferredNeighborhoods.map(n => n.toLowerCase().replace(/\s+/g, '-')));
+      }
+
+      // Add mortgage-related tags
+      if (data.mortgageEstimate) {
+        hashtags.push('mortgage-estimated');
+        if (data.mortgageEstimate.cmhcPremium && data.mortgageEstimate.cmhcPremium > 0) {
+          hashtags.push('cmhc-required');
+        }
+      }
+
+      // Add urgency tags
+      if (data.urgencyFactors?.length) {
+        hashtags.push(...data.urgencyFactors.map(f => f.toLowerCase().replace(/\s+/g, '-')));
+      }
+
+      // Build notes as structured JSON (only if we have meaningful data)
+      let notes: string | undefined;
+      const notesData: Record<string, unknown> = {};
+
+      if (data.conversationSummary) {
+        notesData.summary = data.conversationSummary;
+      }
+      if (data.mortgageEstimate) {
+        notesData.mortgageEstimate = data.mortgageEstimate;
+      }
+      if (data.viewedListings?.length) {
+        notesData.viewedListings = data.viewedListings.map(l => l.address);
+      }
+      if (data.preferredNeighborhoods?.length) {
+        notesData.preferredNeighborhoods = data.preferredNeighborhoods;
+      }
+      if (Object.keys(notesData).length > 0) {
+        notesData.updatedAt = new Date().toISOString();
+        notes = JSON.stringify(notesData);
+      }
+
+      // Build the payload with only non-empty values
+      const rawPayload: Record<string, unknown> = {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        cell_phone_1: data.phone,
+        deal_type: data.leadType,
+        avg_price: data.averagePrice || data.mortgageEstimate?.maxHomePrice,
+        avg_beds: data.averageBeds,
+        avg_baths: data.averageBaths,
+        primary_city: data.primaryCity,
+        hashtags: hashtags.length > 0 ? [...new Set(hashtags)] : undefined, // Dedupe hashtags
+        notes,
+      };
+
+      const payload = cleanPayload(rawPayload);
+
+      // Don't make API call if there's nothing to update
+      if (Object.keys(payload).length === 0) {
+        console.log('[crm.boldtrail.updateContact.noData] No data to update');
+        return { success: true, contactId };
+      }
+
+      console.error('[crm.boldtrail.updateContact.payload]', {
+        contactId,
+        fieldsToUpdate: Object.keys(payload),
+        hashtagCount: hashtags.length,
+      });
+
+      const response = await fetch(`${this.baseUrl}/contact/${contactId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[crm.boldtrail.updateContact.failed]', {
+          status: response.status,
+          error: errorText,
+        });
+        return { success: false, error: `API error: ${response.status}` };
+      }
+
+      console.error('[crm.boldtrail.updateContact.success]', { contactId });
+      return { success: true, contactId };
+    } catch (error) {
+      console.error('[crm.boldtrail.updateContact.error]', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Get a contact by ID
+   */
+  async getContact(contactId: string): Promise<{ success: boolean; data?: Record<string, unknown>; error?: string }> {
+    if (!this.apiKey) {
+      return { success: false, error: 'API key not configured' };
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/contact/${contactId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        return { success: false, error: `API returned ${response.status}` };
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
   }
 
   /**

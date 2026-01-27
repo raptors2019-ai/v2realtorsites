@@ -1,11 +1,11 @@
 export interface ContactData {
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string;
   phone?: string;
-  source: 'newhomeshow' | 'sri-collective' | 'chatbot';
-  leadType: 'buyer' | 'seller' | 'investor' | 'general';
-  customFields?: Record<string, any>;
+  source?: 'newhomeshow' | 'sri-collective' | 'website';
+  leadType?: 'buyer' | 'seller' | 'investor' | 'general';
+  customFields?: Record<string, unknown>;
 }
 
 export interface ContactResponse {
@@ -13,6 +13,56 @@ export interface ContactResponse {
   contactId?: string;
   fallback?: boolean;
   error?: string;
+}
+
+/**
+ * Data that can be used to update/enrich an existing contact
+ * All fields are optional - only non-empty values will be sent to CRM
+ */
+export interface ContactUpdateData {
+  // Basic info
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+
+  // Lead classification
+  leadType?: 'buyer' | 'seller' | 'investor' | 'general';
+
+  // Buyer preferences
+  averagePrice?: number;
+  averageBeds?: number;
+  averageBaths?: number;
+  primaryCity?: string;
+
+  // Mortgage/affordability data
+  mortgageEstimate?: {
+    maxHomePrice: number;
+    downPayment: number;
+    monthlyPayment: number;
+    annualIncome: number;
+    cmhcPremium?: number;
+  };
+
+  // Engagement tracking
+  hashtags?: string[];
+  conversationSummary?: string;
+
+  // Neighborhoods of interest
+  preferredNeighborhoods?: string[];
+
+  // Properties viewed
+  viewedListings?: Array<{
+    listingId: string;
+    address: string;
+    price: number;
+  }>;
+
+  // Timeline and intent
+  timeline?: string;
+  preApproved?: boolean;
+  firstTimeBuyer?: boolean;
+  urgencyFactors?: string[];
 }
 
 // Listing Types

@@ -9,6 +9,11 @@ import {
   neighborhoodInfoTool,
   firstTimeBuyerFAQTool,
   sellHomeTool,
+  enrichContactTool,
+  extractCrmDataFromToolResult,
+  mergeConversationData,
+  generateConversationSummary,
+  type ConversationCrmData,
 } from '@repo/chatbot'
 
 // Use nodejs runtime for tool execution (Edge has issues with workspace package imports)
@@ -36,13 +41,13 @@ interface StoredContext {
   lastVisit?: string
 }
 
-// Build contextual system prompt with returning visitor info
-function buildSystemPrompt(storedContext?: StoredContext): string {
-  if (!storedContext) {
-    return sriCollectiveSystemPrompt
-  }
+// Build contextual system prompt with returning visitor info and accumulated data
+function buildSystemPrompt(storedContext?: StoredContext, conversationData?: ConversationCrmData): string {
+  let prompt = sriCollectiveSystemPrompt
 
-  const contextSection = `
+  // Add returning visitor context
+  if (storedContext?.contact) {
+    const contextSection = `
 
 ## RETURNING VISITOR CONTEXT
 
@@ -72,28 +77,104 @@ ${storedContext.lastVisit ? `**Last Visit:** ${new Date(storedContext.lastVisit)
 4. Greet them by name and reference their previous interests
 5. Skip any preference questions for info we already have above
 `
+    prompt += contextSection
+  }
 
-  return sriCollectiveSystemPrompt + contextSection
+  // Add accumulated conversation data
+  if (conversationData && Object.keys(conversationData).length > 0) {
+    const dataSection = buildAccumulatedDataSection(conversationData)
+    if (dataSection) {
+      prompt += dataSection
+    }
+  }
+
+  return prompt
+}
+
+// Build section showing accumulated data from this conversation
+function buildAccumulatedDataSection(data: ConversationCrmData): string {
+  const parts: string[] = []
+
+  parts.push('\n\n## ACCUMULATED CONVERSATION DATA')
+  parts.push('\nData captured so far in THIS conversation. Include ALL of this when calling createContact or enrichContact:\n')
+
+  if (data.contactId) {
+    parts.push(`**Contact ID:** ${data.contactId} (use enrichContact to add more data)`)
+  }
+
+  if (data.mortgageEstimate) {
+    parts.push(`\n**Mortgage Estimate:**`)
+    parts.push(`- Max Home Price: $${data.mortgageEstimate.maxHomePrice.toLocaleString()}`)
+    parts.push(`- Down Payment: $${data.mortgageEstimate.downPayment.toLocaleString()}`)
+    parts.push(`- Monthly Payment: $${data.mortgageEstimate.monthlyPayment.toLocaleString()}`)
+    if (data.mortgageEstimate.cmhcPremium) {
+      parts.push(`- CMHC Premium: $${data.mortgageEstimate.cmhcPremium.toLocaleString()} (required - down payment < 20%)`)
+    }
+  }
+
+  if (data.preferredCity || data.preferredNeighborhoods?.length) {
+    parts.push(`\n**Location Interests:**`)
+    if (data.preferredCity) parts.push(`- City: ${data.preferredCity}`)
+    if (data.preferredNeighborhoods?.length) parts.push(`- Neighborhoods: ${data.preferredNeighborhoods.join(', ')}`)
+  }
+
+  if (data.averagePrice || data.averageBeds || data.averageBaths) {
+    parts.push(`\n**Property Preferences:**`)
+    if (data.averagePrice) parts.push(`- Budget: $${data.averagePrice.toLocaleString()}`)
+    if (data.averageBeds) parts.push(`- Bedrooms: ${data.averageBeds}`)
+    if (data.averageBaths) parts.push(`- Bathrooms: ${data.averageBaths}`)
+  }
+
+  if (data.firstTimeBuyer || data.preApproved || data.timeline || data.urgencyFactors?.length) {
+    parts.push(`\n**Intent Signals:**`)
+    if (data.firstTimeBuyer) parts.push(`- First-time buyer: YES`)
+    if (data.preApproved) parts.push(`- Pre-approved: YES`)
+    if (data.timeline) parts.push(`- Timeline: ${data.timeline}`)
+    if (data.urgencyFactors?.length) parts.push(`- Urgency: ${data.urgencyFactors.join(', ')}`)
+  }
+
+  if (data.viewedListings?.length) {
+    parts.push(`\n**Properties Viewed (${data.viewedListings.length}):**`)
+    data.viewedListings.slice(0, 5).forEach(l => {
+      parts.push(`- ${l.address} ($${l.price.toLocaleString()})`)
+    })
+  }
+
+  if (data.toolsUsed?.length) {
+    parts.push(`\n**Tools Used:** ${data.toolsUsed.join(', ')}`)
+  }
+
+  parts.push(`\n**IMPORTANT:** When calling createContact, include ALL the data above in the parameters.`)
+  if (data.contactId) {
+    parts.push(`Since contact already exists (ID: ${data.contactId}), use enrichContact to add new data.`)
+  }
+
+  return parts.join('\n')
 }
 
 export async function POST(req: Request) {
-  const { messages, storedContext } = await req.json() as {
+  const { messages, storedContext, conversationCrmData: incomingCrmData } = await req.json() as {
     messages: CoreMessage[]
     storedContext?: StoredContext
+    conversationCrmData?: ConversationCrmData
   }
 
   const data = new StreamData()
 
-  // Build system prompt with optional returning visitor context
-  const systemPrompt = buildSystemPrompt(storedContext)
+  // Initialize accumulated CRM data from incoming data or empty
+  let accumulatedCrmData: ConversationCrmData = incomingCrmData || {}
 
-  // Log when storedContext is provided
-  if (storedContext) {
-    console.error('[chat.sri-collective.storedContext]', {
-      hasContact: !!storedContext.contact,
-      contactName: storedContext.contact?.name,
-      hasPhone: !!storedContext.contact?.phone,
-      hasPreferences: !!storedContext.preferences,
+  // Build system prompt with all context
+  const systemPrompt = buildSystemPrompt(storedContext, accumulatedCrmData)
+
+  // Log context
+  if (storedContext || incomingCrmData) {
+    console.error('[chat.sri-collective.context]', {
+      hasStoredContext: !!storedContext,
+      contactName: storedContext?.contact?.name,
+      hasPhone: !!storedContext?.contact?.phone,
+      hasAccumulatedData: !!incomingCrmData,
+      accumulatedFields: incomingCrmData ? Object.keys(incomingCrmData).filter(k => incomingCrmData[k as keyof ConversationCrmData]) : [],
     })
   }
 
@@ -109,33 +190,68 @@ export async function POST(req: Request) {
       getNeighborhoodInfo: neighborhoodInfoTool,
       answerFirstTimeBuyerQuestion: firstTimeBuyerFAQTool,
       captureSeller: sellHomeTool,
+      enrichContact: enrichContactTool,
     },
     maxSteps: 5,
 
     onStepFinish: async ({ toolResults }) => {
-      // Capture tool results for rich rendering
-      const results = toolResults as any[] || []
+      // Capture tool results for rich rendering AND accumulate CRM data
+      const results = toolResults as Array<{ toolName: string; result: Record<string, unknown> }> || []
+
       for (const toolResult of results) {
-        if (toolResult.toolName === 'estimateMortgage' && toolResult.result?.success) {
-          data.append({
-            type: 'mortgageEstimate',
-            data: toolResult.result.estimate,
-            cta: toolResult.result.cta,
+        // Extract and accumulate CRM data from tool result
+        const crmData = extractCrmDataFromToolResult(toolResult.toolName, toolResult.result)
+        if (crmData) {
+          accumulatedCrmData = mergeConversationData(accumulatedCrmData, crmData)
+
+          // Log what we accumulated
+          console.error('[chat.sri-collective.crmDataAccumulated]', {
+            tool: toolResult.toolName,
+            newFields: Object.keys(crmData).filter(k => crmData[k as keyof typeof crmData]),
           })
         }
-        // Capture property search results for card rendering
+
+        // Existing: capture mortgage estimate for UI rendering
+        if (toolResult.toolName === 'estimateMortgage' && toolResult.result?.success) {
+          const result = toolResult.result as Record<string, unknown>
+          data.append({
+            type: 'mortgageEstimate',
+            data: result.estimate as Record<string, unknown>,
+            cta: result.cta as Record<string, unknown>,
+          } as unknown as Parameters<typeof data.append>[0])
+        }
+
+        // Existing: capture property search results for card rendering
         if (toolResult.toolName === 'searchProperties' && toolResult.result?.success) {
+          const result = toolResult.result as Record<string, unknown>
           data.append({
             type: 'propertySearch',
-            listings: toolResult.result.listings,
-            total: toolResult.result.total,
-            viewAllUrl: toolResult.result.viewAllUrl,
-          })
+            listings: result.listings as unknown[],
+            total: result.total as number,
+            viewAllUrl: result.viewAllUrl as string,
+          } as unknown as Parameters<typeof data.append>[0])
         }
       }
     },
 
     onFinish: async ({ usage, finishReason }) => {
+      // Log accumulated CRM data (client-side storage can be added later)
+      if (Object.keys(accumulatedCrmData).length > 0) {
+        const summary = generateConversationSummary(accumulatedCrmData)
+        accumulatedCrmData.conversationSummary = summary
+
+        // Note: Not sending conversationCrmData via stream for now
+        // The AI has access to accumulated data via system prompt injection
+        // Client-side persistence can be added later if needed
+
+        console.error('[chat.sri-collective.crmDataFinal]', {
+          summary,
+          hasContactId: !!accumulatedCrmData.contactId,
+          hasMortgageEstimate: !!accumulatedCrmData.mortgageEstimate,
+          toolsUsed: accumulatedCrmData.toolsUsed,
+        })
+      }
+
       // Close the data stream
       data.close()
 

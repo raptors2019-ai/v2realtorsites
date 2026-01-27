@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         lastName: '',
         email: email || '',
         phone: cleanedPhone,
-        source: 'chatbot',
+        source: 'sri-collective',
         leadType: preferences?.leadType || 'buyer',
         customFields: {
           average_price: preferences?.budget?.max,
