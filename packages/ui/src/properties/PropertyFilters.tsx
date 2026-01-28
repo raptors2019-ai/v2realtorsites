@@ -7,7 +7,7 @@ import {
   ListingType,
   PropertyClass,
 } from "@repo/types";
-import { cn, formatPriceCompact, getAllCities } from "@repo/lib";
+import { cn, getAllCities } from "@repo/lib";
 import { useState, useCallback, useRef, useEffect } from "react";
 
 interface PropertyFiltersProps {
@@ -296,11 +296,24 @@ export function PropertyFilters({
     return value !== undefined && (Array.isArray(value) ? value.length > 0 : true);
   });
 
-  const getPercent = (value: number) => ((value - MIN_PRICE) / (MAX_PRICE - MIN_PRICE)) * 100;
+  // Check if price range is active (not at defaults)
+  const isPriceActive = priceRange[0] > MIN_PRICE || priceRange[1] < MAX_PRICE;
 
-  // Helper functions for advanced filters
+  // Helper functions for sliders
+  const getPercent = (value: number) => ((value - MIN_PRICE) / (MAX_PRICE - MIN_PRICE)) * 100;
   const getSqftPercent = (value: number) => ((value - SQFT_MIN) / (SQFT_MAX - SQFT_MIN)) * 100;
   const getLotSizePercent = (value: number) => ((value - LOT_SIZE_MIN) / (LOT_SIZE_MAX - LOT_SIZE_MIN)) * 100;
+
+  // Format price for display in compact input (e.g., 500000 -> "500K", 1500000 -> "1.5M")
+  const formatPriceInputDisplay = (value: number): string => {
+    if (value === 0 || value === MIN_PRICE) return '';
+    if (value >= MAX_PRICE) return '5M+';
+    if (value >= 1000000) {
+      const millions = value / 1000000;
+      return millions % 1 === 0 ? `${millions}M` : `${millions.toFixed(1)}M`;
+    }
+    return `${Math.round(value / 1000)}K`;
+  };
 
   // Helper to format display text for multi-select
   const getDisplayText = <T,>(selected: T[], allLabel: string, formatter?: (item: T) => string): string => {
@@ -340,13 +353,22 @@ export function PropertyFilters({
           ref={buttonRef}
           type="button"
           onClick={() => setOpenDropdown(isOpen ? null : dropdownKey)}
-          className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer flex items-center justify-between text-left"
+          className={cn(
+            "w-full h-9 px-3 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer flex items-center justify-between text-left",
+            selected.length > 0
+              ? "bg-primary/5 border-2 border-primary text-primary font-medium"
+              : "bg-stone-50 border border-stone-200 text-stone-700"
+          )}
         >
           <span className="truncate">
             {getDisplayText(selected, allLabel, formatter)}
           </span>
           <svg
-            className={`w-4 h-4 text-stone-400 transition-transform flex-shrink-0 ${isOpen ? "rotate-180" : ""}`}
+            className={cn(
+              "w-4 h-4 transition-transform flex-shrink-0",
+              selected.length > 0 ? "text-primary" : "text-stone-400",
+              isOpen && "rotate-180"
+            )}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -392,8 +414,8 @@ export function PropertyFilters({
 
   return (
     <div className={cn("bg-white rounded-xl shadow-sm border border-stone-200 p-4", className)}>
-      {/* Grid Layout for Filters */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
+      {/* Row 1: Primary Filters */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Listing Type - Multi-Select */}
         <MultiSelectDropdown
           label="Listing"
@@ -440,7 +462,7 @@ export function PropertyFilters({
         />
 
         {/* Area - Multi-Select with Search */}
-        <div className="col-span-2 sm:col-span-1 relative">
+        <div className="relative">
           <label className="block text-[10px] text-stone-500 mb-1.5 uppercase tracking-wide font-medium">
             Area
           </label>
@@ -451,13 +473,22 @@ export function PropertyFilters({
               setOpenDropdown(openDropdown === 'area' ? null : 'area');
               setCitySearchFilter('');
             }}
-            className="w-full h-9 px-3 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer flex items-center justify-between text-left"
+            className={cn(
+              "w-full h-9 px-3 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer flex items-center justify-between text-left",
+              selectedCities.length > 0
+                ? "bg-primary/5 border-2 border-primary text-primary font-medium"
+                : "bg-stone-50 border border-stone-200 text-stone-700"
+            )}
           >
             <span className="truncate">
               {selectedCities.length === 0 ? 'All Areas' : selectedCities.join(', ')}
             </span>
             <svg
-              className={`w-4 h-4 text-stone-400 transition-transform flex-shrink-0 ${openDropdown === 'area' ? "rotate-180" : ""}`}
+              className={cn(
+                "w-4 h-4 transition-transform flex-shrink-0",
+                selectedCities.length > 0 ? "text-primary" : "text-stone-400",
+                openDropdown === 'area' && "rotate-180"
+              )}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -532,6 +563,100 @@ export function PropertyFilters({
             </>
           )}
         </div>
+      </div>
+
+      {/* Row 2: Price + Secondary Filters + Actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mt-3">
+        {/* Price Range Slider - Compact */}
+        <div className="col-span-2">
+          <div className="flex items-center justify-between mb-1">
+            <label className={cn(
+              "text-[10px] uppercase tracking-wide font-medium",
+              isPriceActive ? "text-primary" : "text-stone-500"
+            )}>
+              Price Range
+            </label>
+            <span className={cn(
+              "text-[10px] font-medium",
+              isPriceActive ? "text-primary" : "text-stone-600"
+            )}>
+              {formatPriceInputDisplay(priceRange[0]) || '$0'} — {priceRange[1] >= MAX_PRICE ? '$5M+' : `$${formatPriceInputDisplay(priceRange[1])}`}
+            </span>
+          </div>
+          <div className={cn(
+            "relative h-10 flex items-center rounded-lg px-3",
+            isPriceActive
+              ? "bg-primary/5 border-2 border-primary"
+              : "bg-stone-50 border border-stone-200"
+          )}>
+            {/* Track container */}
+            <div className="absolute left-3 right-3 h-2">
+              {/* Background track */}
+              <div className="absolute inset-0 bg-stone-300 rounded-full shadow-inner" />
+              {/* Active/colored track */}
+              <div
+                className="absolute h-full bg-primary rounded-full shadow-sm"
+                style={{
+                  left: `${getPercent(priceRange[0])}%`,
+                  width: `${getPercent(priceRange[1]) - getPercent(priceRange[0])}%`,
+                }}
+              />
+              {/* Tick marks */}
+              {[0, 20, 40, 60, 80, 100].map((percent) => (
+                <div
+                  key={percent}
+                  className="absolute top-1/2 -translate-y-1/2 w-px h-2.5 bg-stone-400"
+                  style={{ left: `${percent}%`, marginLeft: percent === 0 ? 0 : percent === 100 ? '-1px' : '-0.5px' }}
+                />
+              ))}
+            </div>
+            <input
+              type="range"
+              min={MIN_PRICE}
+              max={MAX_PRICE}
+              step={STEP}
+              value={priceRange[0]}
+              onChange={(e) => handlePriceRangeChange(0, parseInt(e.target.value))}
+              className="absolute left-3 right-3 h-2 appearance-none bg-transparent pointer-events-none z-10
+                [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none
+                [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full
+                [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary
+                [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform
+                [&::-webkit-slider-thumb]:hover:scale-110
+                [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none
+                [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
+                [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary
+                [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
+            />
+            <input
+              type="range"
+              min={MIN_PRICE}
+              max={MAX_PRICE}
+              step={STEP}
+              value={priceRange[1]}
+              onChange={(e) => handlePriceRangeChange(1, parseInt(e.target.value))}
+              className="absolute left-3 right-3 h-2 appearance-none bg-transparent pointer-events-none z-20
+                [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none
+                [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full
+                [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary
+                [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform
+                [&::-webkit-slider-thumb]:hover:scale-110
+                [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none
+                [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
+                [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary
+                [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
+            />
+          </div>
+          {/* Price tick labels */}
+          <div className="flex justify-between px-2 mt-0.5">
+            <span className="text-[9px] text-stone-500">$0</span>
+            <span className="text-[9px] text-stone-500">$1M</span>
+            <span className="text-[9px] text-stone-500">$2M</span>
+            <span className="text-[9px] text-stone-500">$3M</span>
+            <span className="text-[9px] text-stone-500">$4M</span>
+            <span className="text-[9px] text-stone-500">$5M+</span>
+          </div>
+        </div>
 
         {/* Bedrooms - Multi-Select */}
         <MultiSelectDropdown
@@ -583,103 +708,59 @@ export function PropertyFilters({
             <option value="latest">Newest First</option>
           </select>
         </div>
-      </div>
 
-      {/* Price Range Slider */}
-      <div className="mt-4 pt-4 border-t border-stone-100">
-        <div className="flex items-center justify-between mb-3">
-          <label className="text-[10px] text-stone-500 uppercase tracking-wide font-medium">
-            Price Range
+        {/* More Filters Button */}
+        <div>
+          <label className="block text-[10px] text-stone-500 mb-1.5 uppercase tracking-wide font-medium invisible">
+            More
           </label>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-secondary">
-              {formatPriceCompact(priceRange[0])}
-            </span>
-            <span className="text-stone-400">—</span>
-            <span className="text-sm font-medium text-secondary">
-              {priceRange[1] >= MAX_PRICE ? `${formatPriceCompact(MAX_PRICE)}+` : formatPriceCompact(priceRange[1])}
-            </span>
-          </div>
-        </div>
-
-        {/* Dual Range Slider */}
-        <div className="relative h-6 flex items-center">
-          <div className="absolute w-full h-2 bg-stone-200 rounded-full" />
-          <div
-            className="absolute h-2 bg-primary rounded-full"
-            style={{
-              left: `${getPercent(priceRange[0])}%`,
-              width: `${getPercent(priceRange[1]) - getPercent(priceRange[0])}%`,
-            }}
-          />
-          <input
-            type="range"
-            min={MIN_PRICE}
-            max={MAX_PRICE}
-            step={STEP}
-            value={priceRange[0]}
-            onChange={(e) => handlePriceRangeChange(0, parseInt(e.target.value))}
-            className="absolute w-full h-2 appearance-none bg-transparent pointer-events-none z-10
-              [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none
-              [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full
-              [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary
-              [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform
-              [&::-webkit-slider-thumb]:hover:scale-110
-              [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none
-              [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
-              [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary
-              [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
-          />
-          <input
-            type="range"
-            min={MIN_PRICE}
-            max={MAX_PRICE}
-            step={STEP}
-            value={priceRange[1]}
-            onChange={(e) => handlePriceRangeChange(1, parseInt(e.target.value))}
-            className="absolute w-full h-2 appearance-none bg-transparent pointer-events-none z-20
-              [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none
-              [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full
-              [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary
-              [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform
-              [&::-webkit-slider-thumb]:hover:scale-110
-              [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none
-              [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
-              [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary
-              [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
-          />
-        </div>
-
-        <div className="flex justify-between mt-1 text-[10px] text-stone-400">
-          <span>$0</span>
-          <span>$1M</span>
-          <span>$2M</span>
-          <span>$3M</span>
-          <span>$4M</span>
-          <span>$5M+</span>
-        </div>
-      </div>
-
-      {/* More Filters Toggle */}
-      <div className="mt-4 pt-4 border-t border-stone-100">
-        <button
-          type="button"
-          onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
-          className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-        >
-          <svg
-            className={`w-4 h-4 transition-transform duration-200 ${isMoreFiltersOpen ? 'rotate-180' : ''}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+          <button
+            type="button"
+            onClick={() => setIsMoreFiltersOpen(!isMoreFiltersOpen)}
+            className={cn(
+              "w-full h-9 px-3 text-sm rounded-lg transition-all flex items-center justify-center gap-1.5",
+              isMoreFiltersOpen
+                ? "bg-primary text-white"
+                : "bg-stone-50 border border-stone-200 text-stone-600 hover:bg-stone-100"
+            )}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-          {isMoreFiltersOpen ? 'Hide Advanced Filters' : 'More Filters'}
-          {hasAdvancedFilters && (
-            <span className="w-2 h-2 bg-primary rounded-full" />
-          )}
-        </button>
+            <svg
+              className={`w-4 h-4 transition-transform duration-200 ${isMoreFiltersOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+            <span>More</span>
+            {hasAdvancedFilters && !isMoreFiltersOpen && (
+              <span className="w-1.5 h-1.5 bg-primary rounded-full" />
+            )}
+          </button>
+        </div>
+
+        {/* Clear Filters Button */}
+        <div>
+          <label className="block text-[10px] text-stone-500 mb-1.5 uppercase tracking-wide font-medium invisible">
+            Clear
+          </label>
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            disabled={!hasActiveFilters}
+            className={cn(
+              "w-full h-9 px-3 text-sm rounded-lg transition-all flex items-center justify-center gap-1.5",
+              hasActiveFilters
+                ? "bg-stone-50 border border-stone-200 text-stone-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                : "bg-stone-50 border border-stone-100 text-stone-300 cursor-not-allowed"
+            )}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Clear</span>
+          </button>
+        </div>
       </div>
 
       {/* Expandable Advanced Filters Panel */}
@@ -917,20 +998,6 @@ export function PropertyFilters({
         </div>
       )}
 
-      {/* Clear Filters */}
-      {hasActiveFilters && (
-        <div className="mt-4 pt-3 border-t border-stone-100 flex justify-end">
-          <button
-            onClick={handleClearFilters}
-            className="text-xs font-medium text-stone-500 hover:text-primary transition-colors flex items-center gap-1"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Clear All Filters
-          </button>
-        </div>
-      )}
     </div>
   );
 }
