@@ -3,13 +3,12 @@ import type { CoreTool } from 'ai'
 import { BoldTrailClient } from '@repo/crm'
 import { calculateLeadQuality } from '../utils/lead-scoring'
 
-// Format budget to hashtag-friendly format
+// Format budget to hashtag-friendly format (no periods allowed in BoldTrail)
 function formatBudgetHashtag(budget: number): string {
   if (budget < 500000) return 'budget-under-500k'
   if (budget < 750000) return 'budget-500k-750k'
   if (budget < 1000000) return 'budget-750k-1m'
-  if (budget < 1500000) return 'budget-1m-1.5m'
-  if (budget < 2000000) return 'budget-1.5m-2m'
+  if (budget < 2000000) return 'budget-1m-2m'
   return 'budget-2m-plus'
 }
 
