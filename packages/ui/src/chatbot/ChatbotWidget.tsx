@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useChatbotStore, MortgageEstimate, PropertySearchResult, CallToAction, hasCookieConsent } from "./chatbot-store";
+import { useChatbotStore, MortgageEstimate, PropertySearchResult, NeighborhoodInfo, FirstTimeBuyerInfo, hasCookieConsent } from "./chatbot-store";
 import { trackChatbotInteraction, trackLeadFormSubmit } from "@repo/analytics";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessages } from "./ChatMessages";
@@ -11,7 +11,71 @@ import { ChatQuickActions } from "./ChatQuickActions";
 import { SurveyFlow, SurveyState } from "./survey";
 import { BUDGET_LABELS, BUDGET_RANGES, PROPERTY_TYPE_LABELS, TIMELINE_LABELS, TIMELINE_API_MAP, PROMPTS } from "./constants";
 import { useStoredContext, useWelcomeMessage, usePromptRotation, type StoredContext } from "./hooks";
+import { parseStreamResponse, parseTextOnlyStream, buildContactPrompt, parseFullName, saveContactToCRM, formatCurrencyCAD } from "./utils";
 import type { CityMatch } from "@repo/lib";
+
+// Helper to parse first-time buyer info from AI response text
+function parseFirstTimeBuyerFromText(text: string, topic: string, relatedTopics: string[]): FirstTimeBuyerInfo {
+  // Extract question (first heading or first sentence)
+  const questionMatch = text.match(/##\s*(.+?)[\n\r]/);
+  const question = questionMatch ? questionMatch[1].trim() : text.split(/[.!?]/)[0] + '?';
+
+  // Extract the answer (text after question heading, before any other heading)
+  const answerMatch = text.match(/##[^\n]+\n\n([\s\S]+?)(?=\n\n\*\*|$)/);
+  const answer = answerMatch ? answerMatch[1].trim() : text.split('\n\n')[1] || text;
+
+  // Try to extract programs if they exist
+  const programs: Array<{ name: string; benefit: string; eligibility: string }> = [];
+  const programMatches = text.matchAll(/\*\*([^*]+)\*\*\n-\s*Benefit:\s*([^\n]+)\n-\s*Eligibility:\s*([^\n]+)/g);
+  for (const match of programMatches) {
+    programs.push({
+      name: match[1].trim(),
+      benefit: match[2].trim(),
+      eligibility: match[3].trim(),
+    });
+  }
+
+  // Try to extract total potential savings
+  const savingsMatch = text.match(/Total Potential Savings[:\s]*([^\n]+)/i);
+  const totalPotentialSavings = savingsMatch ? savingsMatch[1].trim() : undefined;
+
+  // Try to extract steps
+  const steps: string[] = [];
+  const stepsMatch = text.match(/Steps[:\s]*\n([\s\S]+?)(?=\n\n\*\*|---|\n\*This|$)/i);
+  if (stepsMatch) {
+    const stepLines = stepsMatch[1].match(/\d+\.\s*([^\n]+)/g);
+    if (stepLines) {
+      stepLines.forEach(line => {
+        const stepText = line.replace(/^\d+\.\s*/, '').trim();
+        if (stepText) steps.push(stepText);
+      });
+    }
+  }
+
+  // Try to extract benefits
+  const benefits: string[] = [];
+  const benefitsMatch = text.match(/Benefits[:\s]*\n([\s\S]+?)(?=\n\n\*\*|---|\n\*This|$)/i);
+  if (benefitsMatch) {
+    const benefitLines = benefitsMatch[1].match(/-\s*([^\n]+)/g);
+    if (benefitLines) {
+      benefitLines.forEach(line => {
+        const benefitText = line.replace(/^-\s*/, '').trim();
+        if (benefitText) benefits.push(benefitText);
+      });
+    }
+  }
+
+  return {
+    topic,
+    question,
+    answer,
+    programs: programs.length > 0 ? programs : undefined,
+    totalPotentialSavings,
+    steps: steps.length > 0 ? steps : undefined,
+    benefits: benefits.length > 0 ? benefits : undefined,
+    relatedTopics,
+  };
+}
 
 // Floating button component
 function FloatingButton({ onClick, isOpen }: { onClick: () => void; isOpen: boolean }) {
@@ -73,9 +137,13 @@ export function ChatbotWidget() {
     toggleOpen, minimize, dismissPrompt, addMessage, setLoading,
     preferences, viewedProperties, phone, email, setContactId, updatePreferences,
     // Lead gate state and actions
-    toolUsageCount, hasSoftAsked, hasProvidedContact,
-    incrementToolUsage, markSoftAsked, skipSoftAsk, completeContactCapture
+    toolUsageCount, hasSoftAsked: _hasSoftAsked, hasProvidedContact, skipCount,
+    incrementToolUsage: _incrementToolUsage, markSoftAsked, skipSoftAsk, incrementSkipCount, completeContactCapture
   } = useChatbotStore();
+
+  // Max skips allowed before user must provide contact info
+  const MAX_SKIPS = 2;
+  const remainingSkips = Math.max(0, MAX_SKIPS - skipCount);
 
   // Compute if hard gate is active
   const isHardGateActive = toolUsageCount >= 2 && !hasProvidedContact;
@@ -84,7 +152,15 @@ export function ChatbotWidget() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isMortgageCalculating, setIsMortgageCalculating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const latestMessageRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const mortgageCardRef = useRef<HTMLDivElement>(null);
+  const surveyStepRef = useRef(survey.step); // Track survey step for setTimeout callbacks
+
+  // Keep surveyStepRef in sync with survey state
+  useEffect(() => {
+    surveyStepRef.current = survey.step;
+  }, [survey.step]);
 
   // Rehydrate from localStorage only if cookie consent is accepted
   useEffect(() => {
@@ -120,40 +196,86 @@ export function ChatbotWidget() {
   const prevMessageCountRef = useRef(messages.length);
 
   // Detect when a new tool result is added and trigger gates
+  // Note: We access store state directly to avoid infinite loops from dependency changes
   useEffect(() => {
-    if (messages.length > prevMessageCountRef.current) {
-      // Check the last message for a tool result
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage?.toolResult && !hasProvidedContact) {
-        // A tool was used - increment counter
-        incrementToolUsage();
-
-        // Determine which gate to show (after incrementing)
-        const newToolCount = toolUsageCount + 1;
-
-        if (newToolCount === 1 && !hasSoftAsked) {
-          // First tool use - show soft ask after a short delay
-          setTimeout(() => {
-            if (survey.step === "idle") {
-              setSurvey({ step: "soft-ask", type: "general-contact" });
-            }
-          }, 1500);
-        } else if (newToolCount >= 2 && !hasProvidedContact) {
-          // Second+ tool use - show hard gate after a short delay
-          setTimeout(() => {
-            if (survey.step === "idle" || survey.step === "soft-ask") {
-              setSurvey({ step: "hard-gate", type: "general-contact" });
-            }
-          }, 1500);
-        }
-      }
+    // Only run when a new message is added
+    if (messages.length <= prevMessageCountRef.current) {
+      return;
     }
-    prevMessageCountRef.current = messages.length;
-  }, [messages, hasProvidedContact, hasSoftAsked, toolUsageCount, incrementToolUsage, survey.step]);
 
-  // Scroll to bottom when messages change
+    // Update ref immediately to prevent re-processing
+    prevMessageCountRef.current = messages.length;
+
+    // Check the last message for a tool result
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage?.toolResult) {
+      return;
+    }
+
+    // Get current state from store to avoid stale closure values
+    const state = useChatbotStore.getState();
+    if (state.hasProvidedContact) {
+      return;
+    }
+
+    // A tool was used - increment counter
+    state.incrementToolUsage();
+
+    // Skip showing soft-ask/hard-gate if the tool card has its own inline unlock form
+    const toolsWithInlineForms = ['mortgageEstimate', 'neighborhoodInfo', 'firstTimeBuyer'];
+    const hasInlineForm = toolsWithInlineForms.includes(lastMessage.toolResult.type);
+    if (hasInlineForm) {
+      // Card has its own unlock form, don't show additional gates
+      console.log('[chatbot.gate.skip]', { reason: 'card has its own contact form', tool: lastMessage.toolResult.type });
+      return;
+    }
+
+    // Determine which gate to show (after incrementing)
+    const newToolCount = state.toolUsageCount + 1;
+
+    if (newToolCount === 1 && !state.hasSoftAsked) {
+      // First tool use - show soft ask after a short delay
+      setTimeout(() => {
+        // Re-check ALL state at execution time (user may have provided contact via card unlock)
+        const currentState = useChatbotStore.getState();
+        const currentSurveyStep = surveyStepRef.current;
+        // Check if there's a card with inline form (these handle their own contact capture)
+        const inlineFormTools = ['mortgageEstimate', 'neighborhoodInfo', 'firstTimeBuyer'];
+        const hasCardWithInlineForm = messages.some(m => m.toolResult && inlineFormTools.includes(m.toolResult.type));
+        console.log('[chatbot.softAsk.check]', {
+          currentSurveyStep,
+          hasProvidedContact: currentState.hasProvidedContact,
+          hasSoftAsked: currentState.hasSoftAsked,
+          hasCardWithInlineForm,
+          willShow: currentSurveyStep === "idle" && !currentState.hasProvidedContact && !currentState.hasSoftAsked && !hasCardWithInlineForm,
+        });
+        if (currentSurveyStep === "idle" && !currentState.hasProvidedContact && !currentState.hasSoftAsked && !hasCardWithInlineForm) {
+          setSurvey({ step: "soft-ask", type: "general-contact" });
+        }
+      }, 1500);
+    } else if (newToolCount >= 2) {
+      // Second+ tool use - show hard gate after a short delay
+      setTimeout(() => {
+        // Re-check ALL state at execution time
+        const currentState = useChatbotStore.getState();
+        const currentSurveyStep = surveyStepRef.current;
+        // Check if there's a card with inline form (these handle their own contact capture)
+        const inlineFormTools = ['mortgageEstimate', 'neighborhoodInfo', 'firstTimeBuyer'];
+        const hasCardWithInlineForm = messages.some(m => m.toolResult && inlineFormTools.includes(m.toolResult.type));
+        if ((currentSurveyStep === "idle" || currentSurveyStep === "soft-ask") && !currentState.hasProvidedContact && !hasCardWithInlineForm) {
+          setSurvey({ step: "hard-gate", type: "general-contact" });
+        }
+      }, 1500);
+    }
+  }, [messages]); // Only depend on messages - access other state directly from store
+
+  // Scroll to top of latest message when messages change (so cards are fully visible)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Small delay to let card render fully before scrolling
+    const timer = setTimeout(() => {
+      latestMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+    return () => clearTimeout(timer);
   }, [displayMessages, isLoading, survey.step]);
 
   // Focus input when chat opens and track interaction
@@ -181,8 +303,9 @@ export function ChatbotWidget() {
         messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: content.trim() }],
       };
 
-      // Include stored context for personalization (only on first few messages)
-      if (storedContext && messages.length <= 2) {
+      // Include stored context for personalization - always send if we have contact info
+      // so the AI knows not to ask for it again
+      if (storedContext) {
         requestBody.storedContext = storedContext;
       }
 
@@ -194,78 +317,28 @@ export function ChatbotWidget() {
 
       if (!response.ok) throw new Error("Failed to send message");
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-      let mortgageData: MortgageEstimate | null = null;
-      let propertySearchData: PropertySearchResult | null = null;
-      let ctaData: CallToAction | null = null;
+      const { text: fullText, mortgageData, propertySearchData, neighborhoodData, firstTimeBuyerData, ctaData } = await parseStreamResponse(response);
 
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          for (const line of chunk.split('\n')) {
-            if (!line.trim()) continue;
-            // AI SDK stream prefixes:
-            // 0: text content
-            // 2: data array (custom data from StreamData)
-            // d: done signal
-            // e: error
-            // f: finish reason
-            // Skip any prefixes we don't handle
-            // AI SDK v4 stream prefixes: 0=text, 2=data, d=done, e=error, f=finish
-            const prefix = line.substring(0, 2);
-            const content = line.substring(2);
-
-            if (prefix === '0:') {
-              try { fullText += JSON.parse(content); } catch { /* ignore parse errors */ }
-            } else if (prefix === '2:') {
-              try {
-                const parsed = JSON.parse(content);
-                if (parsed && Array.isArray(parsed)) {
-                  for (const item of parsed) {
-                    if (item.type === 'mortgageEstimate' && item.data) {
-                      mortgageData = item.data;
-                      ctaData = item.cta || null;
-                    }
-                    if (item.type === 'propertySearch' && item.listings) {
-                      propertySearchData = {
-                        listings: item.listings,
-                        total: item.total,
-                        viewAllUrl: item.viewAllUrl,
-                      };
-                    }
-                    // Handle accumulated CRM data (for potential client-side storage)
-                    if (item.type === 'conversationCrmData' && item.data) {
-                      // Could store this for sending back with next request
-                      console.log('[chatbot] Received CRM data:', item.data);
-                    }
-                  }
-                }
-              } catch { /* ignore parse errors */ }
-            }
-            // Silently ignore other prefixes (d:, e:, f:) - they're control messages
-          }
+      if (fullText) {
+        // Determine which tool result to attach (priority order for visual rendering)
+        let toolResult: { type: 'mortgageEstimate' | 'propertySearch' | 'neighborhoodInfo' | 'firstTimeBuyer'; data: MortgageEstimate | PropertySearchResult | NeighborhoodInfo | FirstTimeBuyerInfo } | undefined;
+        if (propertySearchData) {
+          toolResult = { type: 'propertySearch', data: propertySearchData };
+        } else if (mortgageData) {
+          toolResult = { type: 'mortgageEstimate', data: mortgageData };
+        } else if (neighborhoodData) {
+          toolResult = { type: 'neighborhoodInfo', data: neighborhoodData };
+        } else if (firstTimeBuyerData) {
+          const ftbData = parseFirstTimeBuyerFromText(fullText, firstTimeBuyerData.topic, firstTimeBuyerData.relatedTopics);
+          toolResult = { type: 'firstTimeBuyer', data: ftbData };
         }
 
-        if (fullText) {
-          // Determine which tool result to attach (property search takes priority for visual rendering)
-          let toolResult: { type: 'mortgageEstimate' | 'propertySearch'; data: MortgageEstimate | PropertySearchResult } | undefined;
-          if (propertySearchData) {
-            toolResult = { type: 'propertySearch', data: propertySearchData };
-          } else if (mortgageData) {
-            toolResult = { type: 'mortgageEstimate', data: mortgageData };
-          }
-
-          addMessage({
-            role: "assistant", content: fullText,
-            toolResult,
-            cta: ctaData || undefined
-          });
-        }
+        addMessage({
+          role: "assistant",
+          content: fullText,
+          toolResult,
+          cta: ctaData || undefined
+        });
       }
     } catch (error) {
       console.error("Chat error:", error);
@@ -345,35 +418,26 @@ export function ChatbotWidget() {
     setLoading(true);
 
     try {
-      const nameParts = contact.fullName.trim().split(/\s+/);
-      const firstName = nameParts[0] || contact.fullName;
-      const lastName = nameParts.slice(1).join(' ') || '';
+      const { firstName, lastName } = parseFullName(contact.fullName);
+      const priceRange = BUDGET_RANGES[survey.budget || "750k-1m"];
 
-      let contactPrompt = '';
-      if (survey.type === 'dream-home') {
-        const priceRange = BUDGET_RANGES[survey.budget || "750k-1m"];
-        contactPrompt = `Use the createContact tool to save this buyer lead with their dream home preferences:
-- firstName: "${firstName}"
-- lastName: "${lastName}"
-- email: "${contact.email || ''}"
-- cellPhone: "${contact.phone}"
-- leadType: "buyer"
-- source: "sri-collective"
-- propertyTypes: ["${survey.propertyType || 'any'}"]
-- averagePrice: ${priceRange.avg}
-- averageBeds: ${parseInt(survey.bedrooms || '3')}
-- preferredCity: "${survey.locations?.[0] || ''}"
-- preferredNeighborhoods: ${JSON.stringify(survey.locations || [])}
-- timeline: "${TIMELINE_API_MAP[survey.timeline || 'just-exploring']}"`;
-      } else {
-        contactPrompt = `Use the createContact tool to save this general inquiry lead:
-- firstName: "${firstName}"
-- lastName: "${lastName}"
-- email: "${contact.email || ''}"
-- cellPhone: "${contact.phone}"
-- leadType: "general"
-- source: "sri-collective"`;
-      }
+      const contactPrompt = survey.type === 'dream-home'
+        ? buildContactPrompt(
+            { firstName, lastName, phone: contact.phone, email: contact.email },
+            {
+              leadType: 'buyer',
+              propertyTypes: [survey.propertyType || 'any'],
+              averagePrice: priceRange.avg,
+              averageBeds: parseInt(survey.bedrooms || '3'),
+              preferredCity: survey.locations?.[0] || '',
+              preferredNeighborhoods: survey.locations || [],
+              timeline: TIMELINE_API_MAP[survey.timeline || 'just-exploring'],
+            }
+          )
+        : buildContactPrompt(
+            { firstName, lastName, phone: contact.phone, email: contact.email },
+            { leadType: 'general' }
+          );
 
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -383,26 +447,8 @@ export function ChatbotWidget() {
 
       if (!response.ok) throw new Error("Failed to send message");
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          for (const line of decoder.decode(value).split('\n')) {
-            if (!line.trim()) continue;
-            // AI SDK v4 stream prefixes: 0=text, 2=data, d=done, e=error, f=finish
-            const prefix = line.substring(0, 2);
-            if (prefix === '0:') {
-              try { fullText += JSON.parse(line.substring(2)); } catch { /* ignore */ }
-            }
-            // Silently ignore other prefixes (2:, d:, e:, f:)
-          }
-        }
-        if (fullText) addMessage({ role: "assistant", content: fullText });
-      }
+      const fullText = await parseTextOnlyStream(response);
+      if (fullText) addMessage({ role: "assistant", content: fullText });
     } catch (error) {
       console.error("Chat error:", error);
       const thankYouMsg = survey.type === 'dream-home'
@@ -445,57 +491,179 @@ export function ChatbotWidget() {
     router.push(`/properties?budgetMax=${maxPrice}`);
   };
 
-  // Mortgage unlock handler - save contact and show city search
-  const handleMortgageUnlock = async (contact: { phone: string; email?: string }, maxPrice: number) => {
+  // Mortgage unlock handler - save contact and scroll to card (city picker replaces follow-up message)
+  const handleMortgageUnlock = (contact: { name: string; phone: string; email?: string }, maxPrice: number) => {
     trackChatbotInteraction('lead');
     trackLeadFormSubmit('chatbot');
 
-    // Store contact info locally
+    const { firstName, lastName } = parseFullName(contact.name);
+
+    // Store contact info locally and mark as provided
     setContactId('pending', contact.phone, contact.email);
+    completeContactCapture(contact.name, contact.phone, contact.email);
+    markSoftAsked();
+    setSurvey({ step: "idle" });
     updatePreferences({ budget: { max: maxPrice } });
 
-    // Send to API to save contact in CRM
-    try {
-      const contactPrompt = `Use the createContact tool to save this lead who unlocked their mortgage estimate:
-- cellPhone: "${contact.phone}"
-- email: "${contact.email || ''}"
-- leadType: "buyer"
-- source: "sri-collective"
-- averagePrice: ${maxPrice}
-- conversationSummary: "Used mortgage calculator, budget up to ${new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(maxPrice)}"`;
+    // Scroll to mortgage card after a brief delay to let it re-render unlocked
+    setTimeout(() => {
+      mortgageCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
 
-      // Fire and forget - don't block the UI
-      fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: contactPrompt }]
-        }),
-      }).catch(console.error);
+    // Save to CRM (fire and forget)
+    const contactPrompt = buildContactPrompt(
+      { firstName, lastName, phone: contact.phone, email: contact.email },
+      {
+        leadType: 'buyer',
+        averagePrice: maxPrice,
+        conversationSummary: `Used mortgage calculator, budget up to ${formatCurrencyCAD(maxPrice)}`,
+      }
+    );
+    saveContactToCRM(messages, contactPrompt);
+  };
 
-      // Add assistant message asking about city
+  // Handler for city select from mortgage card picker
+  const handleMortgageCitySelect = (citySlug: string, _cityName: string, maxPrice: number) => {
+    trackChatbotInteraction('property_search');
+    router.push(`/properties/${citySlug}?budgetMax=${maxPrice}`);
+  };
+
+  // Handler for "Search All GTA" from mortgage card picker
+  const handleMortgageSearchAll = (maxPrice: number) => {
+    trackChatbotInteraction('property_search');
+    router.push(`/properties?budgetMax=${maxPrice}`);
+  };
+
+  // Handler for skipping the mortgage card unlock (city picker shows in card instead of follow-up message)
+  const handleMortgageSkip = () => {
+    skipSoftAsk(); // Mark soft ask as skipped so it doesn't appear later
+    incrementSkipCount(); // Track skip for limiting future skips
+    // Note: No follow-up message needed - the city picker in the card replaces it
+  };
+
+  // Neighborhood card unlock handler - save contact, show full guide, suggest property search
+  const handleNeighborhoodUnlock = (contact: { name: string; phone: string; email?: string }, city: string) => {
+    trackChatbotInteraction('lead');
+    trackLeadFormSubmit('chatbot');
+
+    const { firstName, lastName } = parseFullName(contact.name);
+
+    // Store contact info locally and mark as provided
+    setContactId('pending', contact.phone, contact.email);
+    completeContactCapture(contact.name, contact.phone, contact.email);
+    markSoftAsked();
+    setSurvey({ step: "idle" });
+    updatePreferences({ locations: [city] });
+
+    // Add follow-up message after a delay
+    setTimeout(() => {
       addMessage({
         role: "assistant",
-        content: "Thanks! Your full results are now unlocked. Which city would you like to search for properties in?",
-        cta: {
-          type: 'city-search-prompt' as const,
-          text: `View Properties Under ${new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(maxPrice)}`,
-          maxPrice,
-        }
+        content: `Thanks ${firstName}! Your full ${city} guide is now unlocked. Would you like me to search for properties in ${city}?`,
       });
-    } catch (error) {
-      console.error("Error saving contact:", error);
-      // Still show city search even if CRM save fails
+    }, 1000);
+
+    // Save to CRM (fire and forget)
+    const contactPrompt = buildContactPrompt(
+      { firstName, lastName, phone: contact.phone, email: contact.email },
+      {
+        leadType: 'buyer',
+        preferredCity: city,
+        conversationSummary: `Explored ${city} neighborhood info`,
+      }
+    );
+    saveContactToCRM(messages, contactPrompt);
+  };
+
+  // Handler for skipping neighborhood unlock
+  const handleNeighborhoodSkip = () => {
+    skipSoftAsk();
+    incrementSkipCount(); // Track skip for limiting future skips
+    addMessage({
+      role: "assistant",
+      content: "No problem! Would you like to explore a different city, or try our mortgage calculator to see what you can afford?",
+    });
+  };
+
+  // Handler for "Search Properties in {City}" on neighborhood card
+  const handleSearchPropertiesFromNeighborhood = (city: string, maxPrice?: number) => {
+    trackChatbotInteraction('property_search');
+    const citySlug = city.toLowerCase().replace(/\s+/g, '-');
+    const url = maxPrice
+      ? `/properties/${citySlug}?budgetMax=${maxPrice}`
+      : `/properties/${citySlug}`;
+    router.push(url);
+  };
+
+  // Handler for clicking a neighborhood chip
+  const handleNeighborhoodClick = (neighborhood: string, city: string) => {
+    sendMessage(`Tell me more about ${neighborhood} in ${city}`);
+  };
+
+  // First-time buyer card unlock handler
+  const handleFirstTimeBuyerUnlock = (contact: { name: string; phone: string; email?: string }) => {
+    trackChatbotInteraction('lead');
+    trackLeadFormSubmit('chatbot');
+
+    const { firstName, lastName } = parseFullName(contact.name);
+
+    // Store contact info locally and mark as provided
+    setContactId('pending', contact.phone, contact.email);
+    completeContactCapture(contact.name, contact.phone, contact.email);
+    markSoftAsked();
+    setSurvey({ step: "idle" });
+
+    // Add follow-up message after a delay
+    setTimeout(() => {
       addMessage({
         role: "assistant",
-        content: "Thanks! Which city would you like to search for properties in?",
-        cta: {
-          type: 'city-search-prompt' as const,
-          text: `View Properties Under ${new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(maxPrice)}`,
-          maxPrice,
-        }
+        content: `Thanks ${firstName}! Your full details are now unlocked. Would you like to calculate your affordability next?`,
       });
-    }
+    }, 1000);
+
+    // Save to CRM (fire and forget)
+    const contactPrompt = buildContactPrompt(
+      { firstName, lastName, phone: contact.phone, email: contact.email },
+      {
+        leadType: 'buyer',
+        firstTimeBuyer: true,
+        conversationSummary: "First-time buyer researching programs and incentives",
+      }
+    );
+    saveContactToCRM(messages, contactPrompt);
+  };
+
+  // Handler for skipping first-time buyer unlock
+  const handleFirstTimeBuyerSkip = () => {
+    skipSoftAsk();
+    incrementSkipCount(); // Track skip for limiting future skips
+    addMessage({
+      role: "assistant",
+      content: "No problem! What else can I help you with? I can search properties, tell you about neighborhoods, or calculate your affordability.",
+    });
+  };
+
+  // Handler for mortgage calculator CTA from first-time buyer card
+  const handleMortgageCalculatorFromFTB = () => {
+    trackChatbotInteraction('message');
+    addMessage({
+      role: "assistant",
+      content: "Let me help you calculate what you can afford. Fill in the details below:",
+      cta: { type: 'mortgage-input-form' as const },
+    });
+  };
+
+  // Handler for clicking a related topic on first-time buyer card
+  const handleRelatedTopicClick = (topic: string) => {
+    const topicPrompts: Record<string, string> = {
+      'home-buying-process': 'What are the steps to buying a home in Ontario?',
+      'closing-costs': 'What closing costs should I budget for?',
+      'first-time-buyer-incentives': 'What incentives are available for first-time buyers?',
+      'pre-approval': 'Do I need mortgage pre-approval?',
+      'down-payment': 'How much down payment do I need?',
+    };
+    const prompt = topicPrompts[topic] || `Tell me about ${topic.replace(/-/g, ' ')}`;
+    sendMessage(prompt);
   };
 
   // Mortgage input form handler - call API to calculate and show results
@@ -518,49 +686,15 @@ export function ChatbotWidget() {
 
       if (!response.ok) throw new Error("Failed to calculate");
 
-      // Parse the streaming response
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-      let mortgageData: MortgageEstimate | null = null;
-      let ctaData: CallToAction | null = null;
+      const { text: fullText, mortgageData, ctaData } = await parseStreamResponse(response);
 
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          for (const line of decoder.decode(value).split('\n')) {
-            if (!line.trim()) continue;
-            // AI SDK v4 stream prefixes: 0=text, 2=data, d=done, e=error, f=finish
-            const prefix = line.substring(0, 2);
-            const content = line.substring(2);
-            if (prefix === '0:') {
-              try { fullText += JSON.parse(content); } catch { /* ignore */ }
-            } else if (prefix === '2:') {
-              try {
-                const parsed = JSON.parse(content);
-                if (parsed && Array.isArray(parsed)) {
-                  for (const item of parsed) {
-                    if (item.type === 'mortgageEstimate' && item.data) {
-                      mortgageData = item.data;
-                      ctaData = item.cta || null;
-                    }
-                  }
-                }
-              } catch { /* ignore */ }
-            }
-            // Silently ignore other prefixes (d:, e:, f:)
-          }
-        }
-
-        if (fullText) {
-          addMessage({
-            role: "assistant",
-            content: fullText,
-            toolResult: mortgageData ? { type: "mortgageEstimate", data: mortgageData } : undefined,
-            cta: ctaData || undefined,
-          });
-        }
+      if (fullText) {
+        addMessage({
+          role: "assistant",
+          content: fullText,
+          toolResult: mortgageData ? { type: "mortgageEstimate", data: mortgageData } : undefined,
+          cta: ctaData || undefined,
+        });
       }
     } catch (error) {
       console.error("Error calculating mortgage:", error);
@@ -583,38 +717,39 @@ export function ChatbotWidget() {
     });
   };
 
+  // Show neighborhood city picker when user clicks explore neighborhoods quick action
+  const showNeighborhoodCityPicker = () => {
+    trackChatbotInteraction('message');
+    addMessage({
+      role: "assistant",
+      content: "I can provide information about various neighborhoods in the Greater Toronto Area. Which city are you interested in?",
+      cta: { type: 'neighborhood-city-picker' as const },
+    });
+  };
+
+  // Handler when user selects a city from the neighborhood city picker
+  const handleNeighborhoodCitySelect = (cityName: string) => {
+    sendMessage(`Tell me about ${cityName}`);
+  };
+
   // Lead gate handlers
-  const handleSoftAskSubmit = async (contact: { fullName: string; phone: string; email?: string }) => {
+  const handleSoftAskSubmit = (contact: { fullName: string; phone: string; email?: string }) => {
     trackChatbotInteraction('lead');
     trackLeadFormSubmit('chatbot');
 
-    // Mark as provided and save contact
     completeContactCapture(contact.fullName, contact.phone, contact.email);
     markSoftAsked();
     setSurvey({ step: "idle" });
 
-    // Save to CRM
-    const nameParts = contact.fullName.trim().split(/\s+/);
-    const firstName = nameParts[0] || contact.fullName;
-    const lastName = nameParts.slice(1).join(' ') || '';
-
-    const contactPrompt = `Use the createContact tool to save this lead who saved their results:
-- firstName: "${firstName}"
-- lastName: "${lastName}"
-- email: "${contact.email || ''}"
-- cellPhone: "${contact.phone}"
-- leadType: "buyer"
-- source: "sri-collective"
-- conversationSummary: "Saved chatbot results after using ${toolUsageCount} tool(s)"`;
-
-    // Fire and forget - don't block UI
-    fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: contactPrompt }]
-      }),
-    }).catch(console.error);
+    const { firstName, lastName } = parseFullName(contact.fullName);
+    const contactPrompt = buildContactPrompt(
+      { firstName, lastName, phone: contact.phone, email: contact.email },
+      {
+        leadType: 'buyer',
+        conversationSummary: `Saved chatbot results after using ${toolUsageCount} tool(s)`,
+      }
+    );
+    saveContactToCRM(messages, contactPrompt);
 
     addMessage({
       role: "assistant",
@@ -631,36 +766,22 @@ export function ChatbotWidget() {
     });
   };
 
-  const handleHardGateSubmit = async (contact: { fullName: string; phone: string; email?: string }) => {
+  const handleHardGateSubmit = (contact: { fullName: string; phone: string; email?: string }) => {
     trackChatbotInteraction('lead');
     trackLeadFormSubmit('chatbot');
 
-    // Mark as provided and save contact
     completeContactCapture(contact.fullName, contact.phone, contact.email);
     setSurvey({ step: "idle" });
 
-    // Save to CRM
-    const nameParts = contact.fullName.trim().split(/\s+/);
-    const firstName = nameParts[0] || contact.fullName;
-    const lastName = nameParts.slice(1).join(' ') || '';
-
-    const contactPrompt = `Use the createContact tool to save this lead who unlocked all tools:
-- firstName: "${firstName}"
-- lastName: "${lastName}"
-- email: "${contact.email || ''}"
-- cellPhone: "${contact.phone}"
-- leadType: "buyer"
-- source: "sri-collective"
-- conversationSummary: "Unlocked all chatbot tools after using ${toolUsageCount} tool(s)"`;
-
-    // Fire and forget - don't block UI
-    fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: contactPrompt }]
-      }),
-    }).catch(console.error);
+    const { firstName, lastName } = parseFullName(contact.fullName);
+    const contactPrompt = buildContactPrompt(
+      { firstName, lastName, phone: contact.phone, email: contact.email },
+      {
+        leadType: 'buyer',
+        conversationSummary: `Unlocked all chatbot tools after using ${toolUsageCount} tool(s)`,
+      }
+    );
+    saveContactToCRM(messages, contactPrompt);
 
     addMessage({
       role: "assistant",
@@ -683,11 +804,28 @@ export function ChatbotWidget() {
               hasContactInfo={Boolean(phone) || hasProvidedContact}
               isMortgageCalculating={isMortgageCalculating}
               isGated={isHardGateActive}
+              latestMessageRef={latestMessageRef}
               onCitySelect={handleCitySelect}
               onSearchAll={handleSearchAll}
               onToolSelect={sendMessage}
               onMortgageUnlock={handleMortgageUnlock}
               onMortgageInput={handleMortgageInput}
+              onMortgageCitySelect={handleMortgageCitySelect}
+              onMortgageSearchAll={handleMortgageSearchAll}
+              onMortgageSkip={handleMortgageSkip}
+              mortgageRemainingSkips={remainingSkips}
+              mortgageCardRef={mortgageCardRef}
+              onNeighborhoodUnlock={handleNeighborhoodUnlock}
+              onNeighborhoodSkip={handleNeighborhoodSkip}
+              neighborhoodRemainingSkips={remainingSkips}
+              onSearchPropertiesFromNeighborhood={handleSearchPropertiesFromNeighborhood}
+              onNeighborhoodClick={handleNeighborhoodClick}
+              onFirstTimeBuyerUnlock={handleFirstTimeBuyerUnlock}
+              onFirstTimeBuyerSkip={handleFirstTimeBuyerSkip}
+              firstTimeBuyerRemainingSkips={remainingSkips}
+              onMortgageCalculatorFromFTB={handleMortgageCalculatorFromFTB}
+              onRelatedTopicClick={handleRelatedTopicClick}
+              onNeighborhoodCitySelect={handleNeighborhoodCitySelect}
             />
 
             <SurveyFlow
@@ -713,7 +851,7 @@ export function ChatbotWidget() {
             <ChatQuickActions
               onDreamHome={startDreamHomeSurvey}
               onMortgageCalculator={showMortgageInputForm}
-              onExploreNeighborhoods={() => sendMessage("Tell me about neighborhoods in the GTA.")}
+              onExploreNeighborhoods={showNeighborhoodCityPicker}
               onContactUs={handleContactUs}
             />
           )}

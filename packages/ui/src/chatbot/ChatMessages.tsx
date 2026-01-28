@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { Message, MortgageEstimate, PropertySearchResult, NavigationCTA, CitySearchCallToAction } from "./chatbot-store";
+import { Message, MortgageEstimate, PropertySearchResult, NavigationCTA, NeighborhoodInfo, FirstTimeBuyerInfo } from "./chatbot-store";
 import { ChatMortgageCard } from "./ChatMortgageCard";
 import { ChatMortgageInputForm } from "./ChatMortgageInputForm";
 import { ChatPropertyList } from "./ChatPropertyCard";
-import { ChatCitySearch } from "./ChatCitySearch";
 import { ChatNavigationCTA } from "./ChatNavigationCTA";
+import { ChatNeighborhoodCard } from "./ChatNeighborhoodCard";
+import { ChatNeighborhoodCityPicker } from "./ChatNeighborhoodCityPicker";
+import { ChatFirstTimeBuyerCard } from "./ChatFirstTimeBuyerCard";
 import { ToolDiscoveryWidgets } from "./ToolDiscoveryWidgets";
 import type { CityMatch } from "@repo/lib";
 
@@ -63,30 +64,67 @@ interface MessageBubbleProps {
   isLatest?: boolean;
   showCitySearch?: boolean;
   showMortgageInput?: boolean;
+  showNeighborhoodCityPicker?: boolean;
   hasContactInfo?: boolean;
   isMortgageCalculating?: boolean;
   isGated?: boolean; // Hide tool discovery widgets when gated
   onCitySelect?: (city: CityMatch, maxPrice: number) => void;
   onSearchAll?: (maxPrice: number) => void;
   onToolSelect?: (prompt: string) => void;
-  onMortgageUnlock?: (contact: { phone: string; email?: string }, maxPrice: number) => void;
+  onMortgageUnlock?: (contact: { name: string; phone: string; email?: string }, maxPrice: number) => void;
   onMortgageInput?: (data: { annualIncome: number; downPayment: number; monthlyDebts: number }) => void;
+  /** Callback when user selects a city from mortgage card picker */
+  onMortgageCitySelect?: (citySlug: string, cityName: string, maxPrice: number) => void;
+  /** Callback when user clicks "Search All GTA" from mortgage card picker */
+  onMortgageSearchAll?: (maxPrice: number) => void;
+  /** Callback when user skips the mortgage card unlock */
+  onMortgageSkip?: () => void;
+  /** Number of skips remaining for mortgage card (if 0, skip button is hidden) */
+  mortgageRemainingSkips?: number;
+  /** Ref to attach to the mortgage card for scrolling */
+  mortgageCardRef?: React.RefObject<HTMLDivElement | null>;
+  /** Callback when user unlocks neighborhood card */
+  onNeighborhoodUnlock?: (contact: { name: string; phone: string; email?: string }, city: string) => void;
+  /** Callback when user skips neighborhood unlock */
+  onNeighborhoodSkip?: () => void;
+  /** Number of skips remaining for neighborhood card (if 0, skip button is hidden) */
+  neighborhoodRemainingSkips?: number;
+  /** Callback when user clicks "Search Properties in {City}" on neighborhood card */
+  onSearchPropertiesFromNeighborhood?: (city: string, maxPrice?: number) => void;
+  /** Callback when user clicks a neighborhood chip */
+  onNeighborhoodClick?: (neighborhood: string, city: string) => void;
+  /** Callback when user unlocks first-time buyer card */
+  onFirstTimeBuyerUnlock?: (contact: { name: string; phone: string; email?: string }) => void;
+  /** Callback when user skips first-time buyer unlock */
+  onFirstTimeBuyerSkip?: () => void;
+  /** Number of skips remaining for first-time buyer card (if 0, skip button is hidden) */
+  firstTimeBuyerRemainingSkips?: number;
+  /** Callback when user clicks mortgage calculator from first-time buyer card */
+  onMortgageCalculatorFromFTB?: () => void;
+  /** Callback when user clicks a related topic on first-time buyer card */
+  onRelatedTopicClick?: (topic: string) => void;
+  /** Ref to attach to the latest message for scrolling */
+  latestMessageRef?: React.RefObject<HTMLDivElement | null>;
+  /** Callback when user selects a city from the neighborhood city picker */
+  onNeighborhoodCitySelect?: (cityName: string) => void;
 }
 
-export function MessageBubble({ message, isLatest, showCitySearch, showMortgageInput, hasContactInfo, isMortgageCalculating, isGated, onCitySelect, onSearchAll, onToolSelect, onMortgageUnlock, onMortgageInput }: MessageBubbleProps) {
+export function MessageBubble({ message, isLatest, showCitySearch: _showCitySearch, showMortgageInput, showNeighborhoodCityPicker, hasContactInfo, isMortgageCalculating, isGated, onCitySelect: _onCitySelect, onSearchAll: _onSearchAll, onToolSelect, onMortgageUnlock, onMortgageInput, onMortgageCitySelect, onMortgageSearchAll, onMortgageSkip, mortgageRemainingSkips, mortgageCardRef, onNeighborhoodUnlock, onNeighborhoodSkip, neighborhoodRemainingSkips, onSearchPropertiesFromNeighborhood, onNeighborhoodClick, onFirstTimeBuyerUnlock, onFirstTimeBuyerSkip, firstTimeBuyerRemainingSkips, onMortgageCalculatorFromFTB, onRelatedTopicClick, latestMessageRef, onNeighborhoodCitySelect }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const hasMortgageData = message.toolResult?.type === "mortgageEstimate";
   const hasPropertyData = message.toolResult?.type === "propertySearch";
   const hasNavigationData = message.toolResult?.type === "navigation";
-  const hasToolData = hasMortgageData || hasPropertyData || hasNavigationData;
+  const hasNeighborhoodData = message.toolResult?.type === "neighborhoodInfo";
+  const hasFirstTimeBuyerData = message.toolResult?.type === "firstTimeBuyer";
+  const hasToolData = hasMortgageData || hasPropertyData || hasNavigationData || hasNeighborhoodData || hasFirstTimeBuyerData;
 
   // Check CTA types
-  const hasCitySearchCta = message.cta?.type === 'city-search-prompt';
   const hasMortgageInputCta = message.cta?.type === 'mortgage-input-form';
-  const hasUrlCta = message.cta && message.cta.type !== 'city-search-prompt' && message.cta.type !== 'mortgage-input-form';
+  const hasNeighborhoodCityPickerCta = message.cta?.type === 'neighborhood-city-picker';
 
   return (
     <div
+      ref={isLatest ? latestMessageRef : undefined}
       className={`flex gap-3 mb-4 ${isUser ? "flex-row-reverse" : ""} ${isLatest ? "animate-in fade-in slide-in-from-bottom-2 duration-300" : ""}`}
     >
       {!isUser && (
@@ -102,36 +140,24 @@ export function MessageBubble({ message, isLatest, showCitySearch, showMortgageI
       >
         {/* Render mortgage card if available */}
         {hasMortgageData && !isUser && (
-          <div className="space-y-3">
+          <div className="space-y-3" ref={mortgageCardRef}>
             <ChatMortgageCard
               {...(message.toolResult!.data as MortgageEstimate)}
               isLocked={!hasContactInfo}
               onUnlock={onMortgageUnlock ? (contact) => onMortgageUnlock(contact, (message.toolResult!.data as MortgageEstimate).maxHomePrice) : undefined}
+              onSkip={onMortgageSkip}
+              remainingSkips={mortgageRemainingSkips}
+              onCitySelect={onMortgageCitySelect}
+              onSearchAll={onMortgageSearchAll}
             />
-            {message.content && (
+            {/* Only show text content when card is UNLOCKED - otherwise it reveals the locked data */}
+            {hasContactInfo && message.content && (
               <div className="bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm px-4 py-3">
                 <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
               </div>
             )}
-            {/* City Search CTA - show input UI if this is the latest message with city search prompt */}
-            {hasCitySearchCta && showCitySearch && onCitySelect && onSearchAll && (
-              <ChatCitySearch
-                maxPrice={(message.cta as CitySearchCallToAction).maxPrice}
-                onCitySelect={onCitySelect}
-                onSearchAll={onSearchAll}
-              />
-            )}
-            {/* URL CTA Button - fallback for standard CTAs */}
-            {hasUrlCta && (
-              <Link
-                href={(message.cta as { url: string; text: string }).url}
-                className="block w-full py-3 px-4 bg-gradient-to-r from-[#0a1628] to-[#1a2d4d] text-white text-center rounded-xl font-semibold text-sm hover:from-[#1a2d4d] hover:to-[#0a1628] transition-all duration-300 shadow-md hover:shadow-lg"
-              >
-                {(message.cta as { url: string; text: string }).text}
-              </Link>
-            )}
-            {/* Tool Discovery Widgets - hidden when gated */}
-            {isLatest && onToolSelect && !isGated && (
+            {/* Tool Discovery Widgets - only show when unlocked and not gated */}
+            {hasContactInfo && isLatest && onToolSelect && !isGated && (
               <ToolDiscoveryWidgets
                 currentTool="mortgage"
                 onToolSelect={onToolSelect}
@@ -178,8 +204,52 @@ export function MessageBubble({ message, isLatest, showCitySearch, showMortgageI
           </div>
         )}
 
+        {/* Render neighborhood info card if available */}
+        {hasNeighborhoodData && !isUser && (
+          <div className="space-y-3">
+            <ChatNeighborhoodCard
+              {...(message.toolResult!.data as NeighborhoodInfo)}
+              isLocked={!hasContactInfo}
+              onUnlock={onNeighborhoodUnlock ? (contact) => onNeighborhoodUnlock(contact, (message.toolResult!.data as NeighborhoodInfo).city) : undefined}
+              onSkip={onNeighborhoodSkip}
+              remainingSkips={neighborhoodRemainingSkips}
+              onSearchProperties={hasContactInfo && onSearchPropertiesFromNeighborhood ? (city, maxPrice) => onSearchPropertiesFromNeighborhood(city, maxPrice) : undefined}
+              onNeighborhoodClick={onNeighborhoodClick}
+            />
+            {/* Tool Discovery Widgets - only show when unlocked and not gated */}
+            {hasContactInfo && isLatest && onToolSelect && !isGated && (
+              <ToolDiscoveryWidgets
+                currentTool="neighborhood"
+                onToolSelect={onToolSelect}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Render first-time buyer card if available */}
+        {hasFirstTimeBuyerData && !isUser && (
+          <div className="space-y-3">
+            <ChatFirstTimeBuyerCard
+              {...(message.toolResult!.data as FirstTimeBuyerInfo)}
+              isLocked={!hasContactInfo}
+              onUnlock={onFirstTimeBuyerUnlock}
+              onSkip={onFirstTimeBuyerSkip}
+              remainingSkips={firstTimeBuyerRemainingSkips}
+              onMortgageCalculator={hasContactInfo ? onMortgageCalculatorFromFTB : undefined}
+              onRelatedTopicClick={onRelatedTopicClick}
+            />
+            {/* Tool Discovery Widgets - only show when unlocked and not gated */}
+            {hasContactInfo && isLatest && onToolSelect && !isGated && (
+              <ToolDiscoveryWidgets
+                currentTool="first-time-buyer"
+                onToolSelect={onToolSelect}
+              />
+            )}
+          </div>
+        )}
+
         {/* Regular message bubble */}
-        {!hasToolData && !hasMortgageInputCta && (
+        {!hasToolData && !hasMortgageInputCta && !hasNeighborhoodCityPickerCta && (
           <div className={isUser ? "" : "bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm px-4 py-3"}>
             {isUser ? (
               <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
@@ -203,6 +273,22 @@ export function MessageBubble({ message, isLatest, showCitySearch, showMortgageI
             />
           </div>
         )}
+
+        {/* Neighborhood City Picker - shown when message has neighborhood-city-picker CTA */}
+        {hasNeighborhoodCityPickerCta && showNeighborhoodCityPicker && !isUser && (
+          <div className="space-y-3">
+            {message.content && (
+              <div className="bg-white border border-stone-100 text-stone-700 rounded-2xl rounded-tl-none shadow-sm px-4 py-3">
+                <ReactMarkdown components={markdownComponents}>{message.content}</ReactMarkdown>
+              </div>
+            )}
+            <div className="bg-gradient-to-br from-[#0a1628] to-[#1a2d4d] rounded-2xl p-4">
+              <ChatNeighborhoodCityPicker
+                onCitySelect={onNeighborhoodCitySelect || (() => {})}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -218,28 +304,57 @@ interface ChatMessagesProps {
   onCitySelect?: (city: CityMatch, maxPrice: number) => void;
   onSearchAll?: (maxPrice: number) => void;
   onToolSelect?: (prompt: string) => void;
-  onMortgageUnlock?: (contact: { phone: string; email?: string }, maxPrice: number) => void;
+  onMortgageUnlock?: (contact: { name: string; phone: string; email?: string }, maxPrice: number) => void;
   onMortgageInput?: (data: { annualIncome: number; downPayment: number; monthlyDebts: number }) => void;
+  /** Callback when user selects a city from mortgage card picker */
+  onMortgageCitySelect?: (citySlug: string, cityName: string, maxPrice: number) => void;
+  /** Callback when user clicks "Search All GTA" from mortgage card picker */
+  onMortgageSearchAll?: (maxPrice: number) => void;
+  /** Callback when user skips the mortgage card unlock */
+  onMortgageSkip?: () => void;
+  /** Number of skips remaining for mortgage card (if 0, skip button is hidden) */
+  mortgageRemainingSkips?: number;
+  /** Ref to attach to the mortgage card for scrolling */
+  mortgageCardRef?: React.RefObject<HTMLDivElement | null>;
+  /** Callback when user unlocks neighborhood card */
+  onNeighborhoodUnlock?: (contact: { name: string; phone: string; email?: string }, city: string) => void;
+  /** Callback when user skips neighborhood unlock */
+  onNeighborhoodSkip?: () => void;
+  /** Number of skips remaining for neighborhood card (if 0, skip button is hidden) */
+  neighborhoodRemainingSkips?: number;
+  /** Callback when user clicks "Search Properties in {City}" on neighborhood card */
+  onSearchPropertiesFromNeighborhood?: (city: string, maxPrice?: number) => void;
+  /** Callback when user clicks a neighborhood chip */
+  onNeighborhoodClick?: (neighborhood: string, city: string) => void;
+  /** Callback when user unlocks first-time buyer card */
+  onFirstTimeBuyerUnlock?: (contact: { name: string; phone: string; email?: string }) => void;
+  /** Callback when user skips first-time buyer unlock */
+  onFirstTimeBuyerSkip?: () => void;
+  /** Number of skips remaining for first-time buyer card (if 0, skip button is hidden) */
+  firstTimeBuyerRemainingSkips?: number;
+  /** Callback when user clicks mortgage calculator from first-time buyer card */
+  onMortgageCalculatorFromFTB?: () => void;
+  /** Callback when user clicks a related topic on first-time buyer card */
+  onRelatedTopicClick?: (topic: string) => void;
+  /** Ref to attach to the latest message for scrolling */
+  latestMessageRef?: React.RefObject<HTMLDivElement | null>;
+  /** Callback when user selects a city from the neighborhood city picker */
+  onNeighborhoodCitySelect?: (cityName: string) => void;
 }
 
-export function ChatMessages({ messages, isLoading, hasContactInfo, isMortgageCalculating, isGated, onCitySelect, onSearchAll, onToolSelect, onMortgageUnlock, onMortgageInput }: ChatMessagesProps) {
-  // Find the latest message with a city-search-prompt CTA
-  let latestCitySearchIndex = -1;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].cta?.type === 'city-search-prompt') {
-      latestCitySearchIndex = i;
-      break;
+export function ChatMessages({ messages, isLoading, hasContactInfo, isMortgageCalculating, isGated, latestMessageRef, onCitySelect, onSearchAll, onToolSelect, onMortgageUnlock, onMortgageInput, onMortgageCitySelect, onMortgageSearchAll, onMortgageSkip, mortgageRemainingSkips, mortgageCardRef, onNeighborhoodUnlock, onNeighborhoodSkip, neighborhoodRemainingSkips, onSearchPropertiesFromNeighborhood, onNeighborhoodClick, onFirstTimeBuyerUnlock, onFirstTimeBuyerSkip, firstTimeBuyerRemainingSkips, onMortgageCalculatorFromFTB, onRelatedTopicClick, onNeighborhoodCitySelect }: ChatMessagesProps) {
+  // Helper to find last index matching a predicate
+  function findLastIndex<T>(arr: T[], predicate: (item: T) => boolean): number {
+    for (let i = arr.length - 1; i >= 0; i--) {
+      if (predicate(arr[i])) return i;
     }
+    return -1;
   }
 
-  // Find the latest message with a mortgage-input-form CTA
-  let latestMortgageInputIndex = -1;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].cta?.type === 'mortgage-input-form') {
-      latestMortgageInputIndex = i;
-      break;
-    }
-  }
+  const latestCitySearchIndex = findLastIndex(messages, m => m.cta?.type === 'city-search-prompt');
+  const latestMortgageInputIndex = findLastIndex(messages, m => m.cta?.type === 'mortgage-input-form');
+  const latestMortgageDataIndex = findLastIndex(messages, m => m.toolResult?.type === 'mortgageEstimate');
+  const latestNeighborhoodCityPickerIndex = findLastIndex(messages, m => m.cta?.type === 'neighborhood-city-picker');
 
   return (
     <>
@@ -250,6 +365,7 @@ export function ChatMessages({ messages, isLoading, hasContactInfo, isMortgageCa
           isLatest={index === messages.length - 1}
           showCitySearch={index === latestCitySearchIndex}
           showMortgageInput={index === latestMortgageInputIndex}
+          showNeighborhoodCityPicker={index === latestNeighborhoodCityPickerIndex}
           hasContactInfo={hasContactInfo}
           isMortgageCalculating={isMortgageCalculating}
           isGated={isGated}
@@ -258,6 +374,23 @@ export function ChatMessages({ messages, isLoading, hasContactInfo, isMortgageCa
           onToolSelect={onToolSelect}
           onMortgageUnlock={onMortgageUnlock}
           onMortgageInput={onMortgageInput}
+          onMortgageCitySelect={onMortgageCitySelect}
+          onMortgageSearchAll={onMortgageSearchAll}
+          onMortgageSkip={onMortgageSkip}
+          mortgageRemainingSkips={mortgageRemainingSkips}
+          mortgageCardRef={index === latestMortgageDataIndex ? mortgageCardRef : undefined}
+          onNeighborhoodUnlock={onNeighborhoodUnlock}
+          onNeighborhoodSkip={onNeighborhoodSkip}
+          neighborhoodRemainingSkips={neighborhoodRemainingSkips}
+          onSearchPropertiesFromNeighborhood={onSearchPropertiesFromNeighborhood}
+          onNeighborhoodClick={onNeighborhoodClick}
+          onFirstTimeBuyerUnlock={onFirstTimeBuyerUnlock}
+          onFirstTimeBuyerSkip={onFirstTimeBuyerSkip}
+          firstTimeBuyerRemainingSkips={firstTimeBuyerRemainingSkips}
+          onMortgageCalculatorFromFTB={onMortgageCalculatorFromFTB}
+          onRelatedTopicClick={onRelatedTopicClick}
+          latestMessageRef={index === messages.length - 1 ? latestMessageRef : undefined}
+          onNeighborhoodCitySelect={onNeighborhoodCitySelect}
         />
       ))}
       {isLoading && <TypingIndicator />}

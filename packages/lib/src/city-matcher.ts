@@ -9,23 +9,58 @@ export interface CityMatch {
 }
 
 // Canonical GTA cities with their slugs (internal - use getAllCities() for external access)
+// Complete coverage from Oshawa to Grimsby/Stoney Creek
 const GTA_CITIES = [
+  // City of Toronto
   { slug: 'toronto', name: 'Toronto' },
+
+  // Peel Region
   { slug: 'mississauga', name: 'Mississauga' },
   { slug: 'brampton', name: 'Brampton' },
+  { slug: 'caledon', name: 'Caledon' },
+
+  // York Region
   { slug: 'vaughan', name: 'Vaughan' },
   { slug: 'markham', name: 'Markham' },
   { slug: 'richmond-hill', name: 'Richmond Hill' },
+  { slug: 'newmarket', name: 'Newmarket' },
+  { slug: 'aurora', name: 'Aurora' },
+  { slug: 'whitchurch-stouffville', name: 'Whitchurch-Stouffville' },
+  { slug: 'king', name: 'King' },
+  { slug: 'east-gwillimbury', name: 'East Gwillimbury' },
+  { slug: 'georgina', name: 'Georgina' },
+
+  // Halton Region
   { slug: 'oakville', name: 'Oakville' },
-  { slug: 'milton', name: 'Milton' },
   { slug: 'burlington', name: 'Burlington' },
-  { slug: 'hamilton', name: 'Hamilton' },
-  { slug: 'caledon', name: 'Caledon' },
+  { slug: 'milton', name: 'Milton' },
+  { slug: 'halton-hills', name: 'Halton Hills' },
+
   // Durham Region
-  { slug: 'ajax', name: 'Ajax' },
   { slug: 'pickering', name: 'Pickering' },
+  { slug: 'ajax', name: 'Ajax' },
   { slug: 'whitby', name: 'Whitby' },
   { slug: 'oshawa', name: 'Oshawa' },
+  { slug: 'clarington', name: 'Clarington' },
+  { slug: 'uxbridge', name: 'Uxbridge' },
+  { slug: 'scugog', name: 'Scugog' },
+  { slug: 'brock', name: 'Brock' },
+
+  // City of Hamilton (amalgamated)
+  { slug: 'hamilton', name: 'Hamilton' },
+  { slug: 'stoney-creek', name: 'Stoney Creek' },
+  { slug: 'ancaster', name: 'Ancaster' },
+  { slug: 'dundas', name: 'Dundas' },
+  { slug: 'flamborough', name: 'Flamborough' },
+  { slug: 'glanbrook', name: 'Glanbrook' },
+
+  // Niagara Region (western edge)
+  { slug: 'grimsby', name: 'Grimsby' },
+  { slug: 'lincoln', name: 'Lincoln' },
+  { slug: 'west-lincoln', name: 'West Lincoln' },
+  { slug: 'niagara-on-the-lake', name: 'Niagara-on-the-Lake' },
+  { slug: 'st-catharines', name: 'St. Catharines' },
+  { slug: 'niagara-falls', name: 'Niagara Falls' },
 ] as const
 
 // Aliases and common variations that map to canonical cities (internal)
@@ -40,6 +75,34 @@ const CITY_ALIASES: Record<string, string> = {
   'dt': 'toronto',
   'gta': 'toronto', // Default GTA to Toronto
 
+  // Toronto neighborhood aliases (former municipalities)
+  'scarborough': 'toronto',
+  'etobicoke': 'toronto',
+  'north york': 'toronto',
+  'east york': 'toronto',
+  'york': 'toronto',
+  'the beaches': 'toronto',
+  'beaches': 'toronto',
+  'leslieville': 'toronto',
+  'liberty village': 'toronto',
+  'king west': 'toronto',
+  'queen west': 'toronto',
+  'yorkville': 'toronto',
+  'rosedale': 'toronto',
+  'the annex': 'toronto',
+  'high park': 'toronto',
+  'parkdale': 'toronto',
+  'cabbagetown': 'toronto',
+  'riverdale': 'toronto',
+  'danforth': 'toronto',
+  'greektown': 'toronto',
+  'mimico': 'toronto',
+  'long branch': 'toronto',
+  'leaside': 'toronto',
+  'davisville': 'toronto',
+  'midtown': 'toronto',
+  'forest hill': 'toronto',
+
   // Mississauga aliases
   'sauga': 'mississauga',
   'miss': 'mississauga',
@@ -50,23 +113,30 @@ const CITY_ALIASES: Record<string, string> = {
   'erin mills': 'mississauga',
   'streetsville': 'mississauga',
   'cooksville': 'mississauga',
+  'meadowvale': 'mississauga',
+  'clarkson': 'mississauga',
+  'lorne park': 'mississauga',
 
   // Brampton aliases
   'bramp': 'brampton',
   'bramalea': 'brampton',
   'springdale': 'brampton',
   'castlemore': 'brampton',
+  'heart lake': 'brampton',
+  'mount pleasant': 'brampton',
 
   // Vaughan aliases
   'woodbridge': 'vaughan',
   'kleinburg': 'vaughan',
   'maple': 'vaughan',
   'concord': 'vaughan',
+  'thornhill': 'vaughan', // Thornhill spans Vaughan/Markham, default to Vaughan
 
   // Markham aliases
   'unionville': 'markham',
-  'thornhill': 'markham',
   'markham village': 'markham',
+  'cornell': 'markham',
+  'angus glen': 'markham',
 
   // Richmond Hill aliases
   'rhill': 'richmond-hill',
@@ -76,16 +146,49 @@ const CITY_ALIASES: Record<string, string> = {
   // Oakville aliases
   'bronte': 'oakville',
   'glen abbey': 'oakville',
+  'joshua creek': 'oakville',
 
-  // Toronto neighborhood aliases
-  'scarborough': 'toronto',
-  'etobicoke': 'toronto',
-  'north york': 'toronto',
-  'east york': 'toronto',
-  'york': 'toronto',
+  // Burlington aliases
+  'aldershot': 'burlington',
+
+  // Milton aliases
+  'georgetown': 'halton-hills', // Georgetown is in Halton Hills
+
+  // Halton Hills aliases
+  'acton': 'halton-hills',
 
   // Durham region aliases
   'durham': 'oshawa', // Default Durham to Oshawa (largest city)
+  'bowmanville': 'clarington',
+  'courtice': 'clarington',
+  'newcastle': 'clarington',
+  'port perry': 'scugog',
+  'beaverton': 'brock',
+
+  // York Region aliases
+  'stouffville': 'whitchurch-stouffville',
+  'queensville': 'east-gwillimbury',
+  'holland landing': 'east-gwillimbury',
+  'keswick': 'georgina',
+  'sutton': 'georgina',
+  'nobleton': 'king',
+  'king city': 'king',
+  'schomberg': 'king',
+
+  // Hamilton area aliases
+  'the hammer': 'hamilton',
+  'steeltown': 'hamilton',
+  'waterdown': 'flamborough',
+  'binbrook': 'glanbrook',
+
+  // Niagara aliases
+  'notl': 'niagara-on-the-lake',
+  'st kitts': 'st-catharines',
+  'saint catharines': 'st-catharines',
+  'the falls': 'niagara-falls',
+  'beamsville': 'lincoln',
+  'vineland': 'lincoln',
+  'smithville': 'west-lincoln',
 }
 
 /**

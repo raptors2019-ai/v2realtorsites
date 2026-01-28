@@ -442,6 +442,24 @@ server.tool(
 );
 
 // ============================================
+// NOTE: Hashtag Management
+// ============================================
+// The kvCORE Public API V2 does NOT expose hashtag management endpoints.
+// Hashtags must be created manually in BoldTrail via:
+//   Marketing > Hashtag Management
+//
+// Required hashtags for chatbot integration:
+// - Location: toronto, mississauga, brampton, vaughan, markham, etc.
+// - Sources: website, sri-collective, newhomeshow
+// - Lead quality: hot-lead, warm-lead, cold-lead
+// - Lead type: buyer, seller, investor, general
+// - Timeline: timeline-asap, timeline-1-3-months, etc.
+// - Qualification: pre-approved, first-time-buyer, mortgage-estimated
+// - Budget: budget-under-500k, budget-500k-750k, budget-750k-1m, etc.
+// - Property type: detached, semi-detached, townhouse, condo, etc.
+// - Engagement: engaged-mortgage-calc, engaged-neighborhoods, etc.
+
+// ============================================
 // Start the server
 // ============================================
 async function main() {

@@ -85,6 +85,17 @@ export const createContactTool: CoreTool = {
   }),
 
   execute: async (params) => {
+    // Log incoming parameters (for debugging)
+    console.error('[chatbot.createContact.params]', {
+      firstName: params.firstName,
+      hasEmail: !!params.email,
+      hasPhone: !!params.cellPhone,
+      leadType: params.leadType,
+      preferredCity: params.preferredCity,
+      hasNeighborhoods: !!params.preferredNeighborhoods?.length,
+      conversationSummary: params.conversationSummary?.slice(0, 50),
+    });
+
     // Phone is required - validate format
     const cleaned = params.cellPhone.replace(/\D/g, '')
     if (cleaned.length !== 10 && cleaned.length !== 11) {
@@ -196,37 +207,73 @@ export const createContactTool: CoreTool = {
         hashtags.push(`viewed-${params.viewedListings.length}-listings`)
       }
 
-      // Build notes with structured data for agent reference
-      const notes = JSON.stringify({
-        capturedAt: new Date().toISOString(),
-        source: params.source || 'website',
-        leadQuality,
-        // Agent-friendly conversation summary (top-level for visibility)
-        conversationSummary: params.conversationSummary,
-        preferences: {
-          timeline: params.timeline,
-          urgencyFactors: params.urgencyFactors,
-          preApproved: params.preApproved,
-          firstTimeBuyer: params.firstTimeBuyer,
-          propertyAddress: params.propertyAddress,
-          reasonForSelling: params.reasonForSelling,
-          preferredNeighborhoods: params.preferredNeighborhoods,
-        },
-        mortgageEstimate: params.mortgageEstimate ? {
-          annualIncome: params.mortgageEstimate.annualIncome,
-          downPayment: params.mortgageEstimate.downPayment,
-          monthlyDebts: params.mortgageEstimate.monthlyDebts,
-          estimatedMaxPrice: params.mortgageEstimate.maxPrice,
-        } : undefined,
-        // Properties the user showed interest in
-        viewedListings: params.viewedListings?.map((l: { listingId: string; address: string; price: number }) => l.address),
-        // Conversation engagement metrics
-        engagement: params.engagement ? {
-          toolsUsed: params.engagement.toolsUsed,
-          propertiesViewed: params.engagement.propertiesViewed,
-          topics: params.engagement.conversationTopics,
-        } : undefined,
-      })
+      // Build human-readable notes for agent reference
+      const noteLines: string[] = []
+
+      // Header with timestamp and source
+      noteLines.push(`📋 CHATBOT LEAD - ${new Date().toLocaleDateString('en-CA')}`)
+      noteLines.push(`Source: ${params.source || 'website'} | Quality: ${leadQuality.toUpperCase()}`)
+      noteLines.push('')
+
+      // Conversation summary (most important)
+      if (params.conversationSummary) {
+        noteLines.push(`💬 Summary: ${params.conversationSummary}`)
+        noteLines.push('')
+      }
+
+      // Mortgage/affordability info
+      if (params.mortgageEstimate) {
+        noteLines.push('💰 AFFORDABILITY:')
+        noteLines.push(`  • Max Budget: $${params.mortgageEstimate.maxPrice.toLocaleString()}`)
+        noteLines.push(`  • Income: $${params.mortgageEstimate.annualIncome.toLocaleString()}/yr`)
+        noteLines.push(`  • Down Payment: $${params.mortgageEstimate.downPayment.toLocaleString()}`)
+        if (params.mortgageEstimate.monthlyDebts) {
+          noteLines.push(`  • Monthly Debts: $${params.mortgageEstimate.monthlyDebts.toLocaleString()}`)
+        }
+        noteLines.push('')
+      }
+
+      // Location preferences
+      if (params.preferredCity || params.preferredNeighborhoods?.length) {
+        noteLines.push('📍 LOCATION INTEREST:')
+        if (params.preferredCity) noteLines.push(`  • City: ${params.preferredCity}`)
+        if (params.preferredNeighborhoods?.length) {
+          noteLines.push(`  • Neighborhoods: ${params.preferredNeighborhoods.join(', ')}`)
+        }
+        noteLines.push('')
+      }
+
+      // Qualifications
+      const quals: string[] = []
+      if (params.firstTimeBuyer) quals.push('First-time buyer')
+      if (params.preApproved) quals.push('Pre-approved')
+      if (params.timeline) quals.push(`Timeline: ${params.timeline}`)
+      if (params.urgencyFactors?.length) quals.push(`Urgency: ${params.urgencyFactors.join(', ')}`)
+      if (quals.length) {
+        noteLines.push('✅ QUALIFICATIONS:')
+        quals.forEach(q => noteLines.push(`  • ${q}`))
+        noteLines.push('')
+      }
+
+      // Properties viewed
+      if (params.viewedListings?.length) {
+        noteLines.push(`🏠 PROPERTIES VIEWED (${params.viewedListings.length}):`)
+        params.viewedListings.slice(0, 5).forEach((l: { address: string; price: number }) => {
+          noteLines.push(`  • ${l.address} ($${l.price.toLocaleString()})`)
+        })
+        noteLines.push('')
+      }
+
+      // Seller info
+      if (params.propertyAddress || params.reasonForSelling) {
+        noteLines.push('🏷️ SELLING:')
+        if (params.propertyAddress) noteLines.push(`  • Property: ${params.propertyAddress}`)
+        if (params.reasonForSelling) noteLines.push(`  • Reason: ${params.reasonForSelling}`)
+        if (params.sellerTimeline) noteLines.push(`  • Timeline: ${params.sellerTimeline}`)
+        noteLines.push('')
+      }
+
+      const notes = noteLines.join('\n')
 
       const response = await client.createContact({
         firstName: params.firstName,

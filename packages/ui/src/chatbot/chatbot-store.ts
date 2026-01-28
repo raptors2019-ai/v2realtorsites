@@ -78,6 +78,34 @@ export interface NavigationCTA {
   external?: boolean;
 }
 
+export interface NeighborhoodInfo {
+  city: string;
+  avgPrice: string;
+  vibe: string;
+  priceRange?: { min: number; max: number };
+  neighborhoods: Array<{ name: string; vibe: string; avgPrice: string }>;
+  transit: { goStations: string[]; commuteToUnion: string; local?: string; ttc?: string };
+  schools: string[];
+  topSchools?: string[];
+  recreation: string[];
+  attractions?: string[];
+  searchSuggestion?: { city: string; maxPrice?: number; neighborhood?: string };
+}
+
+export interface FirstTimeBuyerInfo {
+  topic: string;
+  question: string;
+  answer: string;
+  programs?: Array<{ name: string; benefit: string; eligibility: string }>;
+  totalPotentialSavings?: string;
+  steps?: string[];
+  breakdown?: Record<string, string>;
+  benefits?: string[];
+  requirements?: Record<string, string>;
+  example?: string;
+  relatedTopics: string[];
+}
+
 // Standard URL-based CTA
 export interface UrlCallToAction {
   type?: 'url';
@@ -97,7 +125,12 @@ export interface MortgageInputCallToAction {
   type: 'mortgage-input-form';
 }
 
-export type CallToAction = UrlCallToAction | CitySearchCallToAction | MortgageInputCallToAction;
+// Neighborhood city picker CTA - triggers city selection UI for neighborhood info
+export interface NeighborhoodCityPickerCallToAction {
+  type: 'neighborhood-city-picker';
+}
+
+export type CallToAction = UrlCallToAction | CitySearchCallToAction | MortgageInputCallToAction | NeighborhoodCityPickerCallToAction;
 
 export interface Message {
   id: string;
@@ -106,8 +139,8 @@ export interface Message {
   timestamp: Date;
   // Optional tool result data for rich rendering
   toolResult?: {
-    type: "propertySearch" | "mortgageEstimate" | "navigation";
-    data: MortgageEstimate | PropertySearchResult | NavigationCTA;
+    type: "propertySearch" | "mortgageEstimate" | "navigation" | "neighborhoodInfo" | "firstTimeBuyer";
+    data: MortgageEstimate | PropertySearchResult | NavigationCTA | NeighborhoodInfo | FirstTimeBuyerInfo;
   };
   // Optional call-to-action button
   cta?: CallToAction;
@@ -160,6 +193,7 @@ interface ChatbotState {
   toolUsageCount: number; // 0, 1, 2, 3...
   hasSoftAsked: boolean; // True after soft ask shown
   hasProvidedContact: boolean; // True once contact captured via gate
+  skipCount: number; // Number of times user has skipped inline unlock forms (max 2)
 
   // Actions
   setOpen: (open: boolean) => void;
@@ -184,6 +218,7 @@ interface ChatbotState {
   incrementToolUsage: () => void;
   markSoftAsked: () => void;
   skipSoftAsk: () => void;
+  incrementSkipCount: () => void; // Increment inline form skip counter
   completeContactCapture: (name: string, phone: string, email?: string) => void;
 }
 
@@ -214,6 +249,7 @@ export const useChatbotStore = create<ChatbotState>()(
       toolUsageCount: 0,
       hasSoftAsked: false,
       hasProvidedContact: false,
+      skipCount: 0, // Max 2 skips allowed
 
       // UI actions
       setOpen: (open) => set({ isOpen: open }),
@@ -287,6 +323,7 @@ export const useChatbotStore = create<ChatbotState>()(
           toolUsageCount: 0,
           hasSoftAsked: false,
           hasProvidedContact: false,
+          skipCount: 0,
         }),
 
       // Lead gate actions
@@ -298,6 +335,11 @@ export const useChatbotStore = create<ChatbotState>()(
       markSoftAsked: () => set({ hasSoftAsked: true }),
 
       skipSoftAsk: () => set({ hasSoftAsked: true }),
+
+      incrementSkipCount: () =>
+        set((state) => ({
+          skipCount: state.skipCount + 1,
+        })),
 
       completeContactCapture: (name, phone, email) =>
         set((state) => ({
@@ -330,6 +372,7 @@ export const useChatbotStore = create<ChatbotState>()(
         toolUsageCount: state.toolUsageCount,
         hasSoftAsked: state.hasSoftAsked,
         hasProvidedContact: state.hasProvidedContact,
+        skipCount: state.skipCount, // Inline form skip counter
       }),
 
       // Skip hydration for SSR

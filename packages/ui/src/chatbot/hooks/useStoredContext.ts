@@ -42,7 +42,8 @@ export function useStoredContext({
   return useMemo((): StoredContext | null => {
     if (!isHydrated) return null
 
-    const hasContactInfo = preferences.firstName && phone
+    // Contact info is present if we have phone (name is nice to have but phone is primary)
+    const hasContactInfo = !!phone
     const hasPreferences = preferences.propertyType || preferences.budget || preferences.locations?.length
 
     if (!hasContactInfo && !hasPreferences && viewedProperties.length === 0) {
@@ -51,7 +52,7 @@ export function useStoredContext({
 
     return {
       contact: hasContactInfo ? {
-        name: preferences.firstName,
+        name: preferences.firstName || undefined, // Include name if we have it
         phone,
         email,
       } : undefined,

@@ -91,6 +91,40 @@ ${storedContext.lastVisit ? `**Last Visit:** ${new Date(storedContext.lastVisit)
   return prompt
 }
 
+// Build stream data payload for UI card rendering based on tool result
+function buildStreamData(toolName: string, result: Record<string, unknown>): Record<string, unknown> | null {
+  switch (toolName) {
+    case 'estimateMortgage':
+      return {
+        type: 'mortgageEstimate',
+        data: result.estimate,
+        cta: result.cta,
+      }
+    case 'searchProperties':
+      return {
+        type: 'propertySearch',
+        listings: result.listings,
+        total: result.total,
+        viewAllUrl: result.viewAllUrl,
+      }
+    case 'getNeighborhoodInfo':
+      return {
+        type: 'neighborhoodInfo',
+        city: result.city,
+        data: result.data,
+        searchSuggestion: result.searchSuggestion,
+      }
+    case 'answerFirstTimeBuyerQuestion':
+      return {
+        type: 'firstTimeBuyer',
+        topic: result.topic,
+        relatedTopics: result.relatedTopics,
+      }
+    default:
+      return null
+  }
+}
+
 // Build section showing accumulated data from this conversation
 function buildAccumulatedDataSection(data: ConversationCrmData): string {
   const parts: string[] = []
@@ -194,8 +228,17 @@ export async function POST(req: Request) {
     },
     maxSteps: 5,
 
-    onStepFinish: async ({ toolResults }) => {
-      // Capture tool results for rich rendering AND accumulate CRM data
+    onStepFinish: async ({ toolResults, toolCalls }) => {
+      // Log all tool calls to see what args AI is passing
+      if (toolCalls && toolCalls.length > 0) {
+        for (const call of toolCalls) {
+          console.error('[chat.sri-collective.toolCall]', {
+            toolName: call.toolName,
+            args: call.toolName === 'createContact' ? call.args : '(see full logs for args)',
+          })
+        }
+      }
+
       const results = toolResults as Array<{ toolName: string; result: Record<string, unknown> }> || []
 
       for (const toolResult of results) {
@@ -203,33 +246,19 @@ export async function POST(req: Request) {
         const crmData = extractCrmDataFromToolResult(toolResult.toolName, toolResult.result)
         if (crmData) {
           accumulatedCrmData = mergeConversationData(accumulatedCrmData, crmData)
-
-          // Log what we accumulated
           console.error('[chat.sri-collective.crmDataAccumulated]', {
             tool: toolResult.toolName,
             newFields: Object.keys(crmData).filter(k => crmData[k as keyof typeof crmData]),
           })
         }
 
-        // Existing: capture mortgage estimate for UI rendering
-        if (toolResult.toolName === 'estimateMortgage' && toolResult.result?.success) {
-          const result = toolResult.result as Record<string, unknown>
-          data.append({
-            type: 'mortgageEstimate',
-            data: result.estimate as Record<string, unknown>,
-            cta: result.cta as Record<string, unknown>,
-          } as unknown as Parameters<typeof data.append>[0])
-        }
+        // Capture tool results for UI card rendering
+        if (!toolResult.result?.success) continue
 
-        // Existing: capture property search results for card rendering
-        if (toolResult.toolName === 'searchProperties' && toolResult.result?.success) {
-          const result = toolResult.result as Record<string, unknown>
-          data.append({
-            type: 'propertySearch',
-            listings: result.listings as unknown[],
-            total: result.total as number,
-            viewAllUrl: result.viewAllUrl as string,
-          } as unknown as Parameters<typeof data.append>[0])
+        const result = toolResult.result as Record<string, unknown>
+        const streamData = buildStreamData(toolResult.toolName, result)
+        if (streamData) {
+          data.append(streamData as unknown as Parameters<typeof data.append>[0])
         }
       }
     },

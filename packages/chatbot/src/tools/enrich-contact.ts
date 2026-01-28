@@ -21,9 +21,11 @@ export const enrichContactTool: CoreTool = {
       cmhcPremium: z.number().optional(),
     }).optional().describe('Results from mortgage affordability calculation'),
 
-    // Location preferences
+    // Location preferences (primaryCity maps to kvCORE primary_city field)
+    primaryCity: z.string().optional()
+      .describe('City the user is interested in (maps to CRM primary_city)'),
     preferredCity: z.string().optional()
-      .describe('City the user is interested in'),
+      .describe('Alias for primaryCity - will be mapped'),
     preferredNeighborhoods: z.array(z.string()).optional()
       .describe('Specific neighborhoods of interest'),
 
@@ -58,7 +60,7 @@ export const enrichContactTool: CoreTool = {
   }),
 
   execute: async (params) => {
-    const { contactId, ...updateData } = params;
+    const { contactId, preferredCity, ...updateData } = params;
 
     if (!contactId) {
       return {
@@ -70,7 +72,13 @@ export const enrichContactTool: CoreTool = {
     try {
       const client = new BoldTrailClient();
 
-      const response = await client.updateContact(contactId, updateData);
+      // Map preferredCity to primaryCity if not already set (CRM uses primaryCity)
+      const mappedData = {
+        ...updateData,
+        primaryCity: updateData.primaryCity || preferredCity,
+      };
+
+      const response = await client.updateContact(contactId, mappedData);
 
       if (response.success) {
         console.error('[chatbot.enrichContact.success]', {

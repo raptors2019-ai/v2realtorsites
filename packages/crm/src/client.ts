@@ -81,6 +81,15 @@ export class BoldTrailClient {
         }
       }
 
+      // Log the payload being sent (for debugging)
+      console.error('[crm.boldtrail.createContact.payload]', {
+        hasCity: !!payload.primary_city,
+        city: payload.primary_city,
+        hasHashtags: !!payload.hashtags,
+        hashtagCount: Array.isArray(payload.hashtags) ? payload.hashtags.length : 0,
+        fields: Object.keys(payload),
+      });
+
       // kvCORE V2 uses singular /contact endpoint
       const response = await fetch(`${this.baseUrl}/contact`, {
         method: 'POST',
@@ -193,26 +202,42 @@ export class BoldTrailClient {
         hashtags.push(...data.urgencyFactors.map(f => f.toLowerCase().replace(/\s+/g, '-')));
       }
 
-      // Build notes as structured JSON (only if we have meaningful data)
-      let notes: string | undefined;
-      const notesData: Record<string, unknown> = {};
+      // Build human-readable notes for agent reference
+      const noteLines: string[] = [];
+
+      noteLines.push(`📝 ENRICHMENT UPDATE - ${new Date().toLocaleDateString('en-CA')}`);
 
       if (data.conversationSummary) {
-        notesData.summary = data.conversationSummary;
+        noteLines.push(`💬 ${data.conversationSummary}`);
       }
+
       if (data.mortgageEstimate) {
-        notesData.mortgageEstimate = data.mortgageEstimate;
+        noteLines.push('');
+        noteLines.push('💰 AFFORDABILITY:');
+        noteLines.push(`  • Max Budget: $${data.mortgageEstimate.maxHomePrice.toLocaleString()}`);
+        if (data.mortgageEstimate.cmhcPremium) {
+          noteLines.push(`  • CMHC Premium: $${data.mortgageEstimate.cmhcPremium.toLocaleString()}`);
+        }
       }
+
+      if (data.primaryCity || data.preferredNeighborhoods?.length) {
+        noteLines.push('');
+        noteLines.push('📍 LOCATION UPDATE:');
+        if (data.primaryCity) noteLines.push(`  • City: ${data.primaryCity}`);
+        if (data.preferredNeighborhoods?.length) {
+          noteLines.push(`  • Neighborhoods: ${data.preferredNeighborhoods.join(', ')}`);
+        }
+      }
+
       if (data.viewedListings?.length) {
-        notesData.viewedListings = data.viewedListings.map(l => l.address);
+        noteLines.push('');
+        noteLines.push(`🏠 PROPERTIES VIEWED (${data.viewedListings.length}):`);
+        data.viewedListings.slice(0, 5).forEach(l => {
+          noteLines.push(`  • ${l.address} ($${l.price.toLocaleString()})`);
+        });
       }
-      if (data.preferredNeighborhoods?.length) {
-        notesData.preferredNeighborhoods = data.preferredNeighborhoods;
-      }
-      if (Object.keys(notesData).length > 0) {
-        notesData.updatedAt = new Date().toISOString();
-        notes = JSON.stringify(notesData);
-      }
+
+      const notes = noteLines.length > 1 ? noteLines.join('\n') : undefined;
 
       // Build the payload with only non-empty values
       const rawPayload: Record<string, unknown> = {
