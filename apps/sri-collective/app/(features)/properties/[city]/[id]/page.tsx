@@ -2,8 +2,18 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPropertyById, getSimilarProperties, formatPrice } from '@/lib/data'
-import { PropertyGallery, CopyButton, PropertyJsonLd, BackButton, SimilarProperties, ShareButtons } from '@repo/ui'
+import {
+  PropertyGallery,
+  CopyButton,
+  PropertyJsonLd,
+  BackButton,
+  SimilarProperties,
+  ShareButtons,
+  PropertyHighlights,
+  StickyMobileCTA,
+} from '@repo/ui'
 import { PropertyDetailTracker } from '@repo/analytics'
+import { PropertyDetailClient } from './PropertyDetailClient'
 
 interface PageProps {
   params: Promise<{ city: string; id: string }>
@@ -71,9 +81,9 @@ export default async function PropertyDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  const similarProperties = await getSimilarProperties(property) // Default: 3-5 properties
+  const similarProperties = await getSimilarProperties(property)
   const citySlug = createCitySlug(property.city)
-  const cityDisplay = formatCityName(city)
+  const formattedPrice = formatPrice(property.price)
 
   return (
     <>
@@ -95,9 +105,7 @@ export default async function PropertyDetailPage({ params }: PageProps) {
         {/* Breadcrumb & Back Button */}
         <div className="container mx-auto px-4 py-3 sm:py-4 max-w-full">
           <div className="flex flex-col gap-3">
-            {/* Back Button - Left aligned */}
             <BackButton />
-            {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-xs sm:text-sm text-text-secondary flex-wrap">
               <Link href="/" className="hover:text-primary transition-colors">Home</Link>
               <span>/</span>
@@ -110,29 +118,79 @@ export default async function PropertyDetailPage({ params }: PageProps) {
           </div>
         </div>
 
+        {/* Mobile: Full-bleed Gallery */}
+        <div className="lg:hidden -mx-0">
+          <PropertyGallery
+            images={property.images}
+            alt={property.title}
+            priceOverlay={formattedPrice}
+            fullBleed={true}
+          />
+        </div>
+
         {/* Main Content */}
         <div className="container mx-auto px-4 py-6 md:py-8 max-w-full">
           <div className="grid lg:grid-cols-3 gap-6 md:gap-8 w-full">
             {/* Left Column - Images & Details */}
             <div className="lg:col-span-2 space-y-6 md:space-y-8 w-full max-w-full min-w-0">
-              {/* Image Gallery */}
-              <PropertyGallery images={property.images} alt={property.title} />
+              {/* Desktop: Gallery with container */}
+              <div className="hidden lg:block">
+                <PropertyGallery images={property.images} alt={property.title} />
+              </div>
 
-              {/* Mobile Pricing CTA */}
-              <div className="lg:hidden luxury-card-premium rounded-xl p-5 md:p-6 w-full max-w-full">
-                <p className="text-sm text-text-secondary mb-1">Listed Price</p>
-                <p className="text-3xl md:text-4xl font-bold text-gradient-primary mb-5 md:mb-6 break-words">
-                  {formatPrice(property.price)}
-                </p>
+              {/* Mobile: Horizontal Scroll Stats Bar */}
+              <div className="lg:hidden overflow-x-auto -mx-4 px-4 scrollbar-hide">
+                <div className="flex gap-4 w-max py-2">
+                  <div className="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-cream rounded-xl">
+                    <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <div>
+                      <p className="text-lg font-bold text-primary">{property.bedrooms}</p>
+                      <p className="text-xs text-text-secondary">Beds</p>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-cream rounded-xl">
+                    <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                    </svg>
+                    <div>
+                      <p className="text-lg font-bold text-primary">{property.bathrooms}</p>
+                      <p className="text-xs text-text-secondary">Baths</p>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-cream rounded-xl">
+                    <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                    <div>
+                      <p className="text-lg font-bold text-primary">{property.sqft.toLocaleString()}</p>
+                      <p className="text-xs text-text-secondary">Sq Ft</p>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-cream rounded-xl">
+                    <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-bold text-primary capitalize">{property.propertyType.replace('-', ' ')}</p>
+                      <p className="text-xs text-text-secondary">Type</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile CTA Card */}
+              <div className="lg:hidden luxury-card-premium rounded-xl p-5 w-full max-w-full">
                 <Link
                   href={`/contact?type=viewing&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}`}
-                  className="btn-primary w-full py-4 rounded-lg text-center font-semibold block mb-4 transition-transform hover:scale-[1.02] max-w-full"
+                  className="btn-primary w-full py-4 rounded-lg text-center font-semibold block mb-3 transition-transform active:scale-[0.98]"
                 >
                   Schedule a Viewing
                 </Link>
                 <Link
                   href={`/contact?type=question&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}`}
-                  className="btn-outline w-full py-4 rounded-lg text-center font-medium block transition-transform hover:scale-[1.02] max-w-full"
+                  className="btn-outline w-full py-4 rounded-lg text-center font-medium block transition-transform active:scale-[0.98]"
                 >
                   Ask a Question
                 </Link>
@@ -164,8 +222,11 @@ export default async function PropertyDetailPage({ params }: PageProps) {
                   />
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 py-5 md:py-6 border-y border-primary/20">
+                {/* Property Highlights (extracted from description) */}
+                <PropertyHighlights description={property.description} className="mb-5 md:mb-6" />
+
+                {/* Desktop Stats Grid */}
+                <div className="hidden lg:grid grid-cols-4 gap-4 py-5 md:py-6 border-y border-primary/20">
                   <div className="text-center">
                     <p className="text-2xl sm:text-3xl font-bold text-primary">{property.bedrooms}</p>
                     <p className="text-xs sm:text-sm text-text-secondary mt-1">Bedrooms</p>
@@ -184,29 +245,68 @@ export default async function PropertyDetailPage({ params }: PageProps) {
                   </div>
                 </div>
 
-                {/* Description */}
+                {/* Description - Expandable on mobile */}
                 <div className="mt-5 md:mt-6">
                   <h2 className="text-lg md:text-xl font-semibold text-secondary mb-3 md:mb-4">About This Property</h2>
-                  <p className="text-text-secondary text-sm md:text-base leading-relaxed break-words">
-                    {property.description || 'Contact us for more information about this beautiful property.'}
-                  </p>
+                  <PropertyDetailClient
+                    description={property.description || 'Contact us for more information about this beautiful property.'}
+                  />
                 </div>
 
-                {property.mlsNumber && (
-                  <p className="mt-6 text-sm text-text-muted">
-                    MLS# {property.mlsNumber}
-                  </p>
-                )}
+                {/* Listing Details Grid */}
+                <div className="mt-6 pt-6 border-t border-primary/20">
+                  <h3 className="text-sm font-medium text-text-secondary mb-3">Listing Details</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {property.mlsNumber && (
+                      <div>
+                        <p className="text-xs text-text-muted">MLS#</p>
+                        <p className="text-sm font-medium text-secondary">{property.mlsNumber}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-xs text-text-muted">Status</p>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Active
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-text-muted">Property Type</p>
+                      <p className="text-sm font-medium text-secondary capitalize">{property.propertyType.replace('-', ' ')}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-text-muted">Listing Type</p>
+                      <p className="text-sm font-medium text-secondary capitalize">{property.listingType}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile Agent Contact Card */}
+              <div className="lg:hidden luxury-card-premium rounded-xl p-5 w-full">
+                <h3 className="text-lg font-semibold text-secondary mb-4">Contact Our Team</h3>
+                <a
+                  href="tel:+14167860431"
+                  className="flex items-center gap-3 p-3 bg-cream rounded-lg hover:bg-cream/80 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm text-text-secondary">Call us</p>
+                    <p className="font-semibold text-secondary">+1 (416) 786-0431</p>
+                  </div>
+                </a>
               </div>
             </div>
 
-            {/* Right Column - Pricing & Contact */}
-            <div className="space-y-6">
-              {/* Pricing Card - Desktop Sticky */}
-              <div className="luxury-card-premium rounded-xl p-6 hidden lg:block lg:sticky lg:top-24">
+            {/* Right Column - Pricing & Contact (Desktop Only) */}
+            <div className="hidden lg:block space-y-6">
+              <div className="luxury-card-premium rounded-xl p-6 lg:sticky lg:top-24">
                 <p className="text-sm text-text-secondary mb-1">Listed Price</p>
                 <p className="text-4xl font-bold text-gradient-primary mb-6">
-                  {formatPrice(property.price)}
+                  {formattedPrice}
                 </p>
 
                 <Link
@@ -239,11 +339,19 @@ export default async function PropertyDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Similar Properties - Smart Recommendations */}
+        {/* Similar Properties */}
         <SimilarProperties
           currentProperty={property}
           initialSimilar={similarProperties}
           citySlug={citySlug}
+        />
+
+        {/* Sticky Mobile CTA */}
+        <StickyMobileCTA
+          address={property.address}
+          mlsNumber={property.mlsNumber}
+          propertyId={property.id}
+          price={formattedPrice}
         />
       </div>
     </>

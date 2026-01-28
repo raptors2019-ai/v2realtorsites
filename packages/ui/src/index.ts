@@ -18,7 +18,22 @@ export { ToolsSlider } from './components/ToolsSlider'
 export { CalculatorsSlider } from './components/CalculatorsSlider'
 
 // Properties
-export { PropertyCard, PropertyCardCarousel, PropertyGallery, PropertyGrid, PropertyFilters, PropertiesPageClient, PropertySurvey, BackButton, SimilarProperties, ShareButtons } from './properties'
+export {
+  PropertyCard,
+  PropertyCardCarousel,
+  PropertyGallery,
+  PropertyGalleryLightbox,
+  PropertyGrid,
+  PropertyFilters,
+  PropertiesPageClient,
+  PropertySurvey,
+  PropertyHighlights,
+  BackButton,
+  SimilarProperties,
+  ShareButtons,
+  ScrollProgressDots,
+  StickyMobileCTA,
+} from './properties'
 
 // Projects (Builder Projects)
 export { ProjectCard, ProjectGrid, RegistrationSurvey } from './projects'

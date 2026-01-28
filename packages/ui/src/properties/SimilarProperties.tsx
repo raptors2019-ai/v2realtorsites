@@ -2,7 +2,9 @@
 
 import { Property } from "@repo/types";
 import { PropertyCard } from "./PropertyCard";
-import { useEffect, useState } from "react";
+import { ScrollProgressDots } from "./ScrollProgressDots";
+import { useEffect, useState, useRef, useCallback } from "react";
+import Link from "next/link";
 
 interface SimilarPropertiesProps {
   currentProperty: Property;
@@ -19,6 +21,31 @@ export function SimilarProperties({
 }: SimilarPropertiesProps) {
   const [similar, setSimilar] = useState<Property[]>(initialSimilar);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeScrollIndex, setActiveScrollIndex] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Track scroll position to update active dot
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container || similar.length === 0) return;
+
+    const scrollLeft = container.scrollLeft;
+    const itemWidth = container.scrollWidth / similar.length;
+    const newIndex = Math.round(scrollLeft / itemWidth);
+    setActiveScrollIndex(Math.min(newIndex, similar.length - 1));
+  }, [similar.length]);
+
+  // Scroll to specific item when dot is clicked
+  const scrollToIndex = useCallback((index: number) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const itemWidth = container.scrollWidth / similar.length;
+    container.scrollTo({
+      left: itemWidth * index,
+      behavior: "smooth",
+    });
+  }, [similar.length]);
 
   useEffect(() => {
     // Try to fetch smarter recommendations based on user preferences
@@ -93,15 +120,47 @@ export function SimilarProperties({
     fetchWithPreferences();
   }, [currentProperty.id]);
 
-  if (similar.length === 0) return null;
+  // Empty state with explore CTA
+  if (similar.length === 0) {
+    return (
+      <section className="py-16 bg-cream">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl font-bold text-secondary mb-4">
+            Explore More Properties
+          </h2>
+          <p className="text-text-secondary mb-6">
+            Discover other listings in {currentProperty.city} and surrounding areas.
+          </p>
+          <Link
+            href={`/properties/${citySlug}`}
+            className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-lg"
+          >
+            View All in {currentProperty.city}
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-cream">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-secondary">
-            Similar Properties{similar.length > 0 && ` (${similar.length})`}
+            Similar Properties
           </h2>
+          <Link
+            href={`/properties/${citySlug}`}
+            className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            See all in {currentProperty.city}
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
         </div>
 
         {isLoading ? (
@@ -110,8 +169,12 @@ export function SimilarProperties({
           </div>
         ) : (
           <>
-            {/* Mobile: Horizontal scroll */}
-            <div className="md:hidden overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory">
+            {/* Mobile: Horizontal scroll with scroll tracking */}
+            <div
+              ref={scrollContainerRef}
+              onScroll={handleScroll}
+              className="md:hidden overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide"
+            >
               <div className="flex gap-4 w-max">
                 {similar.map((p, index) => (
                   <div key={p.id} className="w-[85vw] max-w-sm snap-center">
@@ -119,13 +182,30 @@ export function SimilarProperties({
                   </div>
                 ))}
               </div>
-              {similar.length > 1 && (
-                <div className="flex justify-center gap-2 mt-4">
-                  {similar.map((_, index) => (
-                    <div key={index} className="w-2 h-2 rounded-full bg-primary/30" />
-                  ))}
-                </div>
-              )}
+            </div>
+
+            {/* Mobile scroll indicators (tappable) */}
+            {similar.length > 1 && (
+              <div className="md:hidden mt-4">
+                <ScrollProgressDots
+                  total={similar.length}
+                  activeIndex={activeScrollIndex}
+                  onDotClick={scrollToIndex}
+                />
+              </div>
+            )}
+
+            {/* Mobile: See all link */}
+            <div className="flex justify-center mt-4 sm:hidden">
+              <Link
+                href={`/properties/${citySlug}`}
+                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                See all in {currentProperty.city}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
 
             {/* Desktop: Grid */}
