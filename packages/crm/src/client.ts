@@ -100,20 +100,73 @@ export class BoldTrailClient {
         body: JSON.stringify(payload),
       });
 
+      // Get full response text for debugging
+      const responseText = await response.text();
+
+      // Log complete response details
+      console.error('[crm.boldtrail.createContact.response]', {
+        status: response.status,
+        statusText: response.statusText,
+        body: responseText.slice(0, 1000), // Log first 1000 chars
+      });
+
       if (!response.ok) {
-        const errorText = await response.text();
         console.error('[crm.boldtrail.createContact.failed]', {
           status: response.status,
-          error: errorText,
+          error: responseText,
         });
-        throw new Error(`BoldTrail API error: ${response.status} - ${errorText}`);
+        throw new Error(`BoldTrail API error: ${response.status} - ${responseText}`);
       }
 
-      const result = await response.json() as { id: string };
-      console.error('[crm.boldtrail.createContact.success]', { contactId: result.id });
+      // Parse response
+      let result: { id: string };
+      try {
+        result = JSON.parse(responseText) as { id: string };
+      } catch {
+        console.error('[crm.boldtrail.createContact.parseError]', { responseText });
+        throw new Error('Failed to parse API response');
+      }
+
+      const contactId = result.id;
+      console.error('[crm.boldtrail.createContact.success]', { contactId });
+
+      // Attempt to add hashtags separately if they were provided
+      // (since hashtags in payload may be silently ignored)
+      if (data.customFields?.hashtags && Array.isArray(data.customFields.hashtags) && data.customFields.hashtags.length > 0) {
+        console.error('[crm.boldtrail.createContact.attemptHashtags]', {
+          contactId,
+          hashtagCount: data.customFields.hashtags.length,
+        });
+        const hashtagResult = await this.addContactHashtags(contactId, data.customFields.hashtags);
+        if (!hashtagResult.success) {
+          console.error('[crm.boldtrail.createContact.hashtagsFailed]', {
+            contactId,
+            error: hashtagResult.error,
+            note: 'Contact created but hashtags not applied - may need to be pre-created in BoldTrail UI',
+          });
+        }
+      }
+
+      // Attempt to add notes separately if provided
+      // (since notes in payload may not appear in activity timeline)
+      if (data.customFields?.notes && typeof data.customFields.notes === 'string') {
+        console.error('[crm.boldtrail.createContact.attemptNote]', {
+          contactId,
+          noteLength: data.customFields.notes.length,
+        });
+        const noteResult = await this.addContactNote(contactId, data.customFields.notes);
+        if (!noteResult.success) {
+          console.error('[crm.boldtrail.createContact.noteFailed]', {
+            contactId,
+            error: noteResult.error,
+            note: 'Contact created but activity note not added - may not be available in public API',
+          });
+        }
+      }
+
       return {
         success: true,
-        contactId: result.id,
+        contactId,
       };
     } catch (error) {
       console.error('[crm.boldtrail.createContact.error]', error);
@@ -249,7 +302,7 @@ export class BoldTrailClient {
         avg_beds: data.averageBeds,
         avg_baths: data.averageBaths,
         primary_city: data.primaryCity,
-        hashtags: hashtags.length > 0 ? [...new Set(hashtags)] : undefined, // Dedupe hashtags
+        hashtags: hashtags.length > 0 ? Array.from(new Set(hashtags)) : undefined, // Dedupe hashtags
         notes,
       };
 
@@ -295,6 +348,211 @@ export class BoldTrailClient {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  }
+
+  /**
+   * Add a note to a contact's activity timeline
+   * Tries multiple endpoint variations since kvCORE public API documentation is unclear
+   */
+  async addContactNote(contactId: string, note: string): Promise<ContactResponse> {
+    if (!this.apiKey) {
+      console.warn('[crm.boldtrail.addContactNote.noApiKey] BoldTrail API key not configured');
+      return { success: false, error: 'API key not configured' };
+    }
+
+    if (!contactId || !note) {
+      return { success: false, error: 'Contact ID and note content required' };
+    }
+
+    // Try multiple endpoint variations - kvCORE API docs are inconsistent
+    const endpointVariations: Array<{
+      path: string;
+      method: 'POST' | 'PUT';
+      body: Record<string, unknown>;
+    }> = [
+      // Variation 1: action-note with { note: "..." }
+      { path: `/contact/${contactId}/action-note`, method: 'POST', body: { note } },
+      { path: `/contact/${contactId}/action-note`, method: 'PUT', body: { note } },
+      // Variation 2: action-note with { body: "..." }
+      { path: `/contact/${contactId}/action-note`, method: 'POST', body: { body: note } },
+      // Variation 3: action-note with { content: "..." }
+      { path: `/contact/${contactId}/action-note`, method: 'POST', body: { content: note } },
+      // Variation 4: /note endpoint
+      { path: `/contact/${contactId}/note`, method: 'POST', body: { note } },
+      { path: `/contact/${contactId}/note`, method: 'PUT', body: { note } },
+      // Variation 5: /notes endpoint (plural)
+      { path: `/contact/${contactId}/notes`, method: 'POST', body: { note } },
+      { path: `/contact/${contactId}/notes`, method: 'POST', body: { body: note } },
+      // Variation 6: /activity endpoint
+      { path: `/contact/${contactId}/activity`, method: 'POST', body: { type: 'note', note } },
+      { path: `/contact/${contactId}/activity`, method: 'POST', body: { action: 'note', body: note } },
+    ];
+
+    for (const variation of endpointVariations) {
+      const url = `${this.baseUrl}${variation.path}`;
+
+      try {
+        console.error('[crm.boldtrail.addContactNote.trying]', {
+          method: variation.method,
+          url,
+          bodyKeys: Object.keys(variation.body),
+        });
+
+        const response = await fetch(url, {
+          method: variation.method,
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(variation.body),
+        });
+
+        const responseText = await response.text();
+
+        // Log full response for debugging
+        console.error('[crm.boldtrail.addContactNote.response]', {
+          method: variation.method,
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          body: responseText.slice(0, 500), // Truncate for logging
+        });
+
+        if (response.ok) {
+          console.error('[crm.boldtrail.addContactNote.SUCCESS]', {
+            method: variation.method,
+            path: variation.path,
+            bodyKeys: Object.keys(variation.body),
+          });
+          return { success: true, contactId };
+        }
+
+        // Continue to next variation on 404/405
+        if (response.status === 404 || response.status === 405) {
+          continue;
+        }
+
+        // For other errors (401, 403, 500), stop trying
+        if (response.status === 401 || response.status === 403) {
+          return { success: false, error: `API auth error: ${response.status} - check API token permissions` };
+        }
+      } catch (error) {
+        console.error('[crm.boldtrail.addContactNote.error]', { variation, error });
+      }
+    }
+
+    // All variations failed
+    console.error('[crm.boldtrail.addContactNote.allFailed]', {
+      contactId,
+      variationsTried: endpointVariations.length,
+      message: 'Note endpoint not found - may not be available in public API tier',
+    });
+    return { success: false, error: 'Failed to add note - endpoint not found in public API' };
+  }
+
+  /**
+   * Add hashtags/tags to a contact
+   * Tries multiple endpoint variations since hashtags may need separate API call
+   */
+  async addContactHashtags(contactId: string, hashtags: string[]): Promise<ContactResponse> {
+    if (!this.apiKey) {
+      console.warn('[crm.boldtrail.addContactHashtags.noApiKey] BoldTrail API key not configured');
+      return { success: false, error: 'API key not configured' };
+    }
+
+    if (!contactId || !hashtags.length) {
+      return { success: false, error: 'Contact ID and hashtags required' };
+    }
+
+    // The /tags endpoint returned 422 "tags field is required" - try different formats
+    const tagsAsString = hashtags.join(','); // comma-separated
+    const tagsAsObjects = hashtags.map(t => ({ name: t })); // array of objects with name
+
+    // Try multiple endpoint variations with different body formats
+    const endpointVariations: Array<{
+      path: string;
+      method: 'POST' | 'PUT' | 'PATCH';
+      body: Record<string, unknown>;
+      description: string;
+    }> = [
+      // /tags endpoint - try different value formats (422 means endpoint exists, wrong format)
+      { path: `/contact/${contactId}/tags`, method: 'PUT', body: { tags: hashtags }, description: 'tags as string array' },
+      { path: `/contact/${contactId}/tags`, method: 'PUT', body: { tags: tagsAsString }, description: 'tags as comma string' },
+      { path: `/contact/${contactId}/tags`, method: 'PUT', body: { tags: tagsAsObjects }, description: 'tags as objects with name' },
+      // Maybe the API wants a different structure entirely
+      { path: `/contact/${contactId}/tags`, method: 'PUT', body: hashtags.reduce((acc, t, i) => ({ ...acc, [`tags[${i}]`]: t }), {}), description: 'tags as indexed keys' },
+      // Try POST
+      { path: `/contact/${contactId}/tags`, method: 'POST', body: { tags: hashtags }, description: 'POST tags array' },
+      { path: `/contact/${contactId}/tags`, method: 'POST', body: { tags: tagsAsString }, description: 'POST tags string' },
+      // /hashtags endpoint
+      { path: `/contact/${contactId}/hashtags`, method: 'PUT', body: { hashtags }, description: '/hashtags PUT' },
+      { path: `/contact/${contactId}/hashtags`, method: 'POST', body: { hashtags }, description: '/hashtags POST' },
+      // PATCH/PUT contact directly with hashtags in payload
+      { path: `/contact/${contactId}`, method: 'PUT', body: { hashtags }, description: 'PUT contact hashtags' },
+    ];
+
+    for (const variation of endpointVariations) {
+      const url = `${this.baseUrl}${variation.path}`;
+
+      try {
+        console.error('[crm.boldtrail.addContactHashtags.trying]', {
+          method: variation.method,
+          url,
+          description: variation.description,
+          body: JSON.stringify(variation.body).slice(0, 200),
+        });
+
+        const response = await fetch(url, {
+          method: variation.method,
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(variation.body),
+        });
+
+        const responseText = await response.text();
+
+        // Log full response for debugging
+        console.error('[crm.boldtrail.addContactHashtags.response]', {
+          description: variation.description,
+          status: response.status,
+          body: responseText.slice(0, 300),
+        });
+
+        if (response.ok) {
+          console.error('[crm.boldtrail.addContactHashtags.SUCCESS]', {
+            description: variation.description,
+            method: variation.method,
+            path: variation.path,
+          });
+          return { success: true, contactId };
+        }
+
+        // Continue to next variation on 404/405/422 (422 = validation error, try other formats)
+        if (response.status === 404 || response.status === 405 || response.status === 422) {
+          continue;
+        }
+
+        // For auth errors, stop trying
+        if (response.status === 401 || response.status === 403) {
+          return { success: false, error: `API auth error: ${response.status} - check API token permissions` };
+        }
+      } catch (error) {
+        console.error('[crm.boldtrail.addContactHashtags.error]', { variation, error });
+      }
+    }
+
+    // All variations failed
+    console.error('[crm.boldtrail.addContactHashtags.allFailed]', {
+      contactId,
+      hashtagCount: hashtags.length,
+      variationsTried: endpointVariations.length,
+      message: 'Hashtag endpoint not found - must be pre-created in BoldTrail UI under Marketing > Hashtag Management',
+    });
+    return { success: false, error: 'Failed to add hashtags - endpoint not found in public API' };
   }
 
   /**

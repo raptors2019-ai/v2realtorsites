@@ -12,6 +12,9 @@ interface FormData {
   email: string
   phone: string
   interest: string
+  city: string
+  timeline: string
+  budget: string
   message: string
 }
 
@@ -21,8 +24,60 @@ const initialFormData: FormData = {
   email: '',
   phone: '',
   interest: '',
+  city: '',
+  timeline: '',
+  budget: '',
   message: '',
 }
+
+// GTA cities for dropdown (users can also type their own)
+const GTA_CITIES = [
+  'Toronto',
+  'North York',
+  'Scarborough',
+  'Etobicoke',
+  'Mississauga',
+  'Brampton',
+  'Vaughan',
+  'Markham',
+  'Richmond Hill',
+  'Oakville',
+  'Burlington',
+  'Milton',
+  'Hamilton',
+  'Ajax',
+  'Pickering',
+  'Whitby',
+  'Oshawa',
+  'Newmarket',
+  'Aurora',
+  'King City',
+  'Stouffville',
+  'Caledon',
+  'Georgetown',
+  'Halton Hills',
+  'Grimsby',
+  'St. Catharines',
+  'Niagara Falls',
+]
+
+// Timeline options
+const TIMELINE_OPTIONS = [
+  { value: 'asap', label: 'As soon as possible' },
+  { value: '1-3-months', label: '1-3 months' },
+  { value: '3-6-months', label: '3-6 months' },
+  { value: '6-plus-months', label: '6+ months' },
+  { value: 'just-exploring', label: 'Just exploring' },
+]
+
+// Budget ranges (aligned with BoldTrail hashtags)
+const BUDGET_OPTIONS = [
+  { value: 'under-500k', label: 'Under $500K' },
+  { value: '500k-750k', label: '$500K - $750K' },
+  { value: '750k-1m', label: '$750K - $1M' },
+  { value: '1m-2m', label: '$1M - $2M' },
+  { value: '2m-plus', label: '$2M+' },
+]
 
 export function ContactForm() {
   const searchParams = useSearchParams()
@@ -44,6 +99,17 @@ export function ContactForm() {
     const type = searchParams.get('type')  // 'viewing' or 'question'
     const address = searchParams.get('address')
     const mls = searchParams.get('mls')
+    const cityParam = searchParams.get('city')
+    const priceParam = searchParams.get('price')
+
+    // Helper to determine budget range from price (aligned with BoldTrail hashtags)
+    const getBudgetFromPrice = (price: number): string => {
+      if (price < 500000) return 'under-500k'
+      if (price < 750000) return '500k-750k'
+      if (price < 1000000) return '750k-1m'
+      if (price < 2000000) return '1m-2m'
+      return '2m-plus'
+    }
 
     // Handle property-specific inquiries (viewing or question)
     if (type && address) {
@@ -58,9 +124,15 @@ export function ContactForm() {
         message += `.\n\nMy question is: `
       }
 
+      // Pre-populate city and budget from property data
+      const cityValue = cityParam && GTA_CITIES.includes(cityParam) ? cityParam : ''
+      const budgetValue = priceParam ? getBudgetFromPrice(parseInt(priceParam, 10)) : ''
+
       setFormData((prev) => ({
         ...prev,
         interest: 'buying',  // Property inquiries are typically buyers
+        city: cityValue,
+        budget: budgetValue,
         message,
       }))
       return  // Don't process other interest params
@@ -266,6 +338,75 @@ export function ContactForm() {
           <option value="general">General Inquiry</option>
         </select>
       </div>
+
+      {/* Buyer/Renter specific fields */}
+      {(formData.interest === 'buying' || formData.interest === 'renting') && (
+        <>
+          {/* City and Timeline Row */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            {/* City - Searchable input with datalist */}
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium text-secondary mb-2">
+                Preferred City
+              </label>
+              <input
+                type="text"
+                id="city"
+                name="city"
+                list="city-options"
+                value={formData.city}
+                onChange={handleChange}
+                placeholder="Type or select a city"
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200 bg-white"
+                autoComplete="off"
+              />
+              <datalist id="city-options">
+                {GTA_CITIES.map((city) => (
+                  <option key={city} value={city} />
+                ))}
+              </datalist>
+            </div>
+
+            {/* Timeline */}
+            <div>
+              <label htmlFor="timeline" className="block text-sm font-medium text-secondary mb-2">
+                Timeline
+              </label>
+              <select
+                id="timeline"
+                name="timeline"
+                value={formData.timeline}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200 bg-white"
+              >
+                <option value="">When are you looking?</option>
+                {TIMELINE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Budget */}
+          <div>
+            <label htmlFor="budget" className="block text-sm font-medium text-secondary mb-2">
+              Budget Range
+            </label>
+            <select
+              id="budget"
+              name="budget"
+              value={formData.budget}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200 bg-white"
+            >
+              <option value="">Select your budget</option>
+              {BUDGET_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+        </>
+      )}
 
       {/* Message */}
       <div>

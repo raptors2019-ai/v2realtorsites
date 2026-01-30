@@ -182,13 +182,13 @@ export default async function PropertyDetailPage({ params }: PageProps) {
               {/* Mobile CTA Card */}
               <div className="lg:hidden luxury-card-premium rounded-xl p-5 w-full max-w-full">
                 <Link
-                  href={`/contact?type=viewing&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}`}
+                  href={`/contact?type=viewing&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}&city=${encodeURIComponent(property.city)}&price=${property.price}`}
                   className="btn-primary w-full py-4 rounded-lg text-center font-semibold block mb-3 transition-transform active:scale-[0.98]"
                 >
                   Schedule a Viewing
                 </Link>
                 <Link
-                  href={`/contact?type=question&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}`}
+                  href={`/contact?type=question&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}&city=${encodeURIComponent(property.city)}&price=${property.price}`}
                   className="btn-outline w-full py-4 rounded-lg text-center font-medium block transition-transform active:scale-[0.98]"
                 >
                   Ask a Question
@@ -308,13 +308,13 @@ export default async function PropertyDetailPage({ params }: PageProps) {
                 </p>
 
                 <Link
-                  href={`/contact?type=viewing&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}`}
+                  href={`/contact?type=viewing&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}&city=${encodeURIComponent(property.city)}&price=${property.price}`}
                   className="btn-primary w-full py-4 rounded-lg text-center font-semibold block mb-4 transition-transform hover:scale-[1.02]"
                 >
                   Schedule a Viewing
                 </Link>
                 <Link
-                  href={`/contact?type=question&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}`}
+                  href={`/contact?type=question&address=${encodeURIComponent(property.address)}&mls=${property.mlsNumber || property.id}&city=${encodeURIComponent(property.city)}&price=${property.price}`}
                   className="btn-outline w-full py-4 rounded-lg text-center font-medium block transition-transform hover:scale-[1.02]"
                 >
                   Ask a Question

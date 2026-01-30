@@ -274,6 +274,11 @@ export const createContactTool: CoreTool = {
 
       const notes = noteLines.join('\n')
 
+      // Create contact with all data
+      // The CRM client will:
+      // 1. Create contact with basic fields
+      // 2. Attempt to add hashtags via separate endpoint
+      // 3. Attempt to add note to activity timeline
       const response = await client.createContact({
         firstName: params.firstName,
         lastName: params.lastName || '',
@@ -289,6 +294,14 @@ export const createContactTool: CoreTool = {
           hashtags,
           notes,
         },
+      })
+
+      // Log API attempts for debugging
+      console.error('[chatbot.createContact.crmResponse]', {
+        success: response.success,
+        contactId: response.contactId,
+        hashtagCount: hashtags.length,
+        noteLength: notes.length,
       })
 
       if (response.success) {

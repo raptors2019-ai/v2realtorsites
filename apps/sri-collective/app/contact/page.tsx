@@ -60,8 +60,8 @@ export default function ContactPage() {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="grid lg:grid-cols-5 gap-12">
-              {/* Left Column - Contact Info */}
-              <div className="lg:col-span-2 space-y-8">
+              {/* Contact Info - Shows second on mobile, first on desktop */}
+              <div className="lg:col-span-2 space-y-8 order-2 lg:order-1">
                 {/* Agent Cards */}
                 <ContactPageClient agents={agents} />
 
@@ -88,8 +88,8 @@ export default function ContactPage() {
 
               </div>
 
-              {/* Right Column - Contact Form */}
-              <div className="lg:col-span-3">
+              {/* Contact Form - Shows first on mobile, second on desktop */}
+              <div className="lg:col-span-3 order-1 lg:order-2">
                 <div className="bg-white rounded-2xl border border-gray-200 p-8 md:p-10 shadow-sm">
                   <h2 className="text-2xl font-semibold text-secondary mb-2">Send Us a Message</h2>
                   <p className="text-text-secondary mb-8">

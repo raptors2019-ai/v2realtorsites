@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Validate required fields
-    const { firstName, lastName, email, phone, interest, message } = body
+    const { firstName, lastName, email, phone, interest, city, timeline, budget, message } = body
 
     if (!firstName || !lastName || !email || !interest || !message) {
       return NextResponse.json(
@@ -42,12 +42,38 @@ export async function POST(request: NextRequest) {
 
     const leadType = leadTypeMap[interest] || 'general'
 
-    // Build detailed notes for the CRM
+    // Build hashtags for CRM
+    // Available hashtags must be pre-created in BoldTrail: Marketing > Hashtag Management
+    const hashtags: string[] = [
+      'website',
+      'sri-collective',
+      leadType, // buyer, seller, general, investor
+    ]
+
+    // Add city hashtag (lowercase, hyphenated)
+    if (city) {
+      const cityTag = city.toLowerCase().replace(/\s+/g, '-')
+      hashtags.push(cityTag)
+    }
+
+    // Add timeline hashtag
+    if (timeline) {
+      hashtags.push(`timeline-${timeline}`)
+    }
+
+    // Add budget hashtag
+    if (budget) {
+      hashtags.push(`budget-${budget}`)
+    }
+
+    // Build detailed notes for the CRM (stored in notes field, may not show in activity)
     const notesLines = [
       `=== Lead from Sri Collective Website ===`,
       ``,
-      `Interest Type: ${interest}`,
-      `Source: Sri Collective - Contact Form`,
+      `Interest: ${interest}`,
+      city ? `City: ${city}` : null,
+      timeline ? `Timeline: ${timeline}` : null,
+      budget ? `Budget: ${budget}` : null,
       ``,
       `--- Customer Message ---`,
       message,
@@ -69,12 +95,18 @@ export async function POST(request: NextRequest) {
       source: 'sri-collective',
       leadType,
       customFields: {
+        hashtags,
         notes: notesLines,
         interest_type: interest,
+        city: city || undefined,
       },
     }
 
     // Create contact in BoldTrail
+    // The client will attempt to:
+    // 1. Create contact with basic info
+    // 2. Add hashtags via separate endpoint (if available)
+    // 3. Add note to activity timeline (if available)
     const client = new BoldTrailClient()
     const result = await client.createContact(contactData)
 
@@ -86,10 +118,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Log success with hashtag info for debugging
     console.log('[api.contact.success]', {
       contactId: result.contactId,
       fallback: result.fallback,
       leadType,
+      hashtags,
+      noteLength: notesLines.length,
     })
 
     return NextResponse.json({
