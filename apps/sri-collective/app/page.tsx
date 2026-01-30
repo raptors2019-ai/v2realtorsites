@@ -210,12 +210,14 @@ export default async function Home() {
                     Expert negotiation support
                   </li>
                 </ul>
-                <Link
-                  href="/contact?interest=valuation"
+                <a
+                  href="https://srikathiravelu.remaxexperts.net/seller/valuation/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-primary px-8 py-3.5 rounded-lg text-sm font-medium inline-block"
                 >
                   Get Your Free Valuation
-                </Link>
+                </a>
               </div>
 
               <div className="relative">
