@@ -13,7 +13,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Validate required fields
-    const { firstName, lastName, email, phone, interest, city, timeline, budget, message } = body
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      interest,
+      city,
+      timeline,
+      budget,
+      message,
+      // Property-specific fields (from property detail page)
+      inquiryType,
+      propertyAddress,
+      propertyMls,
+    } = body
 
     if (!firstName || !lastName || !email || !interest || !message) {
       return NextResponse.json(
@@ -50,6 +64,13 @@ export async function POST(request: NextRequest) {
       leadType, // buyer, seller, general, investor
     ]
 
+    // Add inquiry type hashtag for property-specific requests
+    if (inquiryType === 'viewing') {
+      hashtags.push('walkthrough-requested')
+    } else if (inquiryType === 'question') {
+      hashtags.push('question-asked')
+    }
+
     // Add city hashtag (lowercase, hyphenated)
     if (city) {
       const cityTag = city.toLowerCase().replace(/\s+/g, '-')
@@ -67,7 +88,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Build detailed notes for the CRM (stored in notes field, may not show in activity)
+    // For walkthrough requests, put property info prominently at the top
+    const isWalkthroughRequest = inquiryType === 'viewing' && propertyAddress
+    const isPropertyQuestion = inquiryType === 'question' && propertyAddress
+
     const notesLines = [
+      // Property info first for walkthrough requests (most important for realtor)
+      isWalkthroughRequest ? `*** WALKTHROUGH REQUEST ***` : null,
+      isWalkthroughRequest ? `PROPERTY: ${propertyAddress}` : null,
+      isWalkthroughRequest && propertyMls ? `MLS#: ${propertyMls}` : null,
+      isWalkthroughRequest ? `` : null,
+
+      // Property question info
+      isPropertyQuestion ? `*** PROPERTY QUESTION ***` : null,
+      isPropertyQuestion ? `PROPERTY: ${propertyAddress}` : null,
+      isPropertyQuestion && propertyMls ? `MLS#: ${propertyMls}` : null,
+      isPropertyQuestion ? `` : null,
+
       `=== Lead from Sri Collective Website ===`,
       ``,
       `Interest: ${interest}`,
@@ -118,6 +155,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // For walkthrough requests, try to create a task for visibility in CRM
+    if (isWalkthroughRequest && result.contactId) {
+      const taskResult = await client.createContactTask(result.contactId, {
+        title: `Walkthrough: ${propertyAddress}`,
+        description: [
+          `Property: ${propertyAddress}`,
+          propertyMls ? `MLS#: ${propertyMls}` : null,
+          ``,
+          `Contact: ${firstName} ${lastName}`,
+          `Email: ${email}`,
+          phone ? `Phone: ${phone}` : null,
+          ``,
+          `Message: ${message}`,
+        ].filter(Boolean).join('\n'),
+      })
+
+      console.log('[api.contact.task]', {
+        contactId: result.contactId,
+        taskSuccess: taskResult.success,
+        taskError: taskResult.error,
+        propertyAddress,
+      })
+    }
+
     // Log success with hashtag info for debugging
     console.log('[api.contact.success]', {
       contactId: result.contactId,
@@ -125,6 +186,8 @@ export async function POST(request: NextRequest) {
       leadType,
       hashtags,
       noteLength: notesLines.length,
+      isWalkthroughRequest,
+      propertyAddress: propertyAddress || null,
     })
 
     return NextResponse.json({

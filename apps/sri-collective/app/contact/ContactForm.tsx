@@ -16,6 +16,10 @@ interface FormData {
   timeline: string
   budget: string
   message: string
+  // Property-specific fields (populated from URL when coming from property page)
+  inquiryType: string  // 'viewing' | 'question' | ''
+  propertyAddress: string
+  propertyMls: string
 }
 
 const initialFormData: FormData = {
@@ -28,6 +32,9 @@ const initialFormData: FormData = {
   timeline: '',
   budget: '',
   message: '',
+  inquiryType: '',
+  propertyAddress: '',
+  propertyMls: '',
 }
 
 // GTA cities for dropdown (users can also type their own)
@@ -134,6 +141,10 @@ export function ContactForm() {
         city: cityValue,
         budget: budgetValue,
         message,
+        // Property-specific fields for CRM handling
+        inquiryType: type,  // 'viewing' or 'question'
+        propertyAddress: address,
+        propertyMls: mls || '',
       }))
       return  // Don't process other interest params
     }

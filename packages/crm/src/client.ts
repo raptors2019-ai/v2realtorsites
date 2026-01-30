@@ -663,6 +663,109 @@ export class BoldTrailClient {
   }
 
   /**
+   * Create a task for a contact
+   * Tries multiple endpoint variations since kvCORE public API documentation is unclear
+   * Tasks appear in the contact's activity timeline and are useful for walkthrough requests
+   */
+  async createContactTask(
+    contactId: string,
+    task: { title: string; description: string; dueDate?: string }
+  ): Promise<ContactResponse> {
+    if (!this.apiKey) {
+      console.warn('[crm.boldtrail.createContactTask.noApiKey] BoldTrail API key not configured');
+      return { success: false, error: 'API key not configured' };
+    }
+
+    if (!contactId || !task.title) {
+      return { success: false, error: 'Contact ID and task title required' };
+    }
+
+    // Try multiple endpoint and body variations
+    const endpointVariations: Array<{
+      path: string;
+      method: 'POST' | 'PUT';
+      body: Record<string, unknown>;
+      description: string;
+    }> = [
+      // /task endpoint variations
+      { path: `/contact/${contactId}/task`, method: 'POST', body: { title: task.title, description: task.description }, description: '/task POST title+description' },
+      { path: `/contact/${contactId}/task`, method: 'POST', body: { subject: task.title, body: task.description }, description: '/task POST subject+body' },
+      { path: `/contact/${contactId}/task`, method: 'POST', body: { task: task.title, notes: task.description }, description: '/task POST task+notes' },
+      { path: `/contact/${contactId}/task`, method: 'PUT', body: { title: task.title, description: task.description }, description: '/task PUT title+description' },
+      // /action-task endpoint variations
+      { path: `/contact/${contactId}/action-task`, method: 'POST', body: { title: task.title, description: task.description }, description: '/action-task POST' },
+      { path: `/contact/${contactId}/action-task`, method: 'POST', body: { task: task.title, body: task.description }, description: '/action-task POST task+body' },
+      // Global /task endpoint with contact_id
+      { path: `/task`, method: 'POST', body: { contact_id: contactId, title: task.title, description: task.description }, description: 'global /task POST' },
+      { path: `/task`, method: 'POST', body: { lead_id: contactId, subject: task.title, body: task.description }, description: 'global /task POST lead_id' },
+      // /tasks endpoint (plural)
+      { path: `/contact/${contactId}/tasks`, method: 'POST', body: { title: task.title, description: task.description }, description: '/tasks POST' },
+      // /action endpoint with type=task
+      { path: `/contact/${contactId}/action`, method: 'POST', body: { type: 'task', title: task.title, description: task.description }, description: '/action POST type=task' },
+    ];
+
+    for (const variation of endpointVariations) {
+      const url = `${this.baseUrl}${variation.path}`;
+
+      try {
+        console.error('[crm.boldtrail.createContactTask.trying]', {
+          method: variation.method,
+          url,
+          description: variation.description,
+        });
+
+        const response = await fetch(url, {
+          method: variation.method,
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(variation.body),
+        });
+
+        const responseText = await response.text();
+
+        console.error('[crm.boldtrail.createContactTask.response]', {
+          description: variation.description,
+          status: response.status,
+          body: responseText.slice(0, 300),
+        });
+
+        if (response.ok) {
+          console.error('[crm.boldtrail.createContactTask.SUCCESS]', {
+            description: variation.description,
+            method: variation.method,
+            path: variation.path,
+          });
+          return { success: true, contactId };
+        }
+
+        // Continue to next variation on 404/405/422
+        if (response.status === 404 || response.status === 405 || response.status === 422) {
+          continue;
+        }
+
+        // For auth errors, stop trying
+        if (response.status === 401 || response.status === 403) {
+          return { success: false, error: `API auth error: ${response.status} - check API token permissions` };
+        }
+      } catch (error) {
+        console.error('[crm.boldtrail.createContactTask.error]', { variation, error });
+      }
+    }
+
+    // All variations failed
+    console.error('[crm.boldtrail.createContactTask.allFailed]', {
+      contactId,
+      taskTitle: task.title,
+      variationsTried: endpointVariations.length,
+      message: 'Task endpoint not found - may not be available in public API tier',
+    });
+    return { success: false, error: 'Failed to create task - endpoint not found in public API' };
+  }
+
+  /**
    * Get a single listing by ID
    */
   async getListing(listingId: string): Promise<{ success: boolean; data?: BoldTrailListing; error?: string }> {
