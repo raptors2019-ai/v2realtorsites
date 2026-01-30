@@ -6,9 +6,11 @@ import { cn } from "@repo/lib";
 interface CopyButtonProps {
   text: string;
   className?: string;
+  /** "link" shows link icon, "clipboard" shows clipboard icon */
+  variant?: "link" | "clipboard";
 }
 
-export function CopyButton({ text, className }: CopyButtonProps) {
+export function CopyButton({ text, className, variant = "link" }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -25,14 +27,14 @@ export function CopyButton({ text, className }: CopyButtonProps) {
     <button
       onClick={handleCopy}
       className={cn(
-        "p-1.5 rounded-md hover:bg-primary/10 transition-colors group",
+        "p-2 rounded-lg bg-gray-100 hover:bg-primary hover:text-white text-gray-500 transition-all duration-200 group",
         className
       )}
-      title={copied ? "Copied!" : "Copy address"}
+      title={copied ? "Copied!" : variant === "link" ? "Copy link" : "Copy address"}
     >
       {copied ? (
         <svg
-          className="w-4 h-4 text-green-600"
+          className="w-5 h-5 text-green-600 group-hover:text-white"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -44,9 +46,23 @@ export function CopyButton({ text, className }: CopyButtonProps) {
             d="M5 13l4 4L19 7"
           />
         </svg>
+      ) : variant === "link" ? (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+          />
+        </svg>
       ) : (
         <svg
-          className="w-4 h-4 text-text-secondary group-hover:text-primary transition-colors"
+          className="w-5 h-5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

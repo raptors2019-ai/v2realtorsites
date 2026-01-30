@@ -8,7 +8,6 @@ import {
   PropertyJsonLd,
   BackButton,
   SimilarProperties,
-  ShareButtons,
   PropertyHighlights,
   StickyMobileCTA,
 } from '@repo/ui'
@@ -198,27 +197,26 @@ export default async function PropertyDetailPage({ params }: PageProps) {
 
               {/* Property Details */}
               <div className="luxury-card-premium rounded-xl p-5 md:p-8 w-full max-w-full">
-                <h1 className="text-2xl md:text-3xl font-bold text-secondary mb-2 break-words">
-                  {property.title}
-                </h1>
-                <div className="flex items-start gap-2 mb-4 flex-wrap">
-                  <svg className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-start gap-3 mb-2">
+                  <h1 className="text-2xl md:text-3xl font-bold text-secondary break-words flex-1">
+                    {property.title}
+                  </h1>
+                  <CopyButton
+                    text={`https://sricollective.ca/properties/${citySlug}/${property.id}`}
+                    variant="link"
+                  />
+                </div>
+                <div className="flex items-center gap-2 mb-5 md:mb-6">
+                  <svg className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <p className="text-text-secondary text-sm md:text-base break-words flex-1 min-w-0">
+                  <p className="text-text-secondary text-sm md:text-base break-words">
                     {property.address}, {property.city}, {property.province} {property.postalCode}
                   </p>
-                  <CopyButton text={`${property.address}, ${property.city}, ${property.province} ${property.postalCode}`} />
-                </div>
-
-                {/* Social Share Buttons */}
-                <div className="mb-5 md:mb-6">
-                  <ShareButtons
-                    url={`https://sricollective.ca/properties/${citySlug}/${property.id}`}
-                    title={property.title}
-                    contentId={property.id}
-                    description={property.description}
+                  <CopyButton
+                    text={`${property.address}, ${property.city}, ${property.province} ${property.postalCode}`}
+                    variant="clipboard"
                   />
                 </div>
 

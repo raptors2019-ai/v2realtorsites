@@ -78,6 +78,12 @@ export default function ContactPage() {
                       </span>
                     ))}
                   </div>
+                  <div className="mt-4 p-3 bg-cream rounded-lg border border-primary/10">
+                    <p className="text-sm text-text-secondary">
+                      <span className="font-medium text-secondary">+ the entire Greater Toronto Area</span>
+                      {' '}— Don&apos;t see your city? We serve all GTA communities.
+                    </p>
+                  </div>
                 </div>
 
               </div>
