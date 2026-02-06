@@ -210,7 +210,9 @@ export class IDXClient {
       filters.push(`PropertySubType eq '${mappedType}'`)
     }
     if (params.status && params.status !== 'all') {
-      filters.push(`StandardStatus eq '${params.status}'`)
+      // RESO standard uses 'Closed' for sold properties
+      const resoStatus = params.status === 'Sold' ? 'Closed' : params.status
+      filters.push(`StandardStatus eq '${resoStatus}'`)
     } else {
       filters.push(`StandardStatus eq 'Active'`) // Default to active
     }
