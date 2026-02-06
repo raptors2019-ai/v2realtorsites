@@ -9,7 +9,7 @@ export interface LeadEmailData {
   source: 'newhomeshow' | 'sri-collective'
   leadSource: 'contact-form' | 'registration' | 'chatbot' | 'property-inquiry'
   leadType: 'buyer' | 'seller' | 'investor' | 'general'
-  leadQuality?: 'hot' | 'warm' | 'cold'
+  leadQuality?: 'hot' | 'warm' | 'cold' | 'unqualified'
 
   // Context
   interest?: string

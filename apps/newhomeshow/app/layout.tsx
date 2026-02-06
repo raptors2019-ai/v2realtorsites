@@ -38,7 +38,6 @@ const footerConfig: FooterConfig = {
   logoSecondPartClass: 'text-gradient-primary',
   description: 'Your trusted partner for pre-construction homes in the Greater Toronto Area.',
   contactInfo: {
-    phone: '+1 (416) 786-0431',
     email: 'info@newhomeshow.ca',
   },
   quickLinks: [

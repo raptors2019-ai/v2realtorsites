@@ -37,7 +37,7 @@ const footerConfig: FooterConfig = {
   description: 'Your trusted real estate team serving Toronto, Mississauga, Brampton and surrounding areas.',
   teamGroupImage: '/images/sriandniru.JPEG',
   teamMembers: [
-    { name: 'Sri Kathiravelu', title: 'Sales Representative', phone: '416-305-1111', image: '/images/sri.JPEG' },
+    { name: 'Sri Kathiravelu', title: 'Sales Representative', phone: '+1 (416) 305-1111', image: '/images/sri.JPEG' },
     { name: 'Niru Arulselvan', title: 'Sales Representative', phone: '+1 (416) 786-0431', image: '/images/niru.JPEG' },
   ],
   socialLinks: [

@@ -80,24 +80,13 @@ Operational. API key configured in environment variables.
 
 ---
 
-### 10. Update Sri's Phone Number (Sri Collective)
-**Priority:** LOW
-**Goal:** Verify correct phone number
-
-**Status:** NEEDS VERIFICATION — Current number `416-305-1111` is displayed in footer and contact page. Confirm with Sri if this is correct.
+### 10. Update Sri's Phone Number (Sri Collective) — DONE
+Confirmed `+1 (416) 305-1111`. Formatted consistently with country code.
 
 ---
 
-### 11. Remove Phone Numbers (NewHomeShow)
-**Priority:** LOW
-**Goal:** No phone numbers displayed on the site
-
-**Status:** NOT DONE — Phone `+1 (416) 786-0431` still shows in footer config and connect-with-sales page.
-
-**Remaining:**
-- [ ] Remove phone from `footerConfig` in `apps/newhomeshow/app/layout.tsx`
-- [ ] Remove phone display from connect-with-sales page
-- [ ] Keep phone field in contact forms (for capturing user's phone)
+### 11. Remove Phone Numbers (NewHomeShow) — DONE
+Removed phone from footer config and connect-with-sales contact info section. Email-only contact. Phone field still in forms (for capturing user's number).
 
 ---
 
@@ -129,14 +118,14 @@ Operational. API key configured in environment variables.
 - [x] Display deposit structure from Sanity
 - [x] Enhanced contact form
 - [x] Footer disclaimer
-- [ ] Remove phone numbers *(LOW)*
+- [x] Remove phone numbers
 
 ### Sri Collective
 - [x] Fix filter count not updating
 - [ ] HoodQ neighborhood info *(HIGH — partial, chatbot only)*
 - [ ] Property summary tabs *(LOW — depends on HoodQ)*
 - [ ] Sold properties display *(MEDIUM — needs data source research)*
-- [ ] Verify Sri's phone number *(LOW)*
+- [x] Verify Sri's phone number
 - [x] BoldTrail API key
 - [ ] Regional market analytics dashboard *(FUTURE)*
 
