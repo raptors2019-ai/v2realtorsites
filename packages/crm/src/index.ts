@@ -1,3 +1,5 @@
 export { BoldTrailClient } from './client'
 export { IDXClient, idxClient } from './idx-client'
 export * from './types'
+export { sendLeadNotificationEmail } from './email/send'
+export type { LeadEmailData } from './email/types'

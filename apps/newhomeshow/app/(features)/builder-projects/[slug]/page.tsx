@@ -234,6 +234,63 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               </p>
             </div>
 
+            {/* Deposit & Incentives */}
+            {(project.depositStructure || project.totalDeposit || (project.incentives && project.incentives.length > 0)) && (
+              <div className="luxury-card-premium rounded-xl p-6 md:p-8">
+                <h2 className="text-xl font-bold text-secondary dark:text-white mb-6">Deposit & Incentives</h2>
+                <div className="space-y-6">
+                  {/* Total Deposit */}
+                  {project.totalDeposit && (
+                    <div className="flex items-center gap-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm text-text-muted dark:text-gray-400">Total Deposit Required</p>
+                        <p className="text-2xl font-bold text-primary">{formatPrice(project.totalDeposit)}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Deposit Structure */}
+                  {project.depositStructure && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-secondary dark:text-white mb-3 uppercase tracking-wide">Payment Schedule</h3>
+                      <div className="space-y-2">
+                        {project.depositStructure.split('|').map((payment, index) => (
+                          <div key={index} className="flex items-center gap-3 p-3 bg-cream dark:bg-secondary-light rounded-lg">
+                            <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">
+                              {index + 1}
+                            </span>
+                            <span className="text-text-secondary dark:text-gray-300 text-sm">{payment.trim()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Incentives */}
+                  {project.incentives && project.incentives.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-secondary dark:text-white mb-3 uppercase tracking-wide">Current Incentives</h3>
+                      <ul className="space-y-2">
+                        {project.incentives.map((incentive) => (
+                          <li key={incentive} className="flex items-start gap-3">
+                            <svg className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-text-secondary dark:text-gray-300 text-sm">{incentive}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Product Types */}
             <div className="luxury-card-premium rounded-xl p-6 md:p-8">
               <h2 className="text-xl font-bold text-secondary dark:text-white mb-6">Available Home Types</h2>

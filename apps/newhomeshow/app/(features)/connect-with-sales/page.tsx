@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { BUDGET_RANGES, TIMELINE_OPTIONS } from '@repo/types'
 
 interface FormData {
   firstName: string
@@ -10,6 +11,8 @@ interface FormData {
   email: string
   phone: string
   interest: string
+  budgetRange: string
+  timeline: string
   message: string
 }
 
@@ -19,8 +22,12 @@ const initialFormData: FormData = {
   email: '',
   phone: '',
   interest: '',
+  budgetRange: '',
+  timeline: '',
   message: '',
 }
+
+const PREFERENCES_KEY = 'newhomeshow_preferences'
 
 const VIP_MESSAGE = "I'm interested in getting VIP access to upcoming pre-construction projects. Please add me to your priority list for early access, platinum pricing, and exclusive incentives."
 
@@ -36,6 +43,26 @@ function ConnectWithSalesContent() {
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [hasPreferences, setHasPreferences] = useState(false)
+
+  // Check for existing preferences from questionnaire or registration
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(PREFERENCES_KEY)
+      if (stored) {
+        const prefs = JSON.parse(stored)
+        setHasPreferences(true)
+        // Pre-fill budget and timeline from stored preferences
+        setFormData(prev => ({
+          ...prev,
+          budgetRange: prefs.budgetRange || '',
+          timeline: prefs.timeline || '',
+        }))
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, [])
 
   // Pre-populate form based on query params
   useEffect(() => {
@@ -64,11 +91,17 @@ function ConnectWithSalesContent() {
     setSubmitStatus('idle')
 
     try {
+      // Find labels for budget/timeline values
+      const budgetLabel = BUDGET_RANGES.find(r => r.value === formData.budgetRange)?.label
+      const timelineLabel = TIMELINE_OPTIONS.find(t => t.value === formData.timeline)?.label
+
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          budgetRange: budgetLabel || formData.budgetRange || undefined,
+          timeline: timelineLabel || formData.timeline || undefined,
           source: 'NewHomeShow - Connect with Sales',
         }),
       })
@@ -284,6 +317,55 @@ function ConnectWithSalesContent() {
                         <option value="general">General Inquiry</option>
                       </select>
                     </div>
+
+                    {/* Show budget & timeline if user hasn't completed questionnaire and interest is buying/investing */}
+                    {!hasPreferences && (formData.interest === 'buying' || formData.interest === 'investing') && (
+                      <div className="grid md:grid-cols-2 gap-5">
+                        <div>
+                          <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1.5">
+                            Budget Range
+                          </label>
+                          <select
+                            value={formData.budgetRange}
+                            onChange={(e) => updateField('budgetRange', e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-primary focus:outline-none transition-colors bg-white dark:bg-secondary-light dark:text-white"
+                          >
+                            <option value="">Select budget</option>
+                            {BUDGET_RANGES.map(range => (
+                              <option key={range.value} value={range.value}>{range.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1.5">
+                            Timeline
+                          </label>
+                          <select
+                            value={formData.timeline}
+                            onChange={(e) => updateField('timeline', e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-primary focus:outline-none transition-colors bg-white dark:bg-secondary-light dark:text-white"
+                          >
+                            <option value="">Select timeline</option>
+                            {TIMELINE_OPTIONS.map(option => (
+                              <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Show saved preferences summary if user completed questionnaire */}
+                    {hasPreferences && formData.budgetRange && (
+                      <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-lg px-4 py-3">
+                        <p className="text-sm text-text-secondary dark:text-gray-300">
+                          <span className="font-medium text-primary">Your preferences:</span>{' '}
+                          {BUDGET_RANGES.find(r => r.value === formData.budgetRange)?.label || formData.budgetRange}
+                          {formData.timeline && (
+                            <> &bull; {TIMELINE_OPTIONS.find(t => t.value === formData.timeline)?.label || formData.timeline}</>
+                          )}
+                        </p>
+                      </div>
+                    )}
 
                     <div>
                       <label className="block text-sm font-medium text-text-secondary dark:text-gray-300 mb-1.5">

@@ -53,6 +53,38 @@ cd boldtrail-mcp-server && npm run dev
 - **Logging:** `console.log('[domain.feature.action]', { data })` format
 - **JSDoc:** Required for public APIs in shared packages
 
+## Commit Convention
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) for ALL commits.
+
+**Format:** `<type>(<scope>): <lowercase description>`
+
+**Types:** `feat`, `fix`, `refactor`, `style`, `perf`, `test`, `docs`, `chore`, `ci`
+
+**Scopes (use the most specific one):**
+- Apps: `newhomeshow`, `sri-collective`
+- Packages: `chatbot`, `crm`, `ui`, `analytics`, `lib`, `types`, `sanity`, `calculators`
+- Infra: `mcp`, `vercel`
+- Omit scope for cross-cutting changes
+
+**Rules:**
+- Imperative mood, lowercase: "add feature" not "Added feature"
+- No period at end of subject line
+- One concern per commit — avoid "fix X and add Y"
+- Breaking changes: add `!` after scope, e.g. `feat(crm)!: change contact API shape`
+
+**Examples:**
+```
+feat(chatbot): add progressive lead gate with soft ask
+fix(crm): simplify BoldTrail hashtag formatting
+refactor(ui): extract hooks and constants from chatbot widget
+style(ui): redesign property detail with mobile-first layout
+perf(lib): add weekly caching for Bank of Canada rates
+test(chatbot): add mortgage estimator edge case coverage
+docs: add client meeting slides
+chore(vercel): trigger rebuild after config change
+```
+
 ## Chatbot System
 
 7 tools in `@repo/chatbot` (all have Zod schemas):
@@ -82,7 +114,7 @@ Site-specific prompts: `sriCollectiveSystemPrompt`, `newhomeShowSystemPrompt`
 
 ## PRP Implementation Status
 
-PRPs (Project Requirement Plans) are in `PRPs/features/`. Status as of Jan 2025:
+PRPs (Project Requirement Plans) are in `PRPs/features/`. Status as of Feb 2026:
 
 ### Completed (95-100%)
 
@@ -91,36 +123,21 @@ PRPs (Project Requirement Plans) are in `PRPs/features/`. Status as of Jan 2025:
 | `seo-foundation.md` | ✅ DONE | SEO types, lib functions, sitemap, robots, PropertyJsonLd, city routes, [...filters] catch-all |
 | `add-properties-page-boldtrail.md` | ✅ DONE | Properties page, detail page, loading states, 404 handling, BoldTrail integration |
 | `chatbot-hero-ux-enhancements.md` | ✅ DONE | z-index fix, pulse animation, hero button enhancements, Framer Motion |
+| `ui-ux-enhancements.md` | ✅ DONE | BentoGrid integrated in both home pages, Framer Motion done |
+| `properties-page-performance.md` | ✅ DONE | PAGE_SIZE=20, Show More button, loading states all done |
+| `fix-boldtrail-mcp-lead-capture.md` | ✅ DONE | MCP server fixed with correct `/v2/public` endpoints, contact capture working |
+| `jest-testing-enhancement.md` | ✅ DONE | 396 tests pass (chatbot: 224, lib: 152, analytics: 20), coverage targets met |
+| `newhomeshow-builder-projects-sanity.md` | ✅ DONE | Sanity schema, GROQ queries, builder project pages, detail pages, registration flow, ProjectCard/Grid components |
+| `properties-page-survey-ux-enhancement.md` | ✅ DONE | Survey landing page, image deduplication with MediaKey, mobile fixes, 404 handling |
+| `idx-integration-user-preferences.md` | ✅ 95% | Full IDXClient (451 lines), Zustand store with consent-gated persistence, PropertySurvey, API routes. Minor: no explicit preference sync endpoint |
+| `analytics-implementation.md` | ✅ 95% | PageViewTracker, trackPropertyListView wired, Consent Mode v2, PropertyDetailTracker |
 
 ### Mostly Complete (80-95%)
 
 | PRP | Status | Notes |
 |-----|--------|-------|
-| `ui-ux-enhancements.md` | ✅ 95% | BentoGrid integrated in both home pages, Framer Motion done |
-| `analytics-implementation.md` | ✅ 90% | PageViewTracker, trackPropertyListView wired, Consent Mode v2 |
-| `properties-page-performance.md` | ✅ 95% | PAGE_SIZE=20, Show More button, loading states all done |
-
-### Substantially Complete (70-95%)
-
-| PRP | Status | Notes |
-|-----|--------|-------|
-| `fix-boldtrail-mcp-lead-capture.md` | ✅ 95% | MCP server fixed with correct `/v2/public` endpoints, contact capture working |
-| `jest-testing-enhancement.md` | ✅ 96% | 396 tests pass (chatbot: 224, lib: 152, analytics: 20), coverage targets met |
-| `chatbot-architecture-refactor.md` | ✅ 70% | **Phase 1 DONE**: Component extraction complete, ChatbotWidget 1160→394 lines |
-
-### Partial Implementation (30-60%)
-
-| PRP | Status | Missing |
-|-----|--------|---------|
-| `chatbot-tools-knowledge-enhancement.md` | 40% | Tool enhancements for better knowledge |
-| `properties-page-survey-ux-enhancement.md` | 30% | Survey landing page, image deduplication, mobile fixes |
-
-### Not Started (0%)
-
-| PRP | Status | Notes |
-|-----|--------|-------|
-| `idx-integration-user-preferences.md` | TODO | Full IDX API client, Zustand persistence, preference sync |
-| `newhomeshow-builder-projects-sanity.md` | TODO | Large feature - Sanity CMS integration for builder projects |
+| `chatbot-tools-knowledge-enhancement.md` | ✅ 85% | All 7 tools implemented with Zod schemas and renderers. Remaining: knowledge base expansion (neighborhoods, FAQs) |
+| `chatbot-architecture-refactor.md` | ✅ 80% | Phase 1 DONE: 17 components extracted, ChatbotWidget 1160→394 lines, survey flow refactored. Remaining: Phase 2 adaptive prompts, improved state management |
 
 ### Key Implemented Features
 

@@ -210,17 +210,7 @@ export function PropertyFilters({
       : [...selectedCities, city];
 
     setSelectedCities(newSelectedCities);
-
-    if (newSelectedCities.length === 0) {
-      handleFilterChange("location", undefined);
-      handleFilterChange("locations", undefined);
-    } else if (newSelectedCities.length === 1) {
-      handleFilterChange("location", newSelectedCities[0]);
-      handleFilterChange("locations", undefined);
-    } else {
-      handleFilterChange("location", undefined);
-      handleFilterChange("locations", newSelectedCities);
-    }
+    handleFilterChange("locations", newSelectedCities.length > 0 ? newSelectedCities : undefined);
   };
 
   const handlePriceRangeChange = useCallback((index: 0 | 1, value: number) => {

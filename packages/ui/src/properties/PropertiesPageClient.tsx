@@ -134,11 +134,9 @@ export function PropertiesPageClient({
     params.set('limit', String(PAGE_SIZE));
     params.set('offset', String(offset));
 
-    // Multiple cities (region) or single city
+    // Cities filter
     if (filters.locations && filters.locations.length > 0) {
       params.set('cities', filters.locations.join(','));
-    } else if (filters.location) {
-      params.set('city', filters.location);
     }
 
     if (filters.priceRange?.min) {
@@ -303,8 +301,8 @@ export function PropertiesPageClient({
         square_feet: p.sqft,
       }));
 
-      const listName = filters.location
-        ? `${filters.location} Properties`
+      const listName = filters.locations && filters.locations.length > 0
+        ? `${filters.locations.join(', ')} Properties`
         : filters.listingType?.includes('lease')
         ? 'Properties For Lease'
         : 'Properties For Sale';
@@ -314,7 +312,7 @@ export function PropertiesPageClient({
         list_name: listName,
       });
     }
-  }, [properties, isLoading, filters.location, filters.listingType]);
+  }, [properties, isLoading, filters.locations, filters.listingType]);
 
   // Handle filter change
   const handleFilterChange = useCallback((newFilters: PropertyFiltersType) => {

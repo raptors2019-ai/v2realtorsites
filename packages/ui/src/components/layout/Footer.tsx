@@ -40,6 +40,7 @@ export interface FooterConfig {
     hours?: string[]
   }
   tagline?: string
+  disclaimer?: string
   mlsDisclaimer?: MLSDisclaimerConfig
 }
 
@@ -302,6 +303,11 @@ export function Footer({ config }: FooterProps) {
 
         {/* Bottom Bar */}
         <div className="border-t border-white/10 mt-12 pt-8" />
+        {config.disclaimer && (
+          <p className="text-gray-500 text-xs text-center mb-6 max-w-3xl mx-auto leading-relaxed">
+            {config.disclaimer}
+          </p>
+        )}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <p className="text-gray-400 text-sm">

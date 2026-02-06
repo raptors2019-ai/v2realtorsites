@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { CoreTool } from 'ai'
-import { BoldTrailClient } from '@repo/crm'
+import { BoldTrailClient, sendLeadNotificationEmail } from '@repo/crm'
 import { calculateLeadQuality } from '../utils/lead-scoring'
 
 // Format budget to hashtag-friendly format (no periods allowed in BoldTrail)
@@ -303,6 +303,37 @@ export const createContactTool: CoreTool = {
         hashtagCount: hashtags.length,
         noteLength: notes.length,
       })
+
+      // Fire-and-forget email notification (send regardless of CRM success)
+      sendLeadNotificationEmail({
+        firstName: params.firstName,
+        lastName: params.lastName || '',
+        email: params.email,
+        phone: params.cellPhone,
+        source: params.source || 'sri-collective',
+        leadSource: 'chatbot',
+        leadType: params.leadType,
+        leadQuality,
+        conversationSummary: params.conversationSummary,
+        budget: params.averagePrice ? `$${params.averagePrice.toLocaleString()}` : undefined,
+        timeline: params.timeline,
+        locations: [params.preferredCity, ...(params.preferredNeighborhoods || [])].filter(Boolean) as string[],
+        propertyTypes: params.propertyTypes,
+        bedrooms: params.averageBeds,
+        bathrooms: params.averageBathrooms,
+        mortgageEstimate: params.mortgageEstimate ? {
+          annualIncome: params.mortgageEstimate.annualIncome,
+          downPayment: params.mortgageEstimate.downPayment,
+          monthlyDebts: params.mortgageEstimate.monthlyDebts,
+          maxPrice: params.mortgageEstimate.maxPrice,
+        } : undefined,
+        viewedListings: params.viewedListings?.map((l: { address: string; price: number }) => ({ address: l.address, price: l.price })),
+        engagement: params.engagement,
+        preApproved: params.preApproved,
+        firstTimeBuyer: params.firstTimeBuyer,
+        urgencyFactors: params.urgencyFactors,
+        propertyAddress: params.propertyAddress,
+      }).catch(err => console.error('[chatbot.createContact.email.error]', err))
 
       if (response.success) {
         // Generate thank you message based on lead quality

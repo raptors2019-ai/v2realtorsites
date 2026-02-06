@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { BoldTrailClient } from '@repo/crm'
+import { BoldTrailClient, sendLeadNotificationEmail } from '@repo/crm'
 import type { ContactData } from '@repo/crm'
 
 export const runtime = 'edge'
@@ -178,6 +178,19 @@ export async function POST(request: NextRequest) {
         propertyAddress,
       })
     }
+
+    // Fire-and-forget email notification
+    sendLeadNotificationEmail({
+      firstName, lastName, email, phone,
+      source: 'sri-collective',
+      leadSource: propertyAddress ? 'property-inquiry' : 'contact-form',
+      leadType,
+      interest, message,
+      budget, timeline,
+      locations: city ? [city] : undefined,
+      propertyAddress, propertyMls,
+      inquiryType,
+    }).catch(err => console.error('[api.contact.email.error]', err))
 
     // Log success with hashtag info for debugging
     console.log('[api.contact.success]', {

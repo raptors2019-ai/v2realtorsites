@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { Header, Footer, ThemeProvider } from '@repo/ui'
+import { Header, Footer, ThemeProvider, QuestionnaireModal } from '@repo/ui'
 import type { HeaderConfig, FooterConfig } from '@repo/ui'
 import { GoogleTagManager } from '@next/third-parties/google'
 import { CookieConsent, PageViewTracker } from '@repo/analytics'
@@ -48,6 +48,7 @@ const footerConfig: FooterConfig = {
     { name: 'Assignments', href: '/assignments' },
     { name: 'Connect with Sales', href: '/connect-with-sales' },
   ],
+  disclaimer: 'NewHomeShow is an independent real estate information service. We are not affiliated with, endorsed by, or representing any builders or developers.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -87,6 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PageViewTracker />
         </Suspense>
         <CookieConsent />
+        <QuestionnaireModal />
       </body>
     </html>
   )

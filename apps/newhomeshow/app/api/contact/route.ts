@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { BoldTrailClient } from '@repo/crm'
+import { BoldTrailClient, sendLeadNotificationEmail } from '@repo/crm'
 import type { ContactData } from '@repo/crm'
 
 export const runtime = 'edge'
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Validate required fields
-    const { firstName, lastName, email, phone, interest, message, source } = body
+    const { firstName, lastName, email, phone, interest, message, source, budgetRange, timeline } = body
 
     if (!firstName || !lastName || !email || !interest || !message) {
       return NextResponse.json(
@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
       ``,
       `Interest Type: ${interest}`,
       `Form: ${source || 'Connect with Sales'}`,
+      budgetRange ? `Budget: ${budgetRange}` : null,
+      timeline ? `Timeline: ${timeline}` : null,
       ``,
       `--- Customer Message ---`,
       message,
@@ -84,6 +86,18 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Fire-and-forget email notification
+    sendLeadNotificationEmail({
+      firstName, lastName, email, phone,
+      source: 'newhomeshow',
+      leadSource: 'contact-form',
+      leadType,
+      interest,
+      message,
+      budget: budgetRange || undefined,
+      timeline: timeline || undefined,
+    }).catch(err => console.error('[api.contact.email.error]', err))
 
     console.log('[api.contact.success]', {
       contactId: result.contactId,

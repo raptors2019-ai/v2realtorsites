@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { BoldTrailClient } from '@repo/crm'
+import { BoldTrailClient, sendLeadNotificationEmail } from '@repo/crm'
 import type { ContactData } from '@repo/crm'
 import { calculateLeadQuality } from '@repo/types'
 import type { RegistrationData } from '@repo/types'
@@ -120,6 +120,21 @@ export async function POST(request: Request) {
         { status: 500 }
       )
     }
+
+    // Fire-and-forget email notification
+    sendLeadNotificationEmail({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      source: 'newhomeshow',
+      leadSource: 'registration',
+      leadType: leadTypeMap[leadQuality],
+      leadQuality,
+      budget: formatBudgetRange(data.budgetRange),
+      timeline: formatTimeline(data.timeline),
+      projectSlug: data.projectSlug,
+    }).catch(err => console.error('[api.register.email.error]', err))
 
     console.log('[api.register.success]', {
       project: data.projectSlug,

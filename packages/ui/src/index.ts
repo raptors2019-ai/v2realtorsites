@@ -38,6 +38,9 @@ export {
 // Projects (Builder Projects)
 export { ProjectCard, ProjectGrid, RegistrationSurvey } from './projects'
 
+// Questionnaire
+export { QuestionnaireModal } from './questionnaire/QuestionnaireModal'
+
 // Chatbot
 export { ChatbotWidget } from './chatbot'
 
