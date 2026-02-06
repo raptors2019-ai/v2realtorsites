@@ -415,9 +415,10 @@ export function PropertyFilters({
           options={[
             { value: 'sale' as ListingType, label: 'For Sale' },
             { value: 'lease' as ListingType, label: 'For Lease' },
+            { value: 'sold' as ListingType, label: 'Sold' },
           ]}
           onToggle={(value) => handleToggle(selectedListingTypes, setSelectedListingTypes, 'listingType', value)}
-          formatter={(type) => type === 'sale' ? 'For Sale' : 'For Lease'}
+          formatter={(type) => type === 'sale' ? 'For Sale' : type === 'lease' ? 'For Lease' : 'Sold'}
           allLabel="All Listings"
         />
 

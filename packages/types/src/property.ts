@@ -1,6 +1,6 @@
 export type PropertyType = 'detached' | 'semi-detached' | 'townhouse' | 'condo'
 
-export type ListingType = 'sale' | 'lease'
+export type ListingType = 'sale' | 'lease' | 'sold'
 
 export interface Property {
   id: string

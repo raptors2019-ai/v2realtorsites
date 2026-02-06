@@ -58,8 +58,8 @@ export async function GET(request: NextRequest) {
       bedrooms,
       bathrooms,
       propertyTypes, // Use array for multi-select support
-      listingType: listingType as 'sale' | 'lease' | undefined, // Now filtered at IDX level
-      status: 'Active', // Always active listings
+      listingType: listingType === 'sold' ? undefined : listingType as 'sale' | 'lease' | undefined,
+      status: listingType === 'sold' ? 'Sold' : 'Active',
       // Advanced filters
       keywords,
       minSqft,
